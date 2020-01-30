@@ -287,3 +287,56 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 		}
 	}
 }
+
+func prettyPrint(elem Element) string {
+	return prettyPrintAcc(elem, "")
+}
+
+func prettyPrintAcc(elem Element, str string) string {
+	elemTyp := elem.Type()
+	switch elemTyp {
+	case ElemTypNil:
+		str = str + "0"
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		str = str + outElem.Channel.Name + "'<" + outElem.Output.Name + ">."
+		return prettyPrintAcc(outElem.Next, str)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		str = str + inpElem.Channel.Name + "(" + inpElem.Input.Name + ")."
+		return prettyPrintAcc(inpElem.Next, str)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameL.Name + "]"
+		return prettyPrintAcc(matchElem.Next, str)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		str = str + "$" + resElem.Restrict.Name + "."
+		return prettyPrintAcc(resElem.Next, str)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		left := prettyPrintAcc(sumElem.ProcessL, "")
+		right := prettyPrintAcc(sumElem.ProcessR, "")
+		str = str + "(" + left + " + " + right + ")"
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		left := prettyPrintAcc(parElem.ProcessL, "")
+		right := prettyPrintAcc(parElem.ProcessR, "")
+		str = str + "(" + left + " | " + right + ")"
+	case ElemTypProcess:
+		procElem := elem.(*ElemProcess)
+		str = str + procElem.Name
+	case ElemTypProcessConstants:
+		pcsElem := elem.(*ElemProcessConstants)
+		params := "("
+		for i, param := range pcsElem.Parameters {
+			if i == len(pcsElem.Parameters)-1 {
+				params = params + param + ")"
+			} else {
+				params = params + param + ", "
+			}
+		}
+		str = str + pcsElem.Name + params
+	}
+	return str
+}
