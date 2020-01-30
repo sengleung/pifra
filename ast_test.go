@@ -7,6 +7,140 @@ import (
 	"github.com/go-test/deep"
 )
 
+func TestSubstituteName(t *testing.T) {
+	log = false
+	tests := map[string]struct {
+		input   Element
+		output  Element
+		oldName Name
+		newName Name
+		err     error
+	}{
+		"output_input_bound_name": {
+			input: &ElemOutput{
+				Channel: Name{
+					Name: "a",
+				},
+				Output: Name{
+					Name: "b",
+				},
+				Next: &ElemInput{
+					Channel: Name{
+						Name: "a",
+					},
+					Input: Name{
+						Name: "d",
+					},
+					Next: &ElemNil{},
+				},
+			},
+			output: &ElemOutput{
+				Channel: Name{
+					Name: "b",
+					Type: Bound,
+				},
+				Output: Name{
+					Name: "b",
+				},
+				Next: &ElemInput{
+					Channel: Name{
+						Name: "b",
+						Type: Bound,
+					},
+					Input: Name{
+						Name: "d",
+					},
+					Next: &ElemNil{},
+				},
+			},
+			oldName: Name{
+				Name: "a",
+			},
+			newName: Name{
+				Name: "b",
+				Type: Bound,
+			},
+		},
+		"par_match_free_name": {
+			input: &ElemOutput{
+				Channel: Name{
+					Name: "a",
+					Type: Bound,
+				},
+				Output: Name{
+					Name: "b",
+				},
+				Next: &ElemParallel{
+					ProcessL: &ElemInput{
+						Channel: Name{
+							Name: "a",
+							Type: Bound,
+						},
+						Input: Name{
+							Name: "d",
+						},
+						Next: &ElemNil{},
+					},
+					ProcessR: &ElemMatch{
+						NameL: Name{
+							Name: "a",
+							Type: Bound,
+						},
+						NameR: Name{
+							Name: "e",
+						},
+						Next: &ElemNil{},
+					},
+				},
+			},
+			output: &ElemOutput{
+				Channel: Name{
+					Name: "b",
+				},
+				Output: Name{
+					Name: "b",
+				},
+				Next: &ElemParallel{
+					ProcessL: &ElemInput{
+						Channel: Name{
+							Name: "b",
+						},
+						Input: Name{
+							Name: "d",
+						},
+						Next: &ElemNil{},
+					},
+					ProcessR: &ElemMatch{
+						NameL: Name{
+							Name: "b",
+						},
+						NameR: Name{
+							Name: "e",
+						},
+						Next: &ElemNil{},
+					},
+				},
+			},
+			oldName: Name{
+				Name: "a",
+				Type: Bound,
+			},
+			newName: Name{
+				Name: "b",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			output := substituteName(tc.input, tc.oldName, tc.newName)
+			if err := deep.Equal(tc.output, output); err != nil {
+				spew.Dump(output)
+				t.Error(err)
+			}
+		})
+	}
+}
+
 func TestAlphaConversion(t *testing.T) {
 	log = false
 	tests := map[string]struct {

@@ -2,9 +2,65 @@ package main
 
 import (
 	"strconv"
+
+	"github.com/mohae/deepcopy"
 )
 
 var boundNameIndex int
+
+func substituteName(elem Element, oldName Name, newName Name) Element {
+	elemCopy := deepcopy.Copy(elem)
+	elem = elemCopy.(Element)
+	subName(elem, oldName, newName)
+	return elem
+}
+
+func subName(elem Element, oldName Name, newName Name) {
+	elemTyp := elem.Type()
+	switch elemTyp {
+	case ElemTypNil:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		if outElem.Channel == oldName {
+			outElem.Channel = newName
+		}
+		if outElem.Output == oldName {
+			outElem.Output = newName
+		}
+		subName(outElem.Next, oldName, newName)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		if inpElem.Channel == oldName {
+			inpElem.Channel = newName
+		}
+		if inpElem.Input == oldName {
+			inpElem.Input = newName
+		}
+		subName(inpElem.Next, oldName, newName)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		if matchElem.NameL == oldName {
+			matchElem.NameL = newName
+		}
+		if matchElem.NameR == oldName {
+			matchElem.NameR = newName
+		}
+		subName(matchElem.Next, oldName, newName)
+	case ElemTypRestriction:
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		subName(sumElem.ProcessL, oldName, newName)
+		subName(sumElem.ProcessR, oldName, newName)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		subName(parElem.ProcessL, oldName, newName)
+		subName(parElem.ProcessR, oldName, newName)
+	case ElemTypProcess:
+		// TODO
+	case ElemTypProcessConstants:
+		// TODO
+	}
+}
 
 func doAlphaConversion(elem Element) {
 	elemTyp := elem.Type()
