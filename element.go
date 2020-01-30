@@ -67,8 +67,8 @@ func (e *ElemMatch) Type() ElementType {
 }
 
 type ElemRestriction struct {
-	Name string
-	Next Element
+	Restrict Name
+	Next     Element
 }
 
 func (e *ElemRestriction) Type() ElementType {

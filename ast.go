@@ -16,9 +16,9 @@ func doAlphaConversion(elem Element) {
 		doAlphaConversion(elem.(*ElemMatch).Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		boundName := resElem.Name
+		boundName := resElem.Restrict.Name
 		newName := generateBoundName()
-		resElem.Name = newName
+		resElem.Restrict.Name = newName
 		substituteNames(resElem.Next, boundName, newName)
 		doAlphaConversion(resElem.Next)
 	case ElemTypSum:
@@ -73,7 +73,7 @@ func substituteNames(elem Element, boundName string, newName string) {
 		substituteNames(matchElem.Next, boundName, newName)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		if resElem.Name != boundName {
+		if resElem.Restrict.Name != boundName {
 			substituteNames(resElem.Next, boundName, newName)
 		}
 	case ElemTypSum:

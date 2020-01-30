@@ -89,7 +89,9 @@ $a.P
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemRestriction{
-					Name: "a",
+					Restrict: Name{
+						Name: "a",
+					},
 					Next: &ElemProcess{
 						Name: "P",
 					},
@@ -188,7 +190,9 @@ Q(x,y,z) = $x.[y=z]P
 			`),
 			declaredProcs: map[string]Element{
 				"Q": &ElemRestriction{
-					Name: "x",
+					Restrict: Name{
+						Name: "x",
+					},
 					Next: &ElemMatch{
 						NameL: "y",
 						NameR: "z",
@@ -228,7 +232,9 @@ i(j).k'<l>.0
 					},
 				},
 				"Q": &ElemRestriction{
-					Name: "x",
+					Restrict: Name{
+						Name: "x",
+					},
 					Next: &ElemMatch{
 						NameL: "y",
 						NameR: "z",
@@ -478,7 +484,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemRestriction{
-					Name: "a",
+					Restrict: Name{
+						Name: "a",
+					},
 					Next: &ElemInput{
 						Channel: Name{
 							Name: "b",
@@ -487,7 +495,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 							Name: "a",
 						},
 						Next: &ElemRestriction{
-							Name: "a",
+							Restrict: Name{
+								Name: "a",
+							},
 							Next: &ElemParallel{
 								ProcessL: &ElemOutput{
 									Channel: Name{
@@ -499,7 +509,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 									Next: &ElemNil{},
 								},
 								ProcessR: &ElemRestriction{
-									Name: "b",
+									Restrict: Name{
+										Name: "b",
+									},
 									Next: &ElemParallel{
 										ProcessL: &ElemInput{
 											Channel: Name{

@@ -23,7 +23,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemRestriction{
-					Name: "bn_0",
+					Restrict: Name{
+						Name: "bn_0",
+					},
 					Next: &ElemInput{
 						Channel: Name{
 							Name: "b",
@@ -32,7 +34,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 							Name: "bn_0",
 						},
 						Next: &ElemRestriction{
-							Name: "bn_1",
+							Restrict: Name{
+								Name: "bn_1",
+							},
 							Next: &ElemParallel{
 								ProcessL: &ElemOutput{
 									Channel: Name{
@@ -44,7 +48,9 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 									Next: &ElemNil{},
 								},
 								ProcessR: &ElemRestriction{
-									Name: "bn_2",
+									Restrict: Name{
+										Name: "bn_2",
+									},
 									Next: &ElemParallel{
 										ProcessL: &ElemInput{
 											Channel: Name{

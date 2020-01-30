@@ -218,7 +218,9 @@ restriction:
     DOLLARSIGN NAME DOT elem
     {
         resElem := &ElemRestriction{
-            Name: $2,
+            Restrict: Name{
+                Name: $2,
+            },
             Next: curElem,
         }
         curElem = resElem
