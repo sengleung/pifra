@@ -14,6 +14,18 @@ const (
 	ElemTypProcessConstants
 )
 
+type NameType int
+
+const (
+	Fresh NameType = iota
+	Bound
+)
+
+type Name struct {
+	Name string
+	Type NameType
+}
+
 type Element interface {
 	Type() ElementType
 }
@@ -25,8 +37,8 @@ func (e *ElemNil) Type() ElementType {
 }
 
 type ElemOutput struct {
-	Channel string
-	Output  string
+	Channel Name
+	Output  Name
 	Next    Element
 }
 

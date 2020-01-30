@@ -33,8 +33,12 @@ a'<b>.P
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemOutput{
-					Channel: "a",
-					Output:  "b",
+					Channel: Name{
+						Name: "a",
+					},
+					Output: Name{
+						Name: "b",
+					},
 					Next: &ElemProcess{
 						Name: "P",
 					},
@@ -154,8 +158,12 @@ P = a'<b>.c(d).0
 			`),
 			declaredProcs: map[string]Element{
 				"P": &ElemOutput{
-					Channel: "a",
-					Output:  "b",
+					Channel: Name{
+						Name: "a",
+					},
+					Output: Name{
+						Name: "b",
+					},
 					Next: &ElemInput{
 						Channel: "c",
 						Input:   "d",
@@ -195,8 +203,12 @@ i(j).k'<l>.0
 			`),
 			declaredProcs: map[string]Element{
 				"P": &ElemOutput{
-					Channel: "a",
-					Output:  "b",
+					Channel: Name{
+						Name: "a",
+					},
+					Output: Name{
+						Name: "b",
+					},
 					Next: &ElemInput{
 						Channel: "c",
 						Input:   "d",
@@ -219,9 +231,13 @@ i(j).k'<l>.0
 					Channel: "i",
 					Input:   "j",
 					Next: &ElemOutput{
-						Channel: "k",
-						Output:  "l",
-						Next:    &ElemNil{},
+						Channel: Name{
+							Name: "k",
+						},
+						Output: Name{
+							Name: "l",
+						},
+						Next: &ElemNil{},
 					},
 				},
 			},
@@ -243,14 +259,22 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 					ProcessR: &ElemParallel{
 						ProcessL: &ElemParallel{
 							ProcessL: &ElemOutput{
-								Channel: "c",
-								Output:  "d",
-								Next:    &ElemNil{},
+								Channel: Name{
+									Name: "c",
+								},
+								Output: Name{
+									Name: "d",
+								},
+								Next: &ElemNil{},
 							},
 							ProcessR: &ElemOutput{
-								Channel: "e",
-								Output:  "f",
-								Next:    &ElemNil{},
+								Channel: Name{
+									Name: "e",
+								},
+								Output: Name{
+									Name: "f",
+								},
+								Next: &ElemNil{},
 							},
 						},
 						ProcessR: &ElemParallel{
@@ -434,9 +458,13 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 							Name: "a",
 							Next: &ElemParallel{
 								ProcessL: &ElemOutput{
-									Channel: "b",
-									Output:  "a",
-									Next:    &ElemNil{},
+									Channel: Name{
+										Name: "b",
+									},
+									Output: Name{
+										Name: "a",
+									},
+									Next: &ElemNil{},
 								},
 								ProcessR: &ElemRestriction{
 									Name: "b",

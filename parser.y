@@ -152,8 +152,12 @@ output:
         channel := $1
         output := $4
         outputElem := &ElemOutput{
-            Channel: channel,
-            Output: output,
+            Channel: Name{
+                Name: channel,
+            },
+            Output: Name{
+                Name: output,
+            },
             Next: curElem,
         }
         curElem = outputElem
@@ -164,15 +168,19 @@ output:
     NAME LANGLE NAME RANGLE DOT elem
     {
         channel := $1
-        variable := $3
+        output := $3
         outputElem := &ElemOutput{
-            Channel: channel,
-            Output: variable,
+            Channel: Name{
+                Name: channel,
+            },
+            Output: Name{
+                Name: output,
+            },
             Next: curElem,
         }
         curElem = outputElem
 
-        Log("out:", channel, variable)
+        Log("out:", channel, output)
     }
 
 input:
