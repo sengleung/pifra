@@ -18,57 +18,76 @@ func TestAlphaConversion(t *testing.T) {
 	}{
 		"parallel_restriction": {
 			input: []byte(`
-$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
+a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			`),
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
-				&ElemRestriction{
-					Restrict: Name{
-						Name: "bn_0",
+				&ElemInput{
+					Channel: Name{
+						Name: "a",
 					},
-					Next: &ElemInput{
-						Channel: Name{
-							Name: "b",
+					Input: Name{
+						Name: "b_0",
+						Type: Bound,
+					},
+					Next: &ElemRestriction{
+						Restrict: Name{
+							Name: "a_1",
+							Type: Bound,
 						},
-						Input: Name{
-							Name: "bn_0",
-						},
-						Next: &ElemRestriction{
-							Restrict: Name{
-								Name: "bn_1",
+						Next: &ElemInput{
+							Channel: Name{
+								Name: "b_0",
+								Type: Bound,
 							},
-							Next: &ElemParallel{
-								ProcessL: &ElemOutput{
-									Channel: Name{
-										Name: "b",
-									},
-									Output: Name{
-										Name: "bn_1",
-									},
-									Next: &ElemNil{},
+							Input: Name{
+								Name: "a_1",
+								Type: Bound,
+							},
+							Next: &ElemRestriction{
+								Restrict: Name{
+									Name: "a_2",
+									Type: Bound,
 								},
-								ProcessR: &ElemRestriction{
-									Restrict: Name{
-										Name: "bn_2",
-									},
-									Next: &ElemParallel{
-										ProcessL: &ElemInput{
-											Channel: Name{
-												Name: "bn_1",
-											},
-											Input: Name{
-												Name: "bn_2",
-											},
-											Next: &ElemNil{},
+								Next: &ElemParallel{
+									ProcessL: &ElemOutput{
+										Channel: Name{
+											Name: "b_0",
+											Type: Bound,
 										},
-										ProcessR: &ElemInput{
-											Channel: Name{
-												Name: "c",
+										Output: Name{
+											Name: "a_2",
+											Type: Bound,
+										},
+										Next: &ElemNil{},
+									},
+									ProcessR: &ElemRestriction{
+										Restrict: Name{
+											Name: "b_3",
+											Type: Bound,
+										},
+										Next: &ElemParallel{
+											ProcessL: &ElemInput{
+												Channel: Name{
+													Name: "a_2",
+													Type: Bound,
+												},
+												Input: Name{
+													Name: "b_3",
+													Type: Bound,
+												},
+												Next: &ElemNil{},
 											},
-											Input: Name{
-												Name: "d",
+											ProcessR: &ElemInput{
+												Channel: Name{
+													Name: "c",
+												},
+												Input: Name{
+													Name: "d_4",
+													Type: Bound,
+												},
+												Next: &ElemNil{},
 											},
-											Next: &ElemNil{},
 										},
 									},
 								},
