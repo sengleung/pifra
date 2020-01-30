@@ -87,11 +87,17 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 		}
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		if matchElem.NameL == boundName {
-			matchElem.NameR = newName
+		if matchElem.NameL.Name == boundName {
+			matchElem.NameL = Name{
+				Name: newName,
+				Type: Bound,
+			}
 		}
-		if matchElem.NameL == boundName {
-			matchElem.NameR = newName
+		if matchElem.NameR.Name == boundName {
+			matchElem.NameR = Name{
+				Name: newName,
+				Type: Bound,
+			}
 		}
 		substituteNamesInput(matchElem.Next, boundName, newName)
 	case ElemTypRestriction:
@@ -154,11 +160,17 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 		substituteNamesRestriction(inpElem.Next, boundName, newName)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		if matchElem.NameL == boundName {
-			matchElem.NameR = newName
+		if matchElem.NameL.Name == boundName {
+			matchElem.NameL = Name{
+				Name: newName,
+				Type: Bound,
+			}
 		}
-		if matchElem.NameL == boundName {
-			matchElem.NameR = newName
+		if matchElem.NameR.Name == boundName {
+			matchElem.NameR = Name{
+				Name: newName,
+				Type: Bound,
+			}
 		}
 		substituteNamesRestriction(matchElem.Next, boundName, newName)
 	case ElemTypRestriction:

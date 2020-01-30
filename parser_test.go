@@ -73,8 +73,12 @@ a(b).P
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemMatch{
-					NameL: "a",
-					NameR: "b",
+					NameL: Name{
+						Name: "a",
+					},
+					NameR: Name{
+						Name: "b",
+					},
 					Next: &ElemProcess{
 						Name: "P",
 					},
@@ -194,8 +198,12 @@ Q(x,y,z) = $x.[y=z]P
 						Name: "x",
 					},
 					Next: &ElemMatch{
-						NameL: "y",
-						NameR: "z",
+						NameL: Name{
+							Name: "y",
+						},
+						NameR: Name{
+							Name: "z",
+						},
 						Next: &ElemProcess{
 							Name: "P",
 						},
@@ -236,8 +244,12 @@ i(j).k'<l>.0
 						Name: "x",
 					},
 					Next: &ElemMatch{
-						NameL: "y",
-						NameR: "z",
+						NameL: Name{
+							Name: "y",
+						},
+						NameR: Name{
+							Name: "z",
+						},
 						Next: &ElemProcess{
 							Name: "P",
 						},

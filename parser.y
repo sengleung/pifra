@@ -206,8 +206,12 @@ match:
     LSQBRACKET NAME EQUAL NAME RSQBRACKET elem
     {
         matchElem := &ElemMatch{
-            NameL: $2,
-            NameR: $4,
+            NameL: Name{
+                Name: $2,
+            },
+            NameR: Name{
+                Name: $4,
+            },
             Next: curElem,
         }
         curElem = matchElem

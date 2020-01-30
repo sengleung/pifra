@@ -57,8 +57,8 @@ func (e *ElemInput) Type() ElementType {
 }
 
 type ElemMatch struct {
-	NameL string
-	NameR string
+	NameL Name
+	NameR Name
 	Next  Element
 }
 
