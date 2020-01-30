@@ -7,6 +7,7 @@ import (
 )
 
 var boundNameIndex int
+var freshNameIndex int
 
 func substituteName(elem Element, oldName Name, newName Name) Element {
 	elemCopy := deepcopy.Copy(elem)
@@ -60,6 +61,26 @@ func subName(elem Element, oldName Name, newName Name) {
 	case ElemTypProcessConstants:
 		// TODO
 	}
+}
+
+func open(elem Element, boundName Name) Element {
+	if boundName.Type != Bound {
+		return nil
+	}
+	elemCopy := deepcopy.Copy(elem)
+	elem = elemCopy.(Element)
+	newName := Name{
+		Name: generateFreshName("fn"),
+		Type: Fresh,
+	}
+	subName(elem, boundName, newName)
+	return elem
+}
+
+func generateFreshName(namePrefix string) string {
+	name := namePrefix + "_" + strconv.Itoa(freshNameIndex)
+	freshNameIndex = freshNameIndex + 1
+	return name
 }
 
 func doAlphaConversion(elem Element) {
