@@ -69,11 +69,25 @@ func open(elem Element, boundName Name) Element {
 	}
 	elemCopy := deepcopy.Copy(elem)
 	elem = elemCopy.(Element)
-	newName := Name{
+	freshName := Name{
 		Name: generateFreshName("fn"),
 		Type: Fresh,
 	}
-	subName(elem, boundName, newName)
+	subName(elem, boundName, freshName)
+	return elem
+}
+
+func close(elem Element, freshName Name) Element {
+	if freshName.Type != Fresh {
+		return nil
+	}
+	elemCopy := deepcopy.Copy(elem)
+	elem = elemCopy.(Element)
+	boundName := Name{
+		Name: generateBoundName(freshName.Name),
+		Type: Bound,
+	}
+	subName(elem, freshName, boundName)
 	return elem
 }
 
