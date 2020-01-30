@@ -47,8 +47,8 @@ func (e *ElemOutput) Type() ElementType {
 }
 
 type ElemInput struct {
-	Channel string
-	Input   string
+	Channel Name
+	Input   Name
 	Next    Element
 }
 

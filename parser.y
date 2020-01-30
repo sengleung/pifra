@@ -189,8 +189,12 @@ input:
         channel := $1
         input := $3
         inputElem := &ElemInput{
-            Channel: channel,
-            Input: input,
+            Channel: Name{
+                Name: channel,
+            },
+            Input: Name{
+                Name: input,
+            },
             Next: curElem,
         }
         curElem = inputElem

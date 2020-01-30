@@ -25,8 +25,12 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 				&ElemRestriction{
 					Name: "bn_0",
 					Next: &ElemInput{
-						Channel: "b",
-						Input:   "bn_0",
+						Channel: Name{
+							Name: "b",
+						},
+						Input: Name{
+							Name: "bn_0",
+						},
 						Next: &ElemRestriction{
 							Name: "bn_1",
 							Next: &ElemParallel{
@@ -43,14 +47,22 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 									Name: "bn_2",
 									Next: &ElemParallel{
 										ProcessL: &ElemInput{
-											Channel: "bn_1",
-											Input:   "bn_2",
-											Next:    &ElemNil{},
+											Channel: Name{
+												Name: "bn_1",
+											},
+											Input: Name{
+												Name: "bn_2",
+											},
+											Next: &ElemNil{},
 										},
 										ProcessR: &ElemInput{
-											Channel: "c",
-											Input:   "d",
-											Next:    &ElemNil{},
+											Channel: Name{
+												Name: "c",
+											},
+											Input: Name{
+												Name: "d",
+											},
+											Next: &ElemNil{},
 										},
 									},
 								},
