@@ -25,9 +25,9 @@ func (e *ElemNil) Type() ElementType {
 }
 
 type ElemOutput struct {
-	Name     string
-	Variable string
-	Next     Element
+	Channel string
+	Output  string
+	Next    Element
 }
 
 func (e *ElemOutput) Type() ElementType {
@@ -35,9 +35,9 @@ func (e *ElemOutput) Type() ElementType {
 }
 
 type ElemInput struct {
-	Name     string
-	Variable string
-	Next     Element
+	Channel string
+	Input   string
+	Next    Element
 }
 
 func (e *ElemInput) Type() ElementType {

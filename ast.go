@@ -46,20 +46,20 @@ func substituteNames(elem Element, boundName string, newName string) {
 	case ElemTypNil:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		if outElem.Name == boundName {
-			outElem.Name = newName
+		if outElem.Channel == boundName {
+			outElem.Channel = newName
 		}
-		if outElem.Variable == boundName {
-			outElem.Variable = newName
+		if outElem.Output == boundName {
+			outElem.Output = newName
 		}
 		substituteNames(outElem.Next, boundName, newName)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		if inpElem.Name == boundName {
-			inpElem.Name = newName
+		if inpElem.Channel == boundName {
+			inpElem.Channel = newName
 		}
-		if inpElem.Variable == boundName {
-			inpElem.Variable = newName
+		if inpElem.Input == boundName {
+			inpElem.Input = newName
 		}
 		substituteNames(inpElem.Next, boundName, newName)
 	case ElemTypMatch:

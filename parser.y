@@ -149,45 +149,45 @@ nil:
 output:
     NAME APOSTROPHE LANGLE NAME RANGLE DOT elem
     {
-        name := $1
-        variable := $4
+        channel := $1
+        output := $4
         outputElem := &ElemOutput{
-            Name: name,
-            Variable: variable,
+            Channel: channel,
+            Output: output,
             Next: curElem,
         }
         curElem = outputElem
 
-        Log("out:", name, variable)
+        Log("out:", channel, output)
     }
     |
     NAME LANGLE NAME RANGLE DOT elem
     {
-        name := $1
+        channel := $1
         variable := $3
         outputElem := &ElemOutput{
-            Name: name,
-            Variable: variable,
+            Channel: channel,
+            Output: variable,
             Next: curElem,
         }
         curElem = outputElem
 
-        Log("out:", name, variable)
+        Log("out:", channel, variable)
     }
 
 input:
     NAME LBRACKET NAME RBRACKET DOT elem
     {
-        name := $1
-        variable := $3
+        channel := $1
+        input := $3
         inputElem := &ElemInput{
-            Name: name,
-            Variable: variable,
+            Channel: channel,
+            Input: input,
             Next: curElem,
         }
         curElem = inputElem
 
-        Log("inp:", name, variable)
+        Log("inp:", channel, input)
     }
 
 match:

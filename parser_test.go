@@ -33,8 +33,8 @@ a'<b>.P
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemOutput{
-					Name:     "a",
-					Variable: "b",
+					Channel: "a",
+					Output:  "b",
 					Next: &ElemProcess{
 						Name: "P",
 					},
@@ -49,8 +49,8 @@ a(b).P
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemInput{
-					Name:     "a",
-					Variable: "b",
+					Channel: "a",
+					Input:   "b",
 					Next: &ElemProcess{
 						Name: "P",
 					},
@@ -154,12 +154,12 @@ P = a'<b>.c(d).0
 			`),
 			declaredProcs: map[string]Element{
 				"P": &ElemOutput{
-					Name:     "a",
-					Variable: "b",
+					Channel: "a",
+					Output:  "b",
 					Next: &ElemInput{
-						Name:     "c",
-						Variable: "d",
-						Next:     &ElemNil{},
+						Channel: "c",
+						Input:   "d",
+						Next:    &ElemNil{},
 					},
 				},
 			},
@@ -195,12 +195,12 @@ i(j).k'<l>.0
 			`),
 			declaredProcs: map[string]Element{
 				"P": &ElemOutput{
-					Name:     "a",
-					Variable: "b",
+					Channel: "a",
+					Output:  "b",
 					Next: &ElemInput{
-						Name:     "c",
-						Variable: "d",
-						Next:     &ElemNil{},
+						Channel: "c",
+						Input:   "d",
+						Next:    &ElemNil{},
 					},
 				},
 				"Q": &ElemRestriction{
@@ -216,12 +216,12 @@ i(j).k'<l>.0
 			},
 			undeclaredProcs: []Element{
 				&ElemInput{
-					Name:     "i",
-					Variable: "j",
+					Channel: "i",
+					Input:   "j",
 					Next: &ElemOutput{
-						Name:     "k",
-						Variable: "l",
-						Next:     &ElemNil{},
+						Channel: "k",
+						Output:  "l",
+						Next:    &ElemNil{},
 					},
 				},
 			},
@@ -236,35 +236,35 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 			declaredProcs: map[string]Element{
 				"R": &ElemParallel{
 					ProcessL: &ElemInput{
-						Name:     "a",
-						Variable: "b",
-						Next:     &ElemNil{},
+						Channel: "a",
+						Input:   "b",
+						Next:    &ElemNil{},
 					},
 					ProcessR: &ElemParallel{
 						ProcessL: &ElemParallel{
 							ProcessL: &ElemOutput{
-								Name:     "c",
-								Variable: "d",
-								Next:     &ElemNil{},
+								Channel: "c",
+								Output:  "d",
+								Next:    &ElemNil{},
 							},
 							ProcessR: &ElemOutput{
-								Name:     "e",
-								Variable: "f",
-								Next:     &ElemNil{},
+								Channel: "e",
+								Output:  "f",
+								Next:    &ElemNil{},
 							},
 						},
 						ProcessR: &ElemParallel{
 							ProcessL: &ElemInput{
-								Name:     "g",
-								Variable: "h",
+								Channel: "g",
+								Input:   "h",
 								Next: &ElemProcessConstants{
 									Name:       "P",
 									Parameters: []string{"d", "c", "b", "a"},
 								},
 							},
 							ProcessR: &ElemInput{
-								Name:     "i",
-								Variable: "j",
+								Channel: "i",
+								Input:   "j",
 								Next: &ElemProcess{
 									Name: "Proc1",
 								},
@@ -428,28 +428,28 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 				&ElemRestriction{
 					Name: "a",
 					Next: &ElemInput{
-						Name:     "b",
-						Variable: "a",
+						Channel: "b",
+						Input:   "a",
 						Next: &ElemRestriction{
 							Name: "a",
 							Next: &ElemParallel{
 								ProcessL: &ElemOutput{
-									Name:     "b",
-									Variable: "a",
-									Next:     &ElemNil{},
+									Channel: "b",
+									Output:  "a",
+									Next:    &ElemNil{},
 								},
 								ProcessR: &ElemRestriction{
 									Name: "b",
 									Next: &ElemParallel{
 										ProcessL: &ElemInput{
-											Name:     "a",
-											Variable: "b",
-											Next:     &ElemNil{},
+											Channel: "a",
+											Input:   "b",
+											Next:    &ElemNil{},
 										},
 										ProcessR: &ElemInput{
-											Name:     "c",
-											Variable: "d",
-											Next:     &ElemNil{},
+											Channel: "c",
+											Input:   "d",
+											Next:    &ElemNil{},
 										},
 									},
 								},
