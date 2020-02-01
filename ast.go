@@ -390,9 +390,13 @@ func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
 		freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
 		freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
 	case ElemTypProcess:
-		// TODO
 	case ElemTypProcessConstants:
-		// TODO
+		pcsElem := elem.(*ElemProcessConstants)
+		for _, param := range pcsElem.Parameters {
+			if param.Type == Fresh {
+				freshNames = append(freshNames, param.Name)
+			}
+		}
 	}
 	return freshNames
 }
