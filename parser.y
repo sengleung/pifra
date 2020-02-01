@@ -326,6 +326,11 @@ parallel:
 pconstants:
     NAME LBRACKET names
     {
+        // Reverse order of curPconstNames
+        for i := len(curPconstNames)/2-1; i >= 0; i-- {
+            j := len(curPconstNames)-1-i
+            curPconstNames[i], curPconstNames[j] = curPconstNames[j], curPconstNames[i]
+        }
         name := $1
         pconstElem := &ElemProcessConstants{
             Name: name,

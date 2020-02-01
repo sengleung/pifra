@@ -158,9 +158,9 @@ P(a,b,c)
 				&ElemProcessConstants{
 					Name: "P",
 					Parameters: []Name{
-						{Name: "c"},
-						{Name: "b"},
 						{Name: "a"},
+						{Name: "b"},
+						{Name: "c"},
 					},
 				},
 			},
@@ -330,10 +330,10 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 								Next: &ElemProcessConstants{
 									Name: "P",
 									Parameters: []Name{
-										{Name: "d"},
-										{Name: "c"},
-										{Name: "b"},
 										{Name: "a"},
+										{Name: "b"},
+										{Name: "c"},
+										{Name: "d"},
 									},
 								},
 							},
