@@ -16,7 +16,7 @@ var curProcParams []string
 var curElem Element          // Tracks the current element chain
 
 // Process Constants element
-var curPconstNames []string  // Tracks the process constant names
+var curPconstNames []Name  // Tracks the process constant names
 
 // Sum element
 var curSum Element            // Current sum process.
@@ -332,19 +332,23 @@ pconstants:
             Parameters: curPconstNames,
         }
         curElem = pconstElem
-        curPconstNames = []string{}
+        curPconstNames = []Name{}
         Log("pconsts:", name)
     }
 
 names:
     NAME COMMA names
     {
-        curPconstNames = append(curPconstNames, $1)
+        curPconstNames = append(curPconstNames, Name{
+            Name: $1,
+        })
     }
     |
     NAME RBRACKET
     {
-        curPconstNames = append(curPconstNames, $1)
+        curPconstNames = append(curPconstNames, Name{
+            Name: $1,
+        })
     }
 
 process:

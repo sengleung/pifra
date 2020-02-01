@@ -208,8 +208,8 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		for i, param := range pcsElem.Parameters {
-			if param == boundName {
-				pcsElem.Parameters[i] = newName
+			if param.Name == boundName {
+				pcsElem.Parameters[i].Name = newName
 			}
 		}
 	}
@@ -281,8 +281,8 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		for i, param := range pcsElem.Parameters {
-			if param == boundName {
-				pcsElem.Parameters[i] = newName
+			if param.Name == boundName {
+				pcsElem.Parameters[i].Name = newName
 			}
 		}
 	}
@@ -331,9 +331,9 @@ func prettyPrintAcc(elem Element, str string) string {
 		params := "("
 		for i, param := range pcsElem.Parameters {
 			if i == len(pcsElem.Parameters)-1 {
-				params = params + param + ")"
+				params = params + param.Name + ")"
 			} else {
-				params = params + param + ", "
+				params = params + param.Name + ", "
 			}
 		}
 		str = str + pcsElem.Name + params

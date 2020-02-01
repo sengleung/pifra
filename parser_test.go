@@ -156,8 +156,12 @@ P(a,b,c)
 			declaredProcs: map[string]Element{},
 			undeclaredProcs: []Element{
 				&ElemProcessConstants{
-					Name:       "P",
-					Parameters: []string{"c", "b", "a"},
+					Name: "P",
+					Parameters: []Name{
+						{Name: "c"},
+						{Name: "b"},
+						{Name: "a"},
+					},
 				},
 			},
 			procParams: map[string][]string{},
@@ -324,8 +328,13 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 									Name: "h",
 								},
 								Next: &ElemProcessConstants{
-									Name:       "P",
-									Parameters: []string{"d", "c", "b", "a"},
+									Name: "P",
+									Parameters: []Name{
+										{Name: "d"},
+										{Name: "c"},
+										{Name: "b"},
+										{Name: "a"},
+									},
 								},
 							},
 							ProcessR: &ElemInput{

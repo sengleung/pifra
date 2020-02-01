@@ -113,7 +113,7 @@ func (e *ElemProcess) Type() ElementType {
 
 type ElemProcessConstants struct {
 	Name       string
-	Parameters []string
+	Parameters []Name
 }
 
 func (e *ElemProcessConstants) Type() ElementType {
