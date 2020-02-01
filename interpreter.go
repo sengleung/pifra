@@ -1,5 +1,7 @@
 package main
 
+var registerSize = 10000
+
 type TransitionType int
 
 const (
@@ -61,4 +63,21 @@ type TransitionState struct {
 	State       State
 	Label       TransitionLabel
 	Transitions []TransitionState
+}
+
+func newTransitionStateRoot(process Element) TransitionState {
+	freshNames := getAllFreshNames(process)
+	var register map[int]string
+	for i, name := range freshNames {
+		register[i+1] = name
+	}
+	return TransitionState{
+		State: State{
+			Process: process,
+			Register: Register{
+				Size:     registerSize,
+				Register: register,
+			},
+		},
+	}
 }
