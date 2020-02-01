@@ -65,13 +65,13 @@ type TransitionState struct {
 	Transitions []TransitionState
 }
 
-func newTransitionStateRoot(process Element) TransitionState {
+func newTransitionStateRoot(process Element) *TransitionState {
 	freshNames := getAllFreshNames(process)
-	var register map[int]string
+	register := make(map[int]string, registerSize)
 	for i, name := range freshNames {
 		register[i+1] = name
 	}
-	return TransitionState{
+	return &TransitionState{
 		State: State{
 			Process: process,
 			Register: Register{
@@ -80,4 +80,8 @@ func newTransitionStateRoot(process Element) TransitionState {
 			},
 		},
 	}
+}
+
+func produceTransitionStates(ts *TransitionState) {
+	// TODO
 }
