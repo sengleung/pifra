@@ -29,13 +29,13 @@ const (
 	Tau
 	OutKnown
 	OutFreshOutput
-	KnownKnown
-	KnownFreshInput
+	InpKnown
+	InpFreshInput
 )
 
 type Label struct {
 	Type  TransitionLabelType
-	Label string
+	Label []string
 }
 
 type Register struct {
@@ -43,16 +43,18 @@ type Register struct {
 	Register map[int]string
 }
 
-func (reg *Register) update() {}
+func (reg *Register) update()           {}                    // TODO
+func (reg *Register) find(i int) string { return "" }         // TODO
+func (reg *Register) findAll() []string { return []string{} } // TODO
 
 type State struct {
-	Process  []Element
+	Process  Element
 	Register Register
 }
 
 type TransitionLabel struct {
 	Type  TransitionType
-	Label []Label
+	Label Label
 }
 
 type TransitionState struct {

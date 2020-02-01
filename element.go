@@ -12,6 +12,16 @@ const (
 	ElemTypParallel
 	ElemTypProcess
 	ElemTypProcessConstants
+
+	ElemTypOutOutput
+	ElemTypOutRestriction
+	ElemTypOutParallelR
+	ElemTypOutParallelL
+
+	ElemTypInpInput
+	ElemTypInpRestriction
+	ElemTypInpParallelR
+	ElemTypInpParallelL
 )
 
 type NameType int
@@ -108,4 +118,22 @@ type ElemProcessConstants struct {
 
 func (e *ElemProcessConstants) Type() ElementType {
 	return ElemTypProcessConstants
+}
+
+type ElemOutOutput struct {
+	Output Name
+	Next   Element
+}
+
+func (e *ElemOutOutput) Type() ElementType {
+	return ElemTypOutOutput
+}
+
+type ElemInpInput struct {
+	Input Name
+	Next  Element
+}
+
+func (e *ElemInpInput) Type() ElementType {
+	return ElemTypInpInput
 }
