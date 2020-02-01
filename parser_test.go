@@ -216,7 +216,7 @@ Q(x,y,z) = $x.[y=z]P
 			},
 			undeclaredProcs: []Element{},
 			procParams: map[string][]string{
-				"Q": []string{"z", "y", "x"},
+				"Q": []string{"x", "y", "z"},
 			},
 		},
 		"undecl_decl_processes": {
@@ -280,7 +280,7 @@ i(j).k'<l>.0
 				},
 			},
 			procParams: map[string][]string{
-				"Q": []string{"z", "y", "x"},
+				"Q": []string{"x", "y", "z"},
 			},
 		},
 		"processes_parallel": {
@@ -354,7 +354,7 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 			},
 			undeclaredProcs: []Element{},
 			procParams: map[string][]string{
-				"R": []string{"k", "j", "i"},
+				"R": []string{"i", "j", "k"},
 			},
 		},
 		"parallel_brackets": {

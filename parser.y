@@ -81,6 +81,11 @@ stmt:
 pconstants_decl:
     NAME LBRACKET pconst_decl_names EQUAL elem
     {
+        // Reverse order of curProcParams
+        for i := len(curProcParams)/2-1; i >= 0; i-- {
+            j := len(curProcParams)-1-i
+            curProcParams[i], curProcParams[j] = curProcParams[j], curProcParams[i]
+        }
         name := $1
         declaredProcs[name] = curElem
         procParams[name] = curProcParams
