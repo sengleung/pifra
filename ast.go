@@ -340,3 +340,59 @@ func prettyPrintAcc(elem Element, str string) string {
 	}
 	return str
 }
+
+func getAllFreshNames(elem Element) []string {
+	return getAllFreshNamesAcc(elem, []string{})
+}
+
+func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		if outElem.Channel.Type == Fresh {
+			freshNames = append(freshNames, outElem.Channel.Name)
+		}
+		if outElem.Output.Type == Fresh {
+			freshNames = append(freshNames, outElem.Output.Name)
+		}
+		return getAllFreshNamesAcc(outElem.Next, freshNames)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		if inpElem.Channel.Type == Fresh {
+			freshNames = append(freshNames, inpElem.Channel.Name)
+		}
+		if inpElem.Input.Type == Fresh {
+			freshNames = append(freshNames, inpElem.Input.Name)
+		}
+		return getAllFreshNamesAcc(inpElem.Next, freshNames)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		if matchElem.NameL.Type == Fresh {
+			freshNames = append(freshNames, matchElem.NameL.Name)
+		}
+		if matchElem.NameR.Type == Fresh {
+			freshNames = append(freshNames, matchElem.NameR.Name)
+		}
+		return getAllFreshNamesAcc(matchElem.Next, freshNames)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		if resElem.Restrict.Type == Fresh {
+			freshNames = append(freshNames, resElem.Restrict.Name)
+		}
+		return getAllFreshNamesAcc(resElem.Next, freshNames)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		freshNames = getAllFreshNamesAcc(sumElem.ProcessL, freshNames)
+		freshNames = getAllFreshNamesAcc(sumElem.ProcessR, freshNames)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
+		freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
+	case ElemTypProcess:
+		// TODO
+	case ElemTypProcessConstants:
+		// TODO
+	}
+	return freshNames
+}
