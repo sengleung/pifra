@@ -62,7 +62,7 @@ type TransitionLabel struct {
 type TransitionState struct {
 	State       State
 	Label       TransitionLabel
-	Transitions []TransitionState
+	Transitions *[]*TransitionState
 }
 
 func newTransitionStateRoot(process Element) *TransitionState {
@@ -79,6 +79,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 				Register: register,
 			},
 		},
+		Transitions: &[]*TransitionState{},
 	}
 }
 
