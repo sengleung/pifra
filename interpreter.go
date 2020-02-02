@@ -117,6 +117,8 @@ func produceTransitionStates(ts *TransitionState) error {
 	for _, path := range inpOuts {
 		switch path.ElementType {
 		case ElemTypInput:
+			dblInputs := []TransitionState{}
+
 			sc := deepcopy.Copy(ts.State)
 			state := sc.(State)
 
@@ -129,21 +131,33 @@ func produceTransitionStates(ts *TransitionState) error {
 			}
 
 			transplantInpInput(elemBefore, lastDirection)
-			transitionState := TransitionState{
-				State: State{
-					Process:  state.Process,
-					Register: deepcopy.Copy(state.Register).(Register),
-				},
-				Label: TransitionLabel{
-					Type: Inp1,
-					Label: Label{
-						Type:  Known,
-						Label: []int{label},
+
+			for i := range state.Register.Register {
+				sc2 := deepcopy.Copy(state)
+				state2 := sc2.(State)
+
+				elemBefore, lastDirection, _ = findElementBefore(state2.Process, path.Directions)
+
+				removeElementAfter(elemBefore, lastDirection)
+
+				finalState := TransitionState{
+					State: State{
+						Process:  state2.Process,
+						Register: deepcopy.Copy(state.Register).(Register),
 					},
-				},
+					Label: TransitionLabel{
+						Type: Inp1,
+						Label: Label{
+							Type:  InpKnown,
+							Label: []int{label, i},
+						},
+					},
+				}
+				dblInputs = append(dblInputs, finalState)
 			}
 
-			spew.Dump(transitionState)
+			spew.Dump(dblInputs)
+
 		case ElemTypOutput:
 		}
 	}
@@ -418,18 +432,18 @@ func removeElementAfter(elem Element, direction Direction) {
 		switch direction {
 		case Next:
 		case Left:
-			sumElem.ProcessL = nextElement(sumElem, direction)
+			sumElem.ProcessL = nextElement(sumElem.ProcessL, direction)
 		case Right:
-			sumElem.ProcessR = nextElement(sumElem, direction)
+			sumElem.ProcessR = nextElement(sumElem.ProcessR, direction)
 		}
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
 		switch direction {
 		case Next:
 		case Left:
-			parElem.ProcessL = nextElement(parElem, direction)
+			parElem.ProcessL = nextElement(parElem.ProcessL, direction)
 		case Right:
-			parElem.ProcessR = nextElement(parElem, direction)
+			parElem.ProcessR = nextElement(parElem.ProcessR, direction)
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
@@ -474,6 +488,9 @@ func nextElement(elem Element, direction Direction) Element {
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
+	case ElemTypInpInput:
+		elemInpInput := elem.(*ElemInpInput)
+		return elemInpInput.Next
 	}
 	return nil
 }
