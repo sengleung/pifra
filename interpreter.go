@@ -397,3 +397,83 @@ func transplantInpInput(elem Element, direction Direction) {
 	case ElemTypProcessConstants:
 	}
 }
+
+func removeElementAfter(elem Element, direction Direction) {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = nextElement(outElem, direction)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = nextElement(inpElem, direction)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		matchElem.Next = nextElement(matchElem, direction)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Next = nextElement(resElem, direction)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		switch direction {
+		case Next:
+		case Left:
+			sumElem.ProcessL = nextElement(sumElem, direction)
+		case Right:
+			sumElem.ProcessR = nextElement(sumElem, direction)
+		}
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		switch direction {
+		case Next:
+		case Left:
+			parElem.ProcessL = nextElement(parElem, direction)
+		case Right:
+			parElem.ProcessR = nextElement(parElem, direction)
+		}
+	case ElemTypProcess:
+	case ElemTypProcessConstants:
+	}
+}
+
+func nextElement(elem Element, direction Direction) Element {
+	switch elem.Type() {
+	case ElemTypNil:
+		return nil
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		return outElem.Next
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		return inpElem.Next
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		return matchElem.Next
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		return resElem.Next
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		switch direction {
+		case Next:
+			return sumElem.ProcessL
+		case Left:
+			return sumElem.ProcessL
+		case Right:
+			return sumElem.ProcessR
+		}
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		switch direction {
+		case Next:
+			return parElem.ProcessL
+		case Left:
+			return parElem.ProcessL
+		case Right:
+			return parElem.ProcessR
+		}
+	case ElemTypProcess:
+	case ElemTypProcessConstants:
+	}
+	return nil
+}
