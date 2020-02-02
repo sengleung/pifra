@@ -1,6 +1,11 @@
 package main
 
-import "github.com/mohae/deepcopy"
+import (
+	"fmt"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/mohae/deepcopy"
+)
 
 var registerSize = 10000
 
@@ -39,12 +44,13 @@ const (
 
 type Label struct {
 	Type  TransitionLabelType
-	Label []string
+	Label []int
 }
 
 type Register struct {
-	Size     int
-	Register map[int]string
+	Size      int
+	Register  map[int]string
+	NameRange map[string]int
 }
 
 func (reg *Register) update()           {}                    // TODO
@@ -76,8 +82,9 @@ const (
 )
 
 type Path struct {
-	Directions  []Direction
-	ElementType ElementType
+	Directions        []Direction
+	BeforeElementType ElementType
+	ElementType       ElementType
 }
 
 func newTransitionStateRoot(process Element) *TransitionState {
@@ -86,20 +93,61 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	for i, name := range freshNames {
 		register[i+1] = name
 	}
+	nameRange := make(map[string]int, registerSize)
+	for i, name := range freshNames {
+		nameRange[name] = i + 1
+	}
 	return &TransitionState{
 		State: State{
 			Process: process,
 			Register: Register{
-				Size:     registerSize,
-				Register: register,
+				Size:      registerSize,
+				Register:  register,
+				NameRange: nameRange,
 			},
 		},
 		Transitions: &[]*TransitionState{},
 	}
 }
 
-func produceTransitionStates(ts *TransitionState) {
-	// TODO
+func produceTransitionStates(ts *TransitionState) error {
+
+	inpOuts := getFirstInpOuts(ts.State.Process)
+
+	for _, path := range inpOuts {
+		switch path.ElementType {
+		case ElemTypInput:
+			sc := deepcopy.Copy(ts.State)
+			state := sc.(State)
+
+			inpElem, _ := findElement(state.Process, path)
+			label := state.Register.NameRange[inpElem.(*ElemInput).Channel.Name]
+
+			elemBefore, lastDirection, found := findElementBefore(state.Process, path.Directions)
+			if !found {
+				return fmt.Errorf("cannot find element")
+			}
+
+			transplantInpInput(elemBefore, lastDirection)
+			transitionState := TransitionState{
+				State: State{
+					Process:  state.Process,
+					Register: deepcopy.Copy(state.Register).(Register),
+				},
+				Label: TransitionLabel{
+					Type: Inp1,
+					Label: Label{
+						Type:  Known,
+						Label: []int{label},
+					},
+				},
+			}
+
+			spew.Dump(transitionState)
+		case ElemTypOutput:
+		}
+	}
+	return nil
 }
 
 func getFirstInpOuts(elem Element) []Path {
@@ -231,4 +279,121 @@ func findElement(elem Element, path Path) (Element, bool) {
 		return elem, true
 	}
 	return nil, false
+}
+
+func findElementBefore(elem Element, pathDirections []Direction) (Element, Direction, bool) {
+	if len(pathDirections) == 0 {
+		return nil, 0, false
+	}
+	directions := pathDirections
+	if len(pathDirections) > 0 {
+		directions = pathDirections[:len(pathDirections)-1]
+	}
+	lastDirection := pathDirections[len(pathDirections)-1]
+	for _, direction := range directions {
+		switch elem.Type() {
+		case ElemTypNil:
+			return nil, 0, false
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			if direction == Next {
+				elem = outElem.Next
+				continue
+			}
+			return nil, 0, false
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			if direction == Next {
+				elem = inpElem.Next
+				continue
+			}
+			return nil, 0, false
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			if direction == Next {
+				elem = matchElem.Next
+				continue
+			}
+			return nil, 0, false
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			if direction == Next {
+				elem = resElem.Next
+				continue
+			}
+			return nil, 0, false
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			switch direction {
+			case Next:
+				return nil, 0, false
+			case Left:
+				elem = sumElem.ProcessL
+				continue
+			case Right:
+				elem = sumElem.ProcessR
+				continue
+			}
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			switch direction {
+			case Next:
+				return nil, 0, false
+			case Left:
+				elem = parElem.ProcessL
+				continue
+			case Right:
+				elem = parElem.ProcessR
+				continue
+			}
+		case ElemTypProcess:
+			return nil, 0, false
+		case ElemTypProcessConstants:
+			return nil, 0, false
+		}
+	}
+	if elem != nil {
+		return elem, lastDirection, true
+	}
+	return nil, 0, false
+}
+
+func transplantInpInput(elem Element, direction Direction) {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypOutput:
+		// outElem := elem.(*ElemOutput)
+		// TODO
+	case ElemTypInput:
+		// inpElem := elem.(*ElemInput)
+		// TODO
+	case ElemTypMatch:
+		// matchElem := elem.(*ElemMatch)
+		// TODO
+	case ElemTypRestriction:
+		// resElem := elem.(*ElemRestriction)
+		// TODO
+	case ElemTypSum:
+		// sumElem := elem.(*ElemSum)
+		// TODO
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		switch direction {
+		case Next:
+		case Left:
+			nextElem := parElem.ProcessL.(*ElemInput)
+			parElem.ProcessL = &ElemInpInput{
+				Input: nextElem.Input,
+				Next:  nextElem.Next,
+			}
+		case Right:
+			nextElem := parElem.ProcessR.(*ElemInput)
+			parElem.ProcessR = &ElemInpInput{
+				Input: nextElem.Input,
+				Next:  nextElem.Next,
+			}
+		}
+	case ElemTypProcess:
+	case ElemTypProcessConstants:
+	}
 }

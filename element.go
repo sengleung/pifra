@@ -22,6 +22,8 @@ const (
 	ElemTypInpRestriction
 	ElemTypInpParallelR
 	ElemTypInpParallelL
+
+	Root
 )
 
 type NameType int
