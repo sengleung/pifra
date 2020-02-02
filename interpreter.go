@@ -163,3 +163,72 @@ func getFirstInpOuts(elem Element) []Path {
 
 	return paths
 }
+
+func findElement(elem Element, path Path) (Element, bool) {
+	for _, direction := range path.Directions {
+		switch elem.Type() {
+		case ElemTypNil:
+			return nil, false
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			if direction == Next {
+				elem = outElem.Next
+				continue
+			}
+			return nil, false
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			if direction == Next {
+				elem = inpElem.Next
+				continue
+			}
+			return nil, false
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			if direction == Next {
+				elem = matchElem.Next
+				continue
+			}
+			return nil, false
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			if direction == Next {
+				elem = resElem.Next
+				continue
+			}
+			return nil, false
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			switch direction {
+			case Next:
+				return nil, false
+			case Left:
+				elem = sumElem.ProcessL
+				continue
+			case Right:
+				elem = sumElem.ProcessR
+				continue
+			}
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			switch direction {
+			case Next:
+				return nil, false
+			case Left:
+				elem = parElem.ProcessL
+				continue
+			case Right:
+				elem = parElem.ProcessR
+				continue
+			}
+		case ElemTypProcess:
+			return nil, false
+		case ElemTypProcessConstants:
+			return nil, false
+		}
+	}
+	if elem != nil && elem.Type() == path.ElementType {
+		return elem, true
+	}
+	return nil, false
+}
