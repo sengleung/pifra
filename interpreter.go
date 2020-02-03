@@ -46,11 +46,18 @@ type Label struct {
 
 type Register struct {
 	Size      int
+	Index     int
 	Register  map[int]string
 	NameRange map[string]int
 }
 
-func (reg *Register) update()           {}                    // TODO
+func (reg *Register) update() {
+	freeName := generateFreshName("fn")
+	reg.Register[reg.Index] = freeName
+	reg.NameRange[freeName] = reg.Index
+	reg.Index = reg.Index + 1
+}
+
 func (reg *Register) find(i int) string { return "" }         // TODO
 func (reg *Register) findAll() []string { return []string{} } // TODO
 
@@ -99,6 +106,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 			Process: process,
 			Register: Register{
 				Size:      registerSize,
+				Index:     len(register),
 				Register:  register,
 				NameRange: nameRange,
 			},
