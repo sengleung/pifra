@@ -21,11 +21,8 @@ func generateBoundName(namePrefix string) string {
 	return name
 }
 
-func substituteName(elem Element, oldName Name, newName Name) Element {
-	elemCopy := deepcopy.Copy(elem)
-	elem = elemCopy.(Element)
+func substituteName(elem Element, oldName Name, newName Name) {
 	subName(elem, oldName, newName)
-	return elem
 }
 
 func subName(elem Element, oldName Name, newName Name) {
@@ -72,6 +69,21 @@ func subName(elem Element, oldName Name, newName Name) {
 		// TODO
 	case ElemTypProcessConstants:
 		// TODO
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		if outOutput.Output == oldName {
+			outOutput.Output = newName
+		}
+		subName(outOutput.Next, oldName, newName)
+	case ElemTypInpInput:
+		inpInput := elem.(*ElemInpInput)
+		if inpInput.Input == oldName {
+			inpInput.Input = newName
+		}
+		subName(inpInput.Next, oldName, newName)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		subName(rootElem.Next, oldName, newName)
 	}
 }
 

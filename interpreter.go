@@ -75,6 +75,11 @@ func (reg *Register) Labels() []int {
 	return labels
 }
 
+// GetName returns register name corresponding to the label.
+func (reg *Register) GetName(label int) string {
+	return reg.Register[label]
+}
+
 func (reg *Register) find(i int) string { return "" }         // TODO
 func (reg *Register) findAll() []string { return []string{} } // TODO
 
@@ -170,6 +175,13 @@ func doDblInp(ts *TransitionState) []*TransitionState {
 		for _, label := range inp1.Register.Labels() {
 			sc2 := deepcopy.Copy(inp1)
 			inp2a := sc2.(State)
+
+			// Substitute the input bound name with the labelled fresh name.
+			inpInputElem, _ := findElement(inp2a.Process, path.Directions)
+			substituteName(inpInputElem, inpInputElem.(*ElemInpInput).Input, Name{
+				Name: inp2a.Register.GetName(label),
+				Type: Fresh,
+			})
 
 			// Find the penultimate element before the inp element in the copied AST.
 			elemBefore, _ := findElement(inp2a.Process, penultimateDirs)
