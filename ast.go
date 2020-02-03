@@ -103,13 +103,10 @@ func close(elem Element, freshName Name) Element {
 	return elem
 }
 
-// InitAst performs
-//   1. alpha-conversion,
-//   2. doubly-linked AST conversion, and
-//   3. adds a root element to the AST as the head.
+// InitAst performs alpha-conversion and adds a root element to the AST as the head,
+// for use in the interpreter.
 func InitAst(elem Element) Element {
 	DoAlphaConversion(elem)
-	ConvertToDllAst(elem)
 	return &ElemRoot{
 		Next: elem,
 	}
@@ -447,69 +444,4 @@ func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
 		return getAllFreshNamesAcc(rootElem.Next, freshNames)
 	}
 	return freshNames
-}
-
-// ConvertToDllAst converts a singly-linked AST to a doubly-linked AST.
-func ConvertToDllAst(elem Element) {
-	convertToDllAstAcc(elem, nil)
-}
-
-func convertToDllAstAcc(elem Element, prev Element) {
-	switch elem.Type() {
-	case ElemTypNil:
-		nilElem := elem.(*ElemNil)
-		nilElem.Parent = prev
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		outElem.Parent = prev
-		prev = outElem
-		convertToDllAstAcc(outElem.Next, prev)
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		inpElem.Parent = prev
-		prev = inpElem
-		convertToDllAstAcc(inpElem.Next, prev)
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		matchElem.Parent = prev
-		prev = matchElem
-		convertToDllAstAcc(matchElem.Next, prev)
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		resElem.Parent = prev
-		prev = resElem
-		convertToDllAstAcc(resElem.Next, prev)
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		sumElem.Parent = prev
-		prev = sumElem
-		convertToDllAstAcc(sumElem.ProcessL, prev)
-		convertToDllAstAcc(sumElem.ProcessR, prev)
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		parElem.Parent = prev
-		prev = parElem
-		convertToDllAstAcc(parElem.ProcessL, prev)
-		convertToDllAstAcc(parElem.ProcessR, prev)
-	case ElemTypProcess:
-		procElem := elem.(*ElemProcess)
-		procElem.Parent = prev
-	case ElemTypProcessConstants:
-		pcsElem := elem.(*ElemProcessConstants)
-		pcsElem.Parent = prev
-	case ElemTypOutOutput:
-		outOutput := elem.(*ElemOutOutput)
-		outOutput.Parent = prev
-		prev = outOutput
-		convertToDllAstAcc(outOutput.Next, prev)
-	case ElemTypInpInput:
-		inpInput := elem.(*ElemInpInput)
-		inpInput.Parent = prev
-		prev = inpInput
-		convertToDllAstAcc(inpInput.Next, prev)
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		prev = rootElem
-		convertToDllAstAcc(rootElem.Next, prev)
-	}
 }
