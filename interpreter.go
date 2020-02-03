@@ -230,6 +230,7 @@ func getFirstInpOuts(elem Element) []Path {
 			popPath()
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
+			curPath = append(curPath, Next)
 			acc(rootElem.Next)
 			popPath()
 		}
@@ -300,6 +301,27 @@ func findElement(elem Element, path Path) (Element, bool) {
 		case ElemTypProcess:
 			return nil, false
 		case ElemTypProcessConstants:
+			return nil, false
+		case ElemTypOutOutput:
+			outOutput := elem.(*ElemOutOutput)
+			if direction == Next {
+				elem = outOutput.Next
+				continue
+			}
+			return nil, false
+		case ElemTypInpInput:
+			inpInput := elem.(*ElemInpInput)
+			if direction == Next {
+				elem = inpInput.Next
+				continue
+			}
+			return nil, false
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			if direction == Next {
+				elem = rootElem.Next
+				continue
+			}
 			return nil, false
 		}
 	}
