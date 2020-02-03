@@ -14,16 +14,9 @@ const (
 	ElemTypProcessConstants
 
 	ElemTypOutOutput
-	ElemTypOutRestriction
-	ElemTypOutParallelR
-	ElemTypOutParallelL
-
 	ElemTypInpInput
-	ElemTypInpRestriction
-	ElemTypInpParallelR
-	ElemTypInpParallelL
 
-	Root
+	ElemTypRoot
 )
 
 type NameType int
@@ -154,4 +147,13 @@ type ElemInpInput struct {
 
 func (e *ElemInpInput) Type() ElementType {
 	return ElemTypInpInput
+}
+
+type Root struct {
+	Elem
+	Next Element
+}
+
+func (e *Root) Type() ElementType {
+	return ElemTypRoot
 }
