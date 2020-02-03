@@ -400,3 +400,62 @@ func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
 	}
 	return freshNames
 }
+
+// ConvertToDllAst converts a singly-linked AST to a doubly-linked AST.
+func ConvertToDllAst(elem Element) {
+	convertToDllAstAcc(elem, nil)
+}
+
+func convertToDllAstAcc(elem Element, prev Element) {
+	switch elem.Type() {
+	case ElemTypNil:
+		nilElem := elem.(*ElemNil)
+		nilElem.Parent = prev
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Parent = prev
+		prev = outElem
+		convertToDllAstAcc(outElem.Next, prev)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Parent = prev
+		prev = inpElem
+		convertToDllAstAcc(inpElem.Next, prev)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		matchElem.Parent = prev
+		prev = matchElem
+		convertToDllAstAcc(matchElem.Next, prev)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Parent = prev
+		prev = resElem
+		convertToDllAstAcc(resElem.Next, prev)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.Parent = prev
+		prev = sumElem
+		convertToDllAstAcc(sumElem.ProcessL, prev)
+		convertToDllAstAcc(sumElem.ProcessR, prev)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parElem.Parent = prev
+		prev = parElem
+		convertToDllAstAcc(parElem.ProcessL, prev)
+		convertToDllAstAcc(parElem.ProcessR, prev)
+	case ElemTypProcess:
+		procElem := elem.(*ElemProcess)
+		procElem.Parent = prev
+	case ElemTypProcessConstants:
+		pcsElem := elem.(*ElemProcessConstants)
+		pcsElem.Parent = prev
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		outOutput.Parent = prev
+		convertToDllAstAcc(outOutput.Next, prev)
+	case ElemTypInpInput:
+		inpInput := elem.(*ElemInpInput)
+		inpInput.Parent = prev
+		convertToDllAstAcc(inpInput.Next, prev)
+	}
+}

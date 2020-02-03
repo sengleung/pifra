@@ -38,17 +38,24 @@ type Name struct {
 	Type NameType
 }
 
+type Elem struct {
+	Parent Element
+}
+
 type Element interface {
 	Type() ElementType
 }
 
-type ElemNil struct{}
+type ElemNil struct {
+	Elem
+}
 
 func (e *ElemNil) Type() ElementType {
 	return ElemTypNil
 }
 
 type ElemOutput struct {
+	Elem
 	Channel Name
 	Output  Name
 	Next    Element
@@ -59,6 +66,7 @@ func (e *ElemOutput) Type() ElementType {
 }
 
 type ElemInput struct {
+	Elem
 	Channel Name
 	Input   Name
 	Next    Element
@@ -69,6 +77,7 @@ func (e *ElemInput) Type() ElementType {
 }
 
 type ElemMatch struct {
+	Elem
 	NameL Name
 	NameR Name
 	Next  Element
@@ -79,6 +88,7 @@ func (e *ElemMatch) Type() ElementType {
 }
 
 type ElemRestriction struct {
+	Elem
 	Restrict Name
 	Next     Element
 }
@@ -88,6 +98,7 @@ func (e *ElemRestriction) Type() ElementType {
 }
 
 type ElemSum struct {
+	Elem
 	ProcessL Element
 	ProcessR Element
 }
@@ -97,6 +108,7 @@ func (e *ElemSum) Type() ElementType {
 }
 
 type ElemParallel struct {
+	Elem
 	ProcessL Element
 	ProcessR Element
 }
@@ -106,6 +118,7 @@ func (e *ElemParallel) Type() ElementType {
 }
 
 type ElemProcess struct {
+	Elem
 	Name string
 }
 
@@ -114,6 +127,7 @@ func (e *ElemProcess) Type() ElementType {
 }
 
 type ElemProcessConstants struct {
+	Elem
 	Name       string
 	Parameters []Name
 }
@@ -123,6 +137,7 @@ func (e *ElemProcessConstants) Type() ElementType {
 }
 
 type ElemOutOutput struct {
+	Elem
 	Output Name
 	Next   Element
 }
@@ -132,6 +147,7 @@ func (e *ElemOutOutput) Type() ElementType {
 }
 
 type ElemInpInput struct {
+	Elem
 	Input Name
 	Next  Element
 }
