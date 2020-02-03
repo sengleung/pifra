@@ -483,6 +483,15 @@ func removeElementAfter(elem Element, direction Direction) {
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		outOutput.Next = nextElement(outOutput, direction)
+	case ElemTypInpInput:
+		inpInput := elem.(*ElemInpInput)
+		inpInput.Next = nextElement(inpInput, direction)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = nextElement(rootElem, direction)
 	}
 }
 
@@ -524,9 +533,15 @@ func nextElement(elem Element, direction Direction) Element {
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		return outOutput.Next
 	case ElemTypInpInput:
 		elemInpInput := elem.(*ElemInpInput)
 		return elemInpInput.Next
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return rootElem.Next
 	}
 	return nil
 }
