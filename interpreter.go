@@ -88,7 +88,7 @@ type Path struct {
 }
 
 func newTransitionStateRoot(process Element) *TransitionState {
-	freshNames := getAllFreshNames(process)
+	freshNames := GetAllFreshNames(process)
 	register := make(map[int]string, registerSize)
 	for i, name := range freshNames {
 		register[i+1] = name

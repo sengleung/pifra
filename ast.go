@@ -9,6 +9,18 @@ import (
 var boundNameIndex int
 var freshNameIndex int
 
+func generateFreshName(namePrefix string) string {
+	name := namePrefix + "_" + strconv.Itoa(freshNameIndex)
+	freshNameIndex = freshNameIndex + 1
+	return name
+}
+
+func generateBoundName(namePrefix string) string {
+	name := namePrefix + "_" + strconv.Itoa(boundNameIndex)
+	boundNameIndex = boundNameIndex + 1
+	return name
+}
+
 func substituteName(elem Element, oldName Name, newName Name) Element {
 	elemCopy := deepcopy.Copy(elem)
 	elem = elemCopy.(Element)
@@ -91,10 +103,9 @@ func close(elem Element, freshName Name) Element {
 	return elem
 }
 
-func generateFreshName(namePrefix string) string {
-	name := namePrefix + "_" + strconv.Itoa(freshNameIndex)
-	freshNameIndex = freshNameIndex + 1
-	return name
+// DoAlphaConversion renames bound names to names appropriate to their scope.
+func DoAlphaConversion(elem Element) {
+	doAlphaConversion(elem)
 }
 
 func doAlphaConversion(elem Element) {
@@ -138,12 +149,6 @@ func doAlphaConversion(elem Element) {
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
 	}
-}
-
-func generateBoundName(namePrefix string) string {
-	name := namePrefix + "_" + strconv.Itoa(boundNameIndex)
-	boundNameIndex = boundNameIndex + 1
-	return name
 }
 
 func substituteNamesInput(elem Element, boundName string, newName string) {
@@ -288,7 +293,8 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 	}
 }
 
-func prettyPrint(elem Element) string {
+// PrettyPrintAst returns a string containing the pi-calculus syntax of the AST.
+func PrettyPrintAst(elem Element) string {
 	return prettyPrintAcc(elem, "")
 }
 
@@ -337,11 +343,23 @@ func prettyPrintAcc(elem Element, str string) string {
 			}
 		}
 		str = str + pcsElem.Name + params
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		str = str + "'<" + outOutput.Output.Name + ">."
+		return prettyPrintAcc(outOutput.Next, str)
+	case ElemTypInpInput:
+		inpInput := elem.(*ElemInpInput)
+		str = str + "(" + inpInput.Input.Name + ")."
+		return prettyPrintAcc(inpInput.Next, str)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return prettyPrintAcc(rootElem.Next, str)
 	}
 	return str
 }
 
-func getAllFreshNames(elem Element) []string {
+// GetAllFreshNames returns all fresh names in the AST.
+func GetAllFreshNames(elem Element) []string {
 	return getAllFreshNamesAcc(elem, []string{})
 }
 
@@ -397,6 +415,21 @@ func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
 				freshNames = append(freshNames, param.Name)
 			}
 		}
+	case ElemTypOutOutput:
+		outOutput := elem.(*ElemOutOutput)
+		if outOutput.Output.Type == Fresh {
+			freshNames = append(freshNames, outOutput.Output.Name)
+		}
+		return getAllFreshNamesAcc(outOutput.Next, freshNames)
+	case ElemTypInpInput:
+		inpInput := elem.(*ElemInpInput)
+		if inpInput.Input.Type == Fresh {
+			freshNames = append(freshNames, inpInput.Input.Name)
+		}
+		return getAllFreshNamesAcc(inpInput.Next, freshNames)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return getAllFreshNamesAcc(rootElem.Next, freshNames)
 	}
 	return freshNames
 }

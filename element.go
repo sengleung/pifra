@@ -149,11 +149,11 @@ func (e *ElemInpInput) Type() ElementType {
 	return ElemTypInpInput
 }
 
-type Root struct {
+type ElemRoot struct {
 	Elem
 	Next Element
 }
 
-func (e *Root) Type() ElementType {
+func (e *ElemRoot) Type() ElementType {
 	return ElemTypRoot
 }

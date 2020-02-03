@@ -239,10 +239,10 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			lex := newLexer(tc.input)
 			yyParse(lex)
 			for _, elem := range declaredProcs {
-				doAlphaConversion(elem)
+				DoAlphaConversion(elem)
 			}
 			for _, elem := range undeclaredProcs {
-				doAlphaConversion(elem)
+				DoAlphaConversion(elem)
 			}
 			if err := deep.Equal(tc.declaredProcs, declaredProcs); err != nil {
 				spew.Dump(declaredProcs, undeclaredProcs, procParams)
