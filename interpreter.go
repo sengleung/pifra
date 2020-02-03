@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
 	"github.com/mohae/deepcopy"
 )
 
@@ -111,60 +108,67 @@ func newTransitionStateRoot(process Element) *TransitionState {
 }
 
 func produceTransitionStates(ts *TransitionState) error {
+	inputs := getFirstInputs(ts.State.Process)
+	dblInputs := []TransitionState{}
 
-	inpOuts := getFirstInpOuts(ts.State.Process)
+	for _, path := range inputs {
+		// INP1 transition relation
+		sc := deepcopy.Copy(ts.State)
+		inp1 := sc.(State)
 
-	for _, path := range inpOuts {
-		switch path.ElementType {
-		case ElemTypInput:
-			dblInputs := []TransitionState{}
+		// Get the input element.
+		inpElem, _ := findElement(inp1.Process, path.Directions)
+		// Find the input channel label in the register.
+		label := inp1.Register.NameRange[inpElem.(*ElemInput).Channel.Name]
 
-			sc := deepcopy.Copy(ts.State)
-			state := sc.(State)
+		penultimateDirs := path.Directions[:len(path.Directions)-1]
+		lastDir := path.Directions[len(path.Directions)-1]
 
-			inpElem, _ := findElement(state.Process, path)
-			label := state.Register.NameRange[inpElem.(*ElemInput).Channel.Name]
+		// Find the penultimate element before the input element.
+		elemBefore, _ := findElement(inp1.Process, penultimateDirs)
+		// Replace the input element with the inp element.
+		transplantInpInput(elemBefore, lastDir)
 
-			elemBefore, lastDirection, found := findElementBefore(state.Process, path.Directions)
-			if !found {
-				return fmt.Errorf("cannot find element")
+		for i := range inp1.Register.Register {
+			// INP2A transition relation
+			sc2 := deepcopy.Copy(inp1)
+			inp2a := sc2.(State)
+
+			// Find the penultimate element before the input element in the copied AST.
+			elemBefore, _ := findElement(inp2a.Process, penultimateDirs)
+			// Remove the input element.
+			removeElementAfter(elemBefore, lastDir)
+
+			dblInp2a := TransitionState{
+				State: State{
+					Process:  inp2a.Process,
+					Register: deepcopy.Copy(inp1.Register).(Register),
+				},
+				Label: TransitionLabel{
+					Type: Inp1,
+					Label: Label{
+						Type:  InpKnown,
+						Label: []int{label, i},
+					},
+				},
 			}
 
-			transplantInpInput(elemBefore, lastDirection)
-
-			for i := range state.Register.Register {
-				sc2 := deepcopy.Copy(state)
-				state2 := sc2.(State)
-
-				elemBefore, lastDirection, _ = findElementBefore(state2.Process, path.Directions)
-
-				removeElementAfter(elemBefore, lastDirection)
-
-				finalState := TransitionState{
-					State: State{
-						Process:  state2.Process,
-						Register: deepcopy.Copy(state.Register).(Register),
-					},
-					Label: TransitionLabel{
-						Type: Inp1,
-						Label: Label{
-							Type:  InpKnown,
-							Label: []int{label, i},
-						},
-					},
-				}
-				dblInputs = append(dblInputs, finalState)
-			}
-
-			spew.Dump(dblInputs)
-
-		case ElemTypOutput:
+			dblInputs = append(dblInputs, dblInp2a)
 		}
 	}
+
 	return nil
 }
 
-func getFirstInpOuts(elem Element) []Path {
+func getFirstInputs(elem Element) []Path {
+	return getFirstInpOuts(elem, true)
+}
+
+func getFirstOutputs(elem Element) []Path {
+	return getFirstInpOuts(elem, false)
+}
+
+func getFirstInpOuts(elem Element, wantInputs bool) []Path {
 	paths := []Path{}
 	curPath := []Direction{}
 
@@ -179,15 +183,19 @@ func getFirstInpOuts(elem Element) []Path {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
-			paths = append(paths, Path{
-				Directions:  deepcopy.Copy(curPath).([]Direction),
-				ElementType: ElemTypOutput,
-			})
+			if !wantInputs {
+				paths = append(paths, Path{
+					Directions:  deepcopy.Copy(curPath).([]Direction),
+					ElementType: ElemTypOutput,
+				})
+			}
 		case ElemTypInput:
-			paths = append(paths, Path{
-				Directions:  deepcopy.Copy(curPath).([]Direction),
-				ElementType: ElemTypInput,
-			})
+			if wantInputs {
+				paths = append(paths, Path{
+					Directions:  deepcopy.Copy(curPath).([]Direction),
+					ElementType: ElemTypInput,
+				})
+			}
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
@@ -235,14 +243,13 @@ func getFirstInpOuts(elem Element) []Path {
 			popPath()
 		}
 	}
-
 	acc(elem)
 
 	return paths
 }
 
-func findElement(elem Element, path Path) (Element, bool) {
-	for _, direction := range path.Directions {
+func findElement(elem Element, directions []Direction) (Element, bool) {
+	for _, direction := range directions {
 		switch elem.Type() {
 		case ElemTypNil:
 			return nil, false
@@ -325,7 +332,7 @@ func findElement(elem Element, path Path) (Element, bool) {
 			return nil, false
 		}
 	}
-	if elem != nil && elem.Type() == path.ElementType {
+	if elem != nil {
 		return elem, true
 	}
 	return nil, false
