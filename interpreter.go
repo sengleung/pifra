@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sort"
+
 	"github.com/mohae/deepcopy"
 )
 
@@ -40,8 +42,9 @@ const (
 )
 
 type Label struct {
-	Type  TransitionLabelType
-	Label []int
+	Type   TransitionLabelType
+	Label1 int
+	Label2 int
 }
 
 type Register struct {
@@ -51,11 +54,24 @@ type Register struct {
 	NameRange map[string]int
 }
 
-func (reg *Register) update() {
+// Update adds a fresh name to the register at the minimum index.
+func (reg *Register) Update() int {
 	freeName := generateFreshName("fn")
-	reg.Register[reg.Index] = freeName
-	reg.NameRange[freeName] = reg.Index
+	index := reg.Index
+	reg.Register[index] = freeName
+	reg.NameRange[freeName] = index
 	reg.Index = reg.Index + 1
+	return index
+}
+
+// Labels returns register labels in sorted order.
+func (reg *Register) Labels() []int {
+	var labels []int
+	for k := range reg.Register {
+		labels = append(labels, k)
+	}
+	sort.Ints(labels)
+	return labels
 }
 
 func (reg *Register) find(i int) string { return "" }         // TODO
@@ -74,7 +90,7 @@ type TransitionLabel struct {
 type TransitionState struct {
 	State       State
 	Label       TransitionLabel
-	Transitions *[]*TransitionState
+	Transitions []*TransitionState
 }
 
 type Direction int
@@ -111,13 +127,16 @@ func newTransitionStateRoot(process Element) *TransitionState {
 				NameRange: nameRange,
 			},
 		},
-		Transitions: &[]*TransitionState{},
+		Transitions: []*TransitionState{},
 	}
 }
 
-func produceTransitionStates(ts *TransitionState) error {
+func produceTransitionStates(ts *TransitionState) {
+}
+
+func doDblInp(ts *TransitionState) []*TransitionState {
 	inputs := getFirstInputs(ts.State.Process)
-	dblInputs := []TransitionState{}
+	dblInputs := []*TransitionState{}
 
 	for _, path := range inputs {
 		// INP1 transition relation
@@ -127,7 +146,7 @@ func produceTransitionStates(ts *TransitionState) error {
 		// Get the input element.
 		inpElem, _ := findElement(inp1.Process, path.Directions)
 		// Find the input channel label in the register.
-		label := inp1.Register.NameRange[inpElem.(*ElemInput).Channel.Name]
+		inpLabel := inp1.Register.NameRange[inpElem.(*ElemInput).Channel.Name]
 
 		penultimateDirs := path.Directions[:len(path.Directions)-1]
 		lastDir := path.Directions[len(path.Directions)-1]
@@ -137,35 +156,54 @@ func produceTransitionStates(ts *TransitionState) error {
 		// Replace the input element with the inp element.
 		transplantInpInput(elemBefore, lastDir)
 
-		for i := range inp1.Register.Register {
-			// INP2A transition relation
+		// INP2A transition relation
+		for _, label := range inp1.Register.Labels() {
 			sc2 := deepcopy.Copy(inp1)
 			inp2a := sc2.(State)
 
-			// Find the penultimate element before the input element in the copied AST.
+			// Find the penultimate element before the inp element in the copied AST.
 			elemBefore, _ := findElement(inp2a.Process, penultimateDirs)
 			// Remove the input element.
 			removeElementAfter(elemBefore, lastDir)
 
-			dblInp2a := TransitionState{
-				State: State{
-					Process:  inp2a.Process,
-					Register: deepcopy.Copy(inp1.Register).(Register),
-				},
+			dblInp2a := &TransitionState{
+				State: inp2a,
 				Label: TransitionLabel{
-					Type: Inp1,
+					Type: Inp2A,
 					Label: Label{
-						Type:  InpKnown,
-						Label: []int{label, i},
+						Type:   InpKnown,
+						Label1: inpLabel,
+						Label2: label,
 					},
 				},
 			}
-
 			dblInputs = append(dblInputs, dblInp2a)
 		}
+
+		// INP2B transition relation
+		sc2 := deepcopy.Copy(inp1)
+		inp2b := sc2.(State)
+
+		// Find the penultimate element before the inp element in the copied AST.
+		elemBefore, _ = findElement(inp2b.Process, penultimateDirs)
+		// Remove the input element.
+		removeElementAfter(elemBefore, lastDir)
+
+		dblInp2b := &TransitionState{
+			State: inp2b,
+			Label: TransitionLabel{
+				Type: Inp2B,
+				Label: Label{
+					Type:   InpFreshInput,
+					Label1: inpLabel,
+					Label2: inp2b.Register.Update(),
+				},
+			},
+		}
+		dblInputs = append(dblInputs, dblInp2b)
 	}
 
-	return nil
+	return dblInputs
 }
 
 func getFirstInputs(elem Element) []Path {
