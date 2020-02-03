@@ -2,6 +2,7 @@ package main
 
 import (
 	"sort"
+	"strconv"
 
 	"github.com/mohae/deepcopy"
 )
@@ -83,7 +84,7 @@ type State struct {
 }
 
 type TransitionLabel struct {
-	Type  TransitionType
+	Rule  TransitionType
 	Label Label
 }
 
@@ -122,7 +123,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 			Process: process,
 			Register: Register{
 				Size:      registerSize,
-				Index:     len(register),
+				Index:     len(register) + 1,
 				Register:  register,
 				NameRange: nameRange,
 			},
@@ -132,6 +133,8 @@ func newTransitionStateRoot(process Element) *TransitionState {
 }
 
 func produceTransitionStates(ts *TransitionState) {
+	dblInputs := doDblInp(ts)
+	ts.Transitions = append(ts.Transitions, dblInputs...)
 }
 
 func doDblInp(ts *TransitionState) []*TransitionState {
@@ -169,7 +172,7 @@ func doDblInp(ts *TransitionState) []*TransitionState {
 			dblInp2a := &TransitionState{
 				State: inp2a,
 				Label: TransitionLabel{
-					Type: Inp2A,
+					Rule: Inp2A,
 					Label: Label{
 						Type:   InpKnown,
 						Label1: inpLabel,
@@ -192,7 +195,7 @@ func doDblInp(ts *TransitionState) []*TransitionState {
 		dblInp2b := &TransitionState{
 			State: inp2b,
 			Label: TransitionLabel{
-				Type: Inp2B,
+				Rule: Inp2B,
 				Label: Label{
 					Type:   InpFreshInput,
 					Label1: inpLabel,
@@ -533,4 +536,85 @@ func nextElement(elem Element, direction Direction) Element {
 		return rootElem.Next
 	}
 	return nil
+}
+
+func prettyPrintTransitionState(ts *TransitionState) string {
+	return prettyPrintState(ts.State) + " ¦- " + PrettyPrintAst(ts.State.Process) + " : " +
+		prettyPrintTransitionRule(ts.Label) + " : " +
+		prettyPrintTransitionLabel(ts.Label)
+}
+
+func prettyPrintState(state State) string {
+	str := "{"
+	labels := state.Register.Labels()
+	reg := state.Register.Register
+
+	for i, label := range labels {
+		if i == len(labels)-1 {
+			str = str + "(" + strconv.Itoa(label) + "," + reg[label] + ")"
+		} else {
+			str = str + "(" + strconv.Itoa(label) + "," + reg[label] + "),"
+		}
+	}
+	return str + "}"
+}
+
+func prettyPrintTransitionRule(label TransitionLabel) string {
+	switch label.Rule {
+	case Inp1:
+		return "INP1"
+	case Inp2A:
+		return "INP2A"
+	case Inp2B:
+		return "INP2B"
+	case DblInp:
+		return "DBLINP"
+	case Out1:
+		return "OUT1"
+	case Out2:
+		return "OUT2"
+	case DblOut:
+		return "DBLOUT"
+	case Match:
+		return "MATCH"
+	case Res:
+		return "RES"
+	case Rec:
+		return "REC"
+	case Sum:
+		return "SUM"
+	case Par1:
+		return "PAR1"
+	case Par2:
+		return "PAR2"
+	case Comm:
+		return "COMM"
+	case Close:
+		return "CLOSE"
+	}
+	return ""
+}
+
+func prettyPrintTransitionLabel(label TransitionLabel) string {
+	l1 := label.Label.Label1
+	l2 := label.Label.Label2
+	switch label.Label.Type {
+	case Known:
+		return strconv.Itoa(l1)
+	case FreshInput:
+		return strconv.Itoa(l1) + "*"
+	case FreshOutput:
+		return strconv.Itoa(l1) + "^"
+	case Tau:
+		return "t "
+	case OutKnown:
+		return strconv.Itoa(l1) + "^" + strconv.Itoa(l2) + " "
+	case OutFreshOutput:
+		return strconv.Itoa(l1) + "'" + strconv.Itoa(l2) + "^"
+	case InpKnown:
+		return strconv.Itoa(l1) + " " + strconv.Itoa(l2) + " "
+	case InpFreshInput:
+		return strconv.Itoa(l1) + " " + strconv.Itoa(l2) + "*"
+	}
+	return ""
 }
