@@ -218,6 +218,20 @@ func getFirstInpOuts(elem Element) []Path {
 			popPath()
 		case ElemTypProcess:
 		case ElemTypProcessConstants:
+		case ElemTypOutOutput:
+			outOutput := elem.(*ElemOutOutput)
+			curPath = append(curPath, Next)
+			acc(outOutput.Next)
+			popPath()
+		case ElemTypInpInput:
+			inpInput := elem.(*ElemInpInput)
+			curPath = append(curPath, Next)
+			acc(inpInput.Next)
+			popPath()
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			acc(rootElem.Next)
+			popPath()
 		}
 	}
 
