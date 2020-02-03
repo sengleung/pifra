@@ -103,6 +103,18 @@ func close(elem Element, freshName Name) Element {
 	return elem
 }
 
+// InitAst performs
+//   1. alpha-conversion,
+//   2. doubly-linked AST conversion, and
+//   3. adds a root element to the AST as the head.
+func InitAst(elem Element) Element {
+	DoAlphaConversion(elem)
+	ConvertToDllAst(elem)
+	return &ElemRoot{
+		Next: elem,
+	}
+}
+
 // DoAlphaConversion renames bound names to names appropriate to their scope.
 func DoAlphaConversion(elem Element) {
 	doAlphaConversion(elem)
@@ -148,6 +160,9 @@ func doAlphaConversion(elem Element) {
 		doAlphaConversion(parElem.ProcessR)
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		doAlphaConversion(rootElem.Next)
 	}
 }
 
@@ -485,10 +500,16 @@ func convertToDllAstAcc(elem Element, prev Element) {
 	case ElemTypOutOutput:
 		outOutput := elem.(*ElemOutOutput)
 		outOutput.Parent = prev
+		prev = outOutput
 		convertToDllAstAcc(outOutput.Next, prev)
 	case ElemTypInpInput:
 		inpInput := elem.(*ElemInpInput)
 		inpInput.Parent = prev
+		prev = inpInput
 		convertToDllAstAcc(inpInput.Next, prev)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		prev = rootElem
+		convertToDllAstAcc(rootElem.Next, prev)
 	}
 }
