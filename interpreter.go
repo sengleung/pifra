@@ -445,6 +445,19 @@ func transplantInpInput(elem Element, direction Direction) {
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
+	case ElemTypOutOutput:
+		// outOutput := elem.(*ElemOutOutput)
+		// TODO
+	case ElemTypInpInput:
+		// inpInput := elem.(*ElemInpInput)
+		// TODO
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		nextElem := rootElem.Next.(*ElemInput)
+		rootElem.Next = &ElemInpInput{
+			Input: nextElem.Input,
+			Next:  nextElem.Next,
+		}
 	}
 }
 
