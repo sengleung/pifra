@@ -158,15 +158,9 @@ func produceTransitionStates(ts *TransitionState) {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
-			outElem := elem.(*ElemOutput)
-			curPath = append(curPath, Next)
-			acc(outElem.Next)
-			popPath()
 		case ElemTypInput:
-			inpElem := elem.(*ElemInput)
-			curPath = append(curPath, Next)
-			acc(inpElem.Next)
-			popPath()
+			dblInputs := doDblInp(ts, curPath)
+			ts.Transitions = append(ts.Transitions, dblInputs...)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
@@ -190,13 +184,9 @@ func produceTransitionStates(ts *TransitionState) {
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
 			curPath = append(curPath, Left)
-			dblInputs := doDblInp(ts, curPath)
-			ts.Transitions = append(ts.Transitions, dblInputs...)
 			acc(parElem.ProcessL)
 			popPath()
 			curPath = append(curPath, Right)
-			dblInputs = doDblInp(ts, curPath)
-			ts.Transitions = append(ts.Transitions, dblInputs...)
 			acc(parElem.ProcessR)
 			popPath()
 		case ElemTypProcess:
