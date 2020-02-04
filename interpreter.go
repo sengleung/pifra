@@ -170,12 +170,12 @@ func produceTransitionStates(ts *TransitionState) {
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
 				dirs = append(dirs, Next)
-				acc(matchElem.Next, ts.State, dirs)
+				acc(matchElem.Next, state, dirs)
 			}
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
 			dirs = append(dirs, Next)
-			acc(resElem.Next, ts.State, dirs)
+			acc(resElem.Next, state, dirs)
 		case ElemTypSum:
 			sumElem := elem.(*ElemSum)
 
@@ -185,26 +185,27 @@ func produceTransitionStates(ts *TransitionState) {
 			sc := deepcopy.Copy(state)
 			stateCopy := sc.(State)
 			penultimateDirs := dirs[:len(dirs)-1]
+			lastDir := dirs[len(dirs)-1]
 			process, _ := findElement(stateCopy.Process, penultimateDirs)
-			removeElementAfter(process, Left)
+			removeElementAfter(process, lastDir, Left)
 			acc(sumElem.ProcessL, stateCopy, dirs)
 
 			// Remove the sum element and take the right-hand side process.
 			sc = deepcopy.Copy(state)
 			stateCopy = sc.(State)
 			process, _ = findElement(stateCopy.Process, penultimateDirs)
-			removeElementAfter(process, Right)
+			removeElementAfter(process, lastDir, Right)
 			acc(sumElem.ProcessR, stateCopy, dirs)
 
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
 
 			dirs = append(dirs, Left)
-			acc(parElem.ProcessL, ts.State, dirs)
+			acc(parElem.ProcessL, state, dirs)
 			_, dirs = popDirs(dirs)
 
 			dirs = append(dirs, Right)
-			acc(parElem.ProcessR, ts.State, dirs)
+			acc(parElem.ProcessR, state, dirs)
 			_, dirs = popDirs(dirs)
 
 		case ElemTypProcess:
@@ -212,15 +213,15 @@ func produceTransitionStates(ts *TransitionState) {
 		case ElemTypOutOutput:
 			outOutput := elem.(*ElemOutOutput)
 			dirs = append(dirs, Next)
-			acc(outOutput.Next, ts.State, dirs)
+			acc(outOutput.Next, state, dirs)
 		case ElemTypInpInput:
 			inpInput := elem.(*ElemInpInput)
 			dirs = append(dirs, Next)
-			acc(inpInput.Next, ts.State, dirs)
+			acc(inpInput.Next, state, dirs)
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
 			dirs = append(dirs, Next)
-			acc(rootElem.Next, ts.State, dirs)
+			acc(rootElem.Next, state, dirs)
 		}
 	}
 	acc(ts.State.Process, ts.State, []Direction{})
@@ -266,7 +267,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 			// Find the penultimate element before the inp element in the copied AST.
 			elemBefore, _ := findElement(inp2a.Process, penultimateDirs)
 			// Remove the input element.
-			removeElementAfter(elemBefore, lastDir)
+			removeElementAfter(elemBefore, lastDir, Next)
 
 			dblInp2a := &TransitionState{
 				State: inp2a,
@@ -289,7 +290,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 		// Find the penultimate element before the inp element in the copied AST.
 		elemBefore, _ = findElement(inp2b.Process, penultimateDirs)
 		// Remove the input element.
-		removeElementAfter(elemBefore, lastDir)
+		removeElementAfter(elemBefore, lastDir, Next)
 
 		dblInp2b := &TransitionState{
 			State: inp2b,
@@ -539,50 +540,50 @@ func replaceElement(elemBefore Element, elemNext Element, direction Direction) {
 	}
 }
 
-func removeElementAfter(elem Element, direction Direction) {
+func removeElementAfter(elem Element, direction Direction, nextDirection Direction) {
 	switch elem.Type() {
 	case ElemTypNil:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		outElem.Next = nextElement(outElem.Next, direction)
+		outElem.Next = nextElement(outElem.Next, nextDirection)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		inpElem.Next = nextElement(inpElem.Next, direction)
+		inpElem.Next = nextElement(inpElem.Next, nextDirection)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		matchElem.Next = nextElement(matchElem.Next, direction)
+		matchElem.Next = nextElement(matchElem.Next, nextDirection)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		resElem.Next = nextElement(resElem.Next, direction)
+		resElem.Next = nextElement(resElem.Next, nextDirection)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
 		switch direction {
 		case Next:
 		case Left:
-			sumElem.ProcessL = nextElement(sumElem.ProcessL, direction)
+			sumElem.ProcessL = nextElement(sumElem.ProcessL, nextDirection)
 		case Right:
-			sumElem.ProcessR = nextElement(sumElem.ProcessR, direction)
+			sumElem.ProcessR = nextElement(sumElem.ProcessR, nextDirection)
 		}
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
 		switch direction {
 		case Next:
 		case Left:
-			parElem.ProcessL = nextElement(parElem.ProcessL, direction)
+			parElem.ProcessL = nextElement(parElem.ProcessL, nextDirection)
 		case Right:
-			parElem.ProcessR = nextElement(parElem.ProcessR, direction)
+			parElem.ProcessR = nextElement(parElem.ProcessR, nextDirection)
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
 	case ElemTypOutOutput:
 		outOutput := elem.(*ElemOutOutput)
-		outOutput.Next = nextElement(outOutput.Next, direction)
+		outOutput.Next = nextElement(outOutput.Next, nextDirection)
 	case ElemTypInpInput:
 		inpInput := elem.(*ElemInpInput)
-		inpInput.Next = nextElement(inpInput.Next, direction)
+		inpInput.Next = nextElement(inpInput.Next, nextDirection)
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
-		rootElem.Next = nextElement(rootElem.Next, direction)
+		rootElem.Next = nextElement(rootElem.Next, nextDirection)
 	}
 }
 
