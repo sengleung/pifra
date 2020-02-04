@@ -114,15 +114,22 @@ type Path struct {
 }
 
 func newTransitionStateRoot(process Element) *TransitionState {
-	freshNames := GetAllFreshNames(process)
+	fns := GetAllFreshNames(process)
 	freshNamesSet := make(map[string]bool)
-	for _, freshName := range freshNames {
+
+	for _, freshName := range fns {
 		freshNamesSet[freshName] = true
 	}
 
+	var freshNames []string
+	for name := range freshNamesSet {
+		freshNames = append(freshNames, name)
+	}
+	sort.Strings(freshNames)
+
 	register := make(map[int]string, registerSize)
 	index := 1
-	for name := range freshNamesSet {
+	for _, name := range freshNames {
 		register[index] = name
 		index = index + 1
 	}
