@@ -145,12 +145,84 @@ func newTransitionStateRoot(process Element) *TransitionState {
 }
 
 func produceTransitionStates(ts *TransitionState) {
-	dblInputs := doDblInp(ts)
-	ts.Transitions = append(ts.Transitions, dblInputs...)
+	curPath := []Direction{}
+
+	popPath := func() Direction {
+		var direction Direction
+		direction, curPath = curPath[len(curPath)-1], curPath[:len(curPath)-1]
+		return direction
+	}
+
+	var acc func(Element)
+	acc = func(elem Element) {
+		switch elem.Type() {
+		case ElemTypNil:
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			curPath = append(curPath, Next)
+			acc(outElem.Next)
+			popPath()
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			curPath = append(curPath, Next)
+			acc(inpElem.Next)
+			popPath()
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			if matchElem.NameL.Name == matchElem.NameR.Name {
+				curPath = append(curPath, Next)
+				acc(matchElem.Next)
+				popPath()
+			}
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			curPath = append(curPath, Next)
+			acc(resElem.Next)
+			popPath()
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			curPath = append(curPath, Left)
+			acc(sumElem.ProcessL)
+			popPath()
+			curPath = append(curPath, Right)
+			acc(sumElem.ProcessR)
+			popPath()
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			curPath = append(curPath, Left)
+			dblInputs := doDblInp(ts, curPath)
+			ts.Transitions = append(ts.Transitions, dblInputs...)
+			acc(parElem.ProcessL)
+			popPath()
+			curPath = append(curPath, Right)
+			dblInputs = doDblInp(ts, curPath)
+			ts.Transitions = append(ts.Transitions, dblInputs...)
+			acc(parElem.ProcessR)
+			popPath()
+		case ElemTypProcess:
+		case ElemTypProcessConstants:
+		case ElemTypOutOutput:
+			outOutput := elem.(*ElemOutOutput)
+			curPath = append(curPath, Next)
+			acc(outOutput.Next)
+			popPath()
+		case ElemTypInpInput:
+			inpInput := elem.(*ElemInpInput)
+			curPath = append(curPath, Next)
+			acc(inpInput.Next)
+			popPath()
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			curPath = append(curPath, Next)
+			acc(rootElem.Next)
+			popPath()
+		}
+	}
+	acc(ts.State.Process)
 }
 
-func doDblInp(ts *TransitionState) []*TransitionState {
-	inputs := getFirstInputs(ts.State.Process)
+func doDblInp(ts *TransitionState, prefixPath []Direction) []*TransitionState {
+	inputs := getFirstInputs(ts.State.Process, prefixPath)
 	dblInputs := []*TransitionState{}
 
 	for _, path := range inputs {
@@ -231,17 +303,19 @@ func doDblInp(ts *TransitionState) []*TransitionState {
 	return dblInputs
 }
 
-func getFirstInputs(elem Element) []Path {
-	return getFirstInpOuts(elem, true)
+func getFirstInputs(elem Element, prefixPath []Direction) []Path {
+	return getFirstInpOuts(elem, prefixPath, true)
 }
 
-func getFirstOutputs(elem Element) []Path {
-	return getFirstInpOuts(elem, false)
+func getFirstOutputs(elem Element, prefixPath []Direction) []Path {
+	return getFirstInpOuts(elem, prefixPath, false)
 }
 
-func getFirstInpOuts(elem Element, wantInputs bool) []Path {
+func getFirstInpOuts(elem Element, prefixPath []Direction, wantInputs bool) []Path {
 	paths := []Path{}
 	curPath := []Direction{}
+
+	elem, _ = findElement(elem, prefixPath)
 
 	popPath := func() Direction {
 		var direction Direction
@@ -255,15 +329,19 @@ func getFirstInpOuts(elem Element, wantInputs bool) []Path {
 		case ElemTypNil:
 		case ElemTypOutput:
 			if !wantInputs {
+				foundDirection := append(deepcopy.Copy(prefixPath).([]Direction),
+					deepcopy.Copy(curPath).([]Direction)...)
 				paths = append(paths, Path{
-					Directions:  deepcopy.Copy(curPath).([]Direction),
+					Directions:  foundDirection,
 					ElementType: ElemTypOutput,
 				})
 			}
 		case ElemTypInput:
 			if wantInputs {
+				foundDirection := append(deepcopy.Copy(prefixPath).([]Direction),
+					deepcopy.Copy(curPath).([]Direction)...)
 				paths = append(paths, Path{
-					Directions:  deepcopy.Copy(curPath).([]Direction),
+					Directions:  foundDirection,
 					ElementType: ElemTypInput,
 				})
 			}
