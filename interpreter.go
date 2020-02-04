@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 
@@ -152,81 +151,79 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	}
 }
 
+func popDirs(dirs []Direction) (Direction, []Direction) {
+	var direction Direction
+	direction, dirs = dirs[len(dirs)-1], dirs[:len(dirs)-1]
+	return direction, dirs
+}
+
 func produceTransitionStates(ts *TransitionState) {
-	curPath := []Direction{}
-
-	popPath := func() Direction {
-		var direction Direction
-		direction, curPath = curPath[len(curPath)-1], curPath[:len(curPath)-1]
-		return direction
-	}
-
-	var acc func(Element, State)
-	acc = func(elem Element, state State) {
+	var acc func(Element, State, []Direction)
+	acc = func(elem Element, state State, dirs []Direction) {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
 		case ElemTypInput:
-			dblInputs := doDblInp(ts.State, curPath)
+			dblInputs := doDblInp(state, dirs)
 			ts.Transitions = append(ts.Transitions, dblInputs...)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
-				curPath = append(curPath, Next)
-				acc(matchElem.Next, ts.State)
-				popPath()
+				dirs = append(dirs, Next)
+				acc(matchElem.Next, ts.State, dirs)
 			}
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
-			curPath = append(curPath, Next)
-			acc(resElem.Next, ts.State)
-			popPath()
+			dirs = append(dirs, Next)
+			acc(resElem.Next, ts.State, dirs)
 		case ElemTypSum:
 			sumElem := elem.(*ElemSum)
 
-			pc := deepcopy.Copy(state)
-			stateCopy := pc.(State)
-
-			penultimateDirs := curPath[:len(curPath)-1]
+			// Copy the process.
+			// Remove the sum element and take the left-hand side process.
+			// No need to append to the directions because element is removed.
+			sc := deepcopy.Copy(state)
+			stateCopy := sc.(State)
+			penultimateDirs := dirs[:len(dirs)-1]
 			process, _ := findElement(stateCopy.Process, penultimateDirs)
 			removeElementAfter(process, Left)
+			acc(sumElem.ProcessL, stateCopy, dirs)
 
-			fmt.Println(PrettyPrintAst(process))
+			// Remove the sum element and take the right-hand side process.
+			sc = deepcopy.Copy(state)
+			stateCopy = sc.(State)
+			process, _ = findElement(stateCopy.Process, penultimateDirs)
+			removeElementAfter(process, Right)
+			acc(sumElem.ProcessR, stateCopy, dirs)
 
-			curPath = append(curPath, Left)
-			acc(sumElem.ProcessL, stateCopy)
-			popPath()
-			curPath = append(curPath, Right)
-			acc(sumElem.ProcessR, ts.State)
-			popPath()
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
-			curPath = append(curPath, Left)
-			acc(parElem.ProcessL, ts.State)
-			popPath()
-			curPath = append(curPath, Right)
-			acc(parElem.ProcessR, ts.State)
-			popPath()
+
+			dirs = append(dirs, Left)
+			acc(parElem.ProcessL, ts.State, dirs)
+			_, dirs = popDirs(dirs)
+
+			dirs = append(dirs, Right)
+			acc(parElem.ProcessR, ts.State, dirs)
+			_, dirs = popDirs(dirs)
+
 		case ElemTypProcess:
 		case ElemTypProcessConstants:
 		case ElemTypOutOutput:
 			outOutput := elem.(*ElemOutOutput)
-			curPath = append(curPath, Next)
-			acc(outOutput.Next, ts.State)
-			popPath()
+			dirs = append(dirs, Next)
+			acc(outOutput.Next, ts.State, dirs)
 		case ElemTypInpInput:
 			inpInput := elem.(*ElemInpInput)
-			curPath = append(curPath, Next)
-			acc(inpInput.Next, ts.State)
-			popPath()
+			dirs = append(dirs, Next)
+			acc(inpInput.Next, ts.State, dirs)
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
-			curPath = append(curPath, Next)
-			acc(rootElem.Next, ts.State)
-			popPath()
+			dirs = append(dirs, Next)
+			acc(rootElem.Next, ts.State, dirs)
 		}
 	}
-	acc(ts.State.Process, ts.State)
+	acc(ts.State.Process, ts.State, []Direction{})
 }
 
 func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
