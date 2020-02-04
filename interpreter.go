@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -160,71 +161,81 @@ func produceTransitionStates(ts *TransitionState) {
 		return direction
 	}
 
-	var acc func(Element)
-	acc = func(elem Element) {
+	var acc func(Element, State)
+	acc = func(elem Element, state State) {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
 		case ElemTypInput:
-			dblInputs := doDblInp(ts, curPath)
+			dblInputs := doDblInp(ts.State, curPath)
 			ts.Transitions = append(ts.Transitions, dblInputs...)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
 				curPath = append(curPath, Next)
-				acc(matchElem.Next)
+				acc(matchElem.Next, ts.State)
 				popPath()
 			}
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
 			curPath = append(curPath, Next)
-			acc(resElem.Next)
+			acc(resElem.Next, ts.State)
 			popPath()
 		case ElemTypSum:
 			sumElem := elem.(*ElemSum)
+
+			pc := deepcopy.Copy(state)
+			stateCopy := pc.(State)
+
+			penultimateDirs := curPath[:len(curPath)-1]
+			process, _ := findElement(stateCopy.Process, penultimateDirs)
+			removeElementAfter(process, Left)
+
+			fmt.Println(PrettyPrintAst(process))
+
 			curPath = append(curPath, Left)
-			acc(sumElem.ProcessL)
+			acc(sumElem.ProcessL, stateCopy)
 			popPath()
 			curPath = append(curPath, Right)
-			acc(sumElem.ProcessR)
+			acc(sumElem.ProcessR, ts.State)
 			popPath()
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
 			curPath = append(curPath, Left)
-			acc(parElem.ProcessL)
+			acc(parElem.ProcessL, ts.State)
 			popPath()
 			curPath = append(curPath, Right)
-			acc(parElem.ProcessR)
+			acc(parElem.ProcessR, ts.State)
 			popPath()
 		case ElemTypProcess:
 		case ElemTypProcessConstants:
 		case ElemTypOutOutput:
 			outOutput := elem.(*ElemOutOutput)
 			curPath = append(curPath, Next)
-			acc(outOutput.Next)
+			acc(outOutput.Next, ts.State)
 			popPath()
 		case ElemTypInpInput:
 			inpInput := elem.(*ElemInpInput)
 			curPath = append(curPath, Next)
-			acc(inpInput.Next)
+			acc(inpInput.Next, ts.State)
 			popPath()
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
 			curPath = append(curPath, Next)
-			acc(rootElem.Next)
+			acc(rootElem.Next, ts.State)
 			popPath()
 		}
 	}
-	acc(ts.State.Process)
+	acc(ts.State.Process, ts.State)
 }
 
-func doDblInp(ts *TransitionState, prefixPath []Direction) []*TransitionState {
-	inputs := getFirstInputs(ts.State.Process, prefixPath)
+func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
+	inputs := getFirstInputs(tsState.Process, prefixPath)
 	dblInputs := []*TransitionState{}
 
 	for _, path := range inputs {
 		// INP1 transition relation
-		sc := deepcopy.Copy(ts.State)
+		sc := deepcopy.Copy(tsState)
 		inp1 := sc.(State)
 
 		// Get the input element.
@@ -536,16 +547,16 @@ func removeElementAfter(elem Element, direction Direction) {
 	case ElemTypNil:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		outElem.Next = nextElement(outElem, direction)
+		outElem.Next = nextElement(outElem.Next, direction)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		inpElem.Next = nextElement(inpElem, direction)
+		inpElem.Next = nextElement(inpElem.Next, direction)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		matchElem.Next = nextElement(matchElem, direction)
+		matchElem.Next = nextElement(matchElem.Next, direction)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		resElem.Next = nextElement(resElem, direction)
+		resElem.Next = nextElement(resElem.Next, direction)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
 		switch direction {
@@ -568,13 +579,13 @@ func removeElementAfter(elem Element, direction Direction) {
 	case ElemTypProcessConstants:
 	case ElemTypOutOutput:
 		outOutput := elem.(*ElemOutOutput)
-		outOutput.Next = nextElement(outOutput, direction)
+		outOutput.Next = nextElement(outOutput.Next, direction)
 	case ElemTypInpInput:
 		inpInput := elem.(*ElemInpInput)
-		inpInput.Next = nextElement(inpInput, direction)
+		inpInput.Next = nextElement(inpInput.Next, direction)
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
-		rootElem.Next = nextElement(rootElem, direction)
+		rootElem.Next = nextElement(rootElem.Next, direction)
 	}
 }
 
