@@ -163,6 +163,8 @@ func produceTransitionStates(ts *TransitionState) {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
+
+		// DBLINP
 		case ElemTypInput:
 			dblInputs := doDblInp(state, dirs)
 			ts.Transitions = append(ts.Transitions, dblInputs...)
@@ -176,6 +178,8 @@ func produceTransitionStates(ts *TransitionState) {
 			resElem := elem.(*ElemRestriction)
 			dirs = append(dirs, Next)
 			acc(resElem.Next, state, dirs)
+
+		// SUM
 		case ElemTypSum:
 			sumElem := elem.(*ElemSum)
 
@@ -197,6 +201,7 @@ func produceTransitionStates(ts *TransitionState) {
 			removeElementAfter(process, lastDir, Right)
 			acc(sumElem.ProcessR, stateCopy, dirs)
 
+		// PAR1, PAR2
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
 
@@ -272,7 +277,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 			dblInp2a := &TransitionState{
 				State: inp2a,
 				Label: TransitionLabel{
-					Rule: Inp2A,
+					Rule: DblInp,
 					Label: Label{
 						Type:   InpKnown,
 						Label1: inpLabel,
@@ -295,7 +300,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 		dblInp2b := &TransitionState{
 			State: inp2b,
 			Label: TransitionLabel{
-				Rule: Inp2B,
+				Rule: DblInp,
 				Label: Label{
 					Type:   InpFreshInput,
 					Label1: inpLabel,
