@@ -158,8 +158,9 @@ func popDirs(dirs []Direction) (Direction, []Direction) {
 }
 
 func produceTransitionStates(ts *TransitionState) {
-	var acc func(Element, State, []Direction)
-	acc = func(elem Element, state State, dirs []Direction) {
+	var acc func(Element, State, []Direction) []*TransitionState
+	acc = func(elem Element, state State, dirs []Direction) []*TransitionState {
+		transitionStates := []*TransitionState{}
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
@@ -167,7 +168,7 @@ func produceTransitionStates(ts *TransitionState) {
 		// DBLINP
 		case ElemTypInput:
 			dblInputs := doDblInp(state, dirs)
-			ts.Transitions = append(ts.Transitions, dblInputs...)
+			transitionStates = append(transitionStates, dblInputs...)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
 			if matchElem.NameL.Name == matchElem.NameR.Name {
@@ -192,25 +193,29 @@ func produceTransitionStates(ts *TransitionState) {
 			lastDir := dirs[len(dirs)-1]
 			process, _ := findElement(stateCopy.Process, penultimateDirs)
 			removeElementAfter(process, lastDir, Left)
-			acc(sumElem.ProcessL, stateCopy, dirs)
+			trns := acc(sumElem.ProcessL, stateCopy, dirs)
+			transitionStates = append(transitionStates, trns...)
 
 			// Remove the sum element and take the right-hand side process.
 			sc = deepcopy.Copy(state)
 			stateCopy = sc.(State)
 			process, _ = findElement(stateCopy.Process, penultimateDirs)
 			removeElementAfter(process, lastDir, Right)
-			acc(sumElem.ProcessR, stateCopy, dirs)
+			trns = acc(sumElem.ProcessR, stateCopy, dirs)
+			transitionStates = append(transitionStates, trns...)
 
 		// PAR1, PAR2
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
 
 			dirs = append(dirs, Left)
-			acc(parElem.ProcessL, state, dirs)
+			trns := acc(parElem.ProcessL, state, dirs)
+			transitionStates = append(transitionStates, trns...)
 			_, dirs = popDirs(dirs)
 
 			dirs = append(dirs, Right)
-			acc(parElem.ProcessR, state, dirs)
+			trns = acc(parElem.ProcessR, state, dirs)
+			transitionStates = append(transitionStates, trns...)
 			_, dirs = popDirs(dirs)
 
 		case ElemTypProcess:
@@ -218,18 +223,23 @@ func produceTransitionStates(ts *TransitionState) {
 		case ElemTypOutOutput:
 			outOutput := elem.(*ElemOutOutput)
 			dirs = append(dirs, Next)
-			acc(outOutput.Next, state, dirs)
+			trns := acc(outOutput.Next, state, dirs)
+			transitionStates = append(transitionStates, trns...)
 		case ElemTypInpInput:
 			inpInput := elem.(*ElemInpInput)
 			dirs = append(dirs, Next)
-			acc(inpInput.Next, state, dirs)
+			trns := acc(inpInput.Next, state, dirs)
+			transitionStates = append(transitionStates, trns...)
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
 			dirs = append(dirs, Next)
-			acc(rootElem.Next, state, dirs)
+			trns := acc(rootElem.Next, state, dirs)
+			transitionStates = append(transitionStates, trns...)
 		}
+		return transitionStates
 	}
-	acc(ts.State.Process, ts.State, []Direction{})
+	trns := acc(ts.State.Process, ts.State, []Direction{})
+	ts.Transitions = append(ts.Transitions, trns...)
 }
 
 func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
