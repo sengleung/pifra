@@ -169,7 +169,10 @@ func doDblInp(ts *TransitionState) []*TransitionState {
 		// Find the penultimate element before the input element.
 		elemBefore, _ := findElement(inp1.Process, penultimateDirs)
 		// Replace the input element with the inp element.
-		transplantInpInput(elemBefore, lastDir)
+		replaceElement(elemBefore, &ElemInpInput{
+			Input: inpElem.(*ElemInput).Input,
+			Next:  inpElem.(*ElemInput).Next,
+		}, lastDir)
 
 		// INP2A transition relation
 		for _, label := range inp1.Register.Labels() {
@@ -406,56 +409,50 @@ func findElement(elem Element, directions []Direction) (Element, bool) {
 	return nil, false
 }
 
-func transplantInpInput(elem Element, direction Direction) {
-	switch elem.Type() {
+func replaceElement(elemBefore Element, elemNext Element, direction Direction) {
+	switch elemBefore.Type() {
 	case ElemTypNil:
 	case ElemTypOutput:
-		// outElem := elem.(*ElemOutput)
-		// TODO
+		outElem := elemBefore.(*ElemOutput)
+		outElem.Next = elemNext
 	case ElemTypInput:
-		// inpElem := elem.(*ElemInput)
-		// TODO
+		inpElem := elemBefore.(*ElemInput)
+		inpElem.Next = elemNext
 	case ElemTypMatch:
-		// matchElem := elem.(*ElemMatch)
-		// TODO
+		matchElem := elemBefore.(*ElemMatch)
+		matchElem.Next = elemNext
 	case ElemTypRestriction:
-		// resElem := elem.(*ElemRestriction)
-		// TODO
+		resElem := elemBefore.(*ElemRestriction)
+		resElem.Next = elemNext
 	case ElemTypSum:
-		// sumElem := elem.(*ElemSum)
-		// TODO
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
+		sumElem := elemBefore.(*ElemSum)
 		switch direction {
 		case Next:
 		case Left:
-			nextElem := parElem.ProcessL.(*ElemInput)
-			parElem.ProcessL = &ElemInpInput{
-				Input: nextElem.Input,
-				Next:  nextElem.Next,
-			}
+			sumElem.ProcessL = elemNext
 		case Right:
-			nextElem := parElem.ProcessR.(*ElemInput)
-			parElem.ProcessR = &ElemInpInput{
-				Input: nextElem.Input,
-				Next:  nextElem.Next,
-			}
+			sumElem.ProcessR = elemNext
+		}
+	case ElemTypParallel:
+		parElem := elemBefore.(*ElemParallel)
+		switch direction {
+		case Next:
+		case Left:
+			parElem.ProcessL = elemNext
+		case Right:
+			parElem.ProcessR = elemNext
 		}
 	case ElemTypProcess:
 	case ElemTypProcessConstants:
 	case ElemTypOutOutput:
-		// outOutput := elem.(*ElemOutOutput)
-		// TODO
+		outOutput := elemBefore.(*ElemOutOutput)
+		outOutput.Next = elemNext
 	case ElemTypInpInput:
-		// inpInput := elem.(*ElemInpInput)
-		// TODO
+		inpInput := elemBefore.(*ElemInpInput)
+		inpInput.Next = elemNext
 	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		nextElem := rootElem.Next.(*ElemInput)
-		rootElem.Next = &ElemInpInput{
-			Input: nextElem.Input,
-			Next:  nextElem.Next,
-		}
+		rootElem := elemBefore.(*ElemRoot)
+		rootElem.Next = elemNext
 	}
 }
 
