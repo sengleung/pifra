@@ -303,7 +303,7 @@ func dblTrans(confs []Configuration) []Configuration {
 	// DBLINP
 	var inpConfs []Configuration
 	for _, conf := range confs {
-		if getElemSetType(conf.Process) == ElemSetInp {
+		if getElemSetType(conf.Process) == ElemSetInp && !conf.Label.Double {
 			inpConfs = append(inpConfs, conf)
 		}
 	}
@@ -314,7 +314,7 @@ func dblTrans(confs []Configuration) []Configuration {
 
 		var inpConfs []Configuration
 		for _, dblConf := range dblConfs {
-			if getElemSetType(dblConf.Process) == ElemSetReg {
+			if getElemSetType(dblConf.Process) == ElemSetReg && !conf.Label.Double {
 				inpConfs = append(inpConfs, dblConf)
 			}
 		}
