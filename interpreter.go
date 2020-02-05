@@ -83,7 +83,7 @@ func (reg *Register) GetName(label int) string {
 func (reg *Register) find(i int) string { return "" }         // TODO
 func (reg *Register) findAll() []string { return []string{} } // TODO
 
-type State struct {
+type Configuration struct {
 	Process  Element
 	Register Register
 }
@@ -94,9 +94,9 @@ type TransitionLabel struct {
 }
 
 type TransitionState struct {
-	State       State
-	Label       TransitionLabel
-	Transitions []*TransitionState
+	Configuration Configuration
+	Label         TransitionLabel
+	Transitions   []*TransitionState
 }
 
 type Direction int
@@ -138,7 +138,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 		nameRange[name] = label
 	}
 	return &TransitionState{
-		State: State{
+		Configuration: Configuration{
 			Process: process,
 			Register: Register{
 				Size:      registerSize,
@@ -158,8 +158,8 @@ func popDirs(dirs []Direction) (Direction, []Direction) {
 }
 
 func produceTransitionStates(ts *TransitionState) {
-	var acc func(Element, State, []Direction) []*TransitionState
-	acc = func(elem Element, state State, dirs []Direction) []*TransitionState {
+	var acc func(Element, Configuration, []Direction) []*TransitionState
+	acc = func(elem Element, state Configuration, dirs []Direction) []*TransitionState {
 		transitionStates := []*TransitionState{}
 		switch elem.Type() {
 		case ElemTypNil:
@@ -188,7 +188,7 @@ func produceTransitionStates(ts *TransitionState) {
 			// Remove the sum element and take the left-hand side process.
 			// No need to append to the directions because element is removed.
 			sc := deepcopy.Copy(state)
-			stateCopy := sc.(State)
+			stateCopy := sc.(Configuration)
 			penultimateDirs := dirs[:len(dirs)-1]
 			lastDir := dirs[len(dirs)-1]
 			process, _ := findElement(stateCopy.Process, penultimateDirs)
@@ -198,7 +198,7 @@ func produceTransitionStates(ts *TransitionState) {
 
 			// Remove the sum element and take the right-hand side process.
 			sc = deepcopy.Copy(state)
-			stateCopy = sc.(State)
+			stateCopy = sc.(Configuration)
 			process, _ = findElement(stateCopy.Process, penultimateDirs)
 			removeElementAfter(process, lastDir, Right)
 			trns = acc(sumElem.ProcessR, stateCopy, dirs)
@@ -238,18 +238,18 @@ func produceTransitionStates(ts *TransitionState) {
 		}
 		return transitionStates
 	}
-	trns := acc(ts.State.Process, ts.State, []Direction{})
+	trns := acc(ts.Configuration.Process, ts.Configuration, []Direction{})
 	ts.Transitions = append(ts.Transitions, trns...)
 }
 
-func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
+func doDblInp(tsState Configuration, prefixPath []Direction) []*TransitionState {
 	inputs := getFirstInputs(tsState.Process, prefixPath)
 	dblInputs := []*TransitionState{}
 
 	for _, path := range inputs {
 		// INP1 transition relation
 		sc := deepcopy.Copy(tsState)
-		inp1 := sc.(State)
+		inp1 := sc.(Configuration)
 
 		// Get the input element.
 		inpElem, _ := findElement(inp1.Process, path.Directions)
@@ -270,7 +270,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 		// INP2A transition relation
 		for _, label := range inp1.Register.Labels() {
 			sc2 := deepcopy.Copy(inp1)
-			inp2a := sc2.(State)
+			inp2a := sc2.(Configuration)
 
 			// Substitute the input bound name with the labelled fresh name.
 			inpInputElem, _ := findElement(inp2a.Process, path.Directions)
@@ -285,7 +285,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 			removeElementAfter(elemBefore, lastDir, Next)
 
 			dblInp2a := &TransitionState{
-				State: inp2a,
+				Configuration: inp2a,
 				Label: TransitionLabel{
 					Rule: DblInp,
 					Label: Label{
@@ -300,7 +300,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 
 		// INP2B transition relation
 		sc2 := deepcopy.Copy(inp1)
-		inp2b := sc2.(State)
+		inp2b := sc2.(Configuration)
 
 		// Find the penultimate element before the inp element in the copied AST.
 		elemBefore, _ = findElement(inp2b.Process, penultimateDirs)
@@ -308,7 +308,7 @@ func doDblInp(tsState State, prefixPath []Direction) []*TransitionState {
 		removeElementAfter(elemBefore, lastDir, Next)
 
 		dblInp2b := &TransitionState{
-			State: inp2b,
+			Configuration: inp2b,
 			Label: TransitionLabel{
 				Rule: DblInp,
 				Label: Label{
@@ -654,12 +654,12 @@ func nextElement(elem Element, direction Direction) Element {
 }
 
 func prettyPrintTransitionState(ts *TransitionState) string {
-	return prettyPrintState(ts.State) + " ¦- " + PrettyPrintAst(ts.State.Process) + " : " +
+	return prettyPrintState(ts.Configuration) + " ¦- " + PrettyPrintAst(ts.Configuration.Process) + " : " +
 		prettyPrintTransitionRule(ts.Label) + " : " +
 		prettyPrintTransitionLabel(ts.Label)
 }
 
-func prettyPrintState(state State) string {
+func prettyPrintState(state Configuration) string {
 	str := "{"
 	labels := state.Register.Labels()
 	reg := state.Register.Register
