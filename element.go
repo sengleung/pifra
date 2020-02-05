@@ -39,16 +39,12 @@ const (
 	ElemSetInp
 )
 
-type Elem struct {
-	SetType ElemSetType
-}
-
 type Element interface {
 	Type() ElementType
 }
 
 type ElemNil struct {
-	Elem
+	SetType ElemSetType
 }
 
 func (e *ElemNil) Type() ElementType {
@@ -56,7 +52,7 @@ func (e *ElemNil) Type() ElementType {
 }
 
 type ElemOutput struct {
-	Elem
+	SetType ElemSetType
 	Channel Name
 	Output  Name
 	Next    Element
@@ -67,7 +63,7 @@ func (e *ElemOutput) Type() ElementType {
 }
 
 type ElemInput struct {
-	Elem
+	SetType ElemSetType
 	Channel Name
 	Input   Name
 	Next    Element
@@ -78,10 +74,10 @@ func (e *ElemInput) Type() ElementType {
 }
 
 type ElemMatch struct {
-	Elem
-	NameL Name
-	NameR Name
-	Next  Element
+	SetType ElemSetType
+	NameL   Name
+	NameR   Name
+	Next    Element
 }
 
 func (e *ElemMatch) Type() ElementType {
@@ -89,7 +85,7 @@ func (e *ElemMatch) Type() ElementType {
 }
 
 type ElemRestriction struct {
-	Elem
+	SetType  ElemSetType
 	Restrict Name
 	Next     Element
 }
@@ -99,7 +95,7 @@ func (e *ElemRestriction) Type() ElementType {
 }
 
 type ElemSum struct {
-	Elem
+	SetType  ElemSetType
 	ProcessL Element
 	ProcessR Element
 }
@@ -109,7 +105,7 @@ func (e *ElemSum) Type() ElementType {
 }
 
 type ElemParallel struct {
-	Elem
+	SetType  ElemSetType
 	ProcessL Element
 	ProcessR Element
 }
@@ -119,8 +115,8 @@ func (e *ElemParallel) Type() ElementType {
 }
 
 type ElemProcess struct {
-	Elem
-	Name string
+	SetType ElemSetType
+	Name    string
 }
 
 func (e *ElemProcess) Type() ElementType {
@@ -128,7 +124,7 @@ func (e *ElemProcess) Type() ElementType {
 }
 
 type ElemProcessConstants struct {
-	Elem
+	SetType    ElemSetType
 	Name       string
 	Parameters []Name
 }
@@ -138,9 +134,9 @@ func (e *ElemProcessConstants) Type() ElementType {
 }
 
 type ElemOutOutput struct {
-	Elem
-	Output Name
-	Next   Element
+	SetType ElemSetType
+	Output  Name
+	Next    Element
 }
 
 func (e *ElemOutOutput) Type() ElementType {
@@ -148,9 +144,9 @@ func (e *ElemOutOutput) Type() ElementType {
 }
 
 type ElemInpInput struct {
-	Elem
-	Input Name
-	Next  Element
+	SetType ElemSetType
+	Input   Name
+	Next    Element
 }
 
 func (e *ElemInpInput) Type() ElementType {
@@ -158,8 +154,8 @@ func (e *ElemInpInput) Type() ElementType {
 }
 
 type ElemRoot struct {
-	Elem
-	Next Element
+	SetType ElemSetType
+	Next    Element
 }
 
 func (e *ElemRoot) Type() ElementType {
