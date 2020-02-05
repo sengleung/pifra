@@ -42,21 +42,25 @@ const (
 	InpFreshInput
 )
 
-type LabelType int
+type SymbolType int
 
 const (
-	LabelTypTau LabelType = iota
-	LabelTypInput
-	LabelTypFreshInput
-	LabelTypFreshOutput
-	LabelTypDblInput
-	LabelTypDblOutput
+	SymbolTypTau SymbolType = iota
+	SymbolTypInput
+	SymbolTypOutput
+	SymbolTypFreshInput
+	SymbolTypFreshOutput
 )
 
+type Symbol struct {
+	Type  SymbolType
+	Value int
+}
+
 type Label struct {
-	Type   LabelType
-	Label  int
-	Label2 int
+	Double  bool
+	Symbol  Symbol
+	Symbol2 Symbol
 }
 
 type Labell struct {
@@ -174,27 +178,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	}
 }
 
-func appendToConfigMap(
-	cmap map[LabelType][]Configuration,
-	configs ...Configuration) map[LabelType][]Configuration {
-	for _, config := range configs {
-		label := config.Label.Type
-		cmap[label] = append(cmap[label], config)
-	}
-
-	return cmap
-}
-
-func configMapToList(
-	cmap map[LabelType][]Configuration) []Configuration {
-	var confs []Configuration
-	for i := LabelTypTau; i <= LabelTypDblOutput; i++ {
-		confs = append(confs, cmap[i]...)
-	}
-	return confs
-}
-
-func trans(conf Configuration) map[LabelType][]Configuration {
+func trans(conf Configuration) []Configuration {
 	process := conf.Process
 	switch process.Type() {
 	// INP1
@@ -205,8 +189,10 @@ func trans(conf Configuration) map[LabelType][]Configuration {
 		// Find the input channel label in the register.
 		inpLabel := inp1Conf.Register.GetLabel(inpElem.Channel.Name)
 		inp1Conf.Label = Label{
-			Type:  LabelTypInput,
-			Label: inpLabel,
+			Symbol: Symbol{
+				Type:  SymbolTypInput,
+				Value: inpLabel,
+			},
 		}
 
 		// Replace the input element with the inp element.
@@ -216,11 +202,11 @@ func trans(conf Configuration) map[LabelType][]Configuration {
 			SetType: ElemSetInp,
 		}
 
-		return appendToConfigMap(make(map[LabelType][]Configuration), inp1Conf)
+		return []Configuration{inp1Conf}
 	// INP2A / INP2B
 	case ElemTypInpInput:
 		// INP2A
-		cmap := make(map[LabelType][]Configuration)
+		var confs []Configuration
 		for _, label := range conf.Register.Labels() {
 			inp2aConf := deepcopy.Copy(conf).(Configuration)
 			inpInputElem := inp2aConf.Process.(*ElemInpInput)
@@ -229,21 +215,25 @@ func trans(conf Configuration) map[LabelType][]Configuration {
 				Type: Fresh,
 			})
 			inp2aConf.Label = Label{
-				Type:  LabelTypInput,
-				Label: label,
+				Symbol: Symbol{
+					Type:  SymbolTypInput,
+					Value: label,
+				},
 			}
 			inp2aConf.Process = inpInputElem.Next
-			cmap = appendToConfigMap(cmap, inp2aConf)
+			confs = append(confs, inp2aConf)
 		}
 
 		// INP2B
 		inp2bConf := deepcopy.Copy(conf).(Configuration)
 		inp2bConf.Label = Label{
-			Type:  LabelTypFreshInput,
-			Label: inp2bConf.Register.Update(),
+			Symbol: Symbol{
+				Type:  SymbolTypFreshInput,
+				Value: inp2bConf.Register.Update(),
+			},
 		}
 		inp2bConf.Process = inp2bConf.Process.(*ElemInpInput).Next
-		return appendToConfigMap(cmap, inp2bConf)
+		return append(confs, inp2bConf)
 
 	// OUT1
 	case ElemTypOutput:
@@ -309,9 +299,8 @@ func getElemSetType(elem Element) ElemSetType {
 	return ElemSetReg
 }
 
-func dblTrans(cmap map[LabelType][]Configuration) map[LabelType][]Configuration {
-	confs := configMapToList(cmap)
-	// Find inp states
+func dblTrans(confs []Configuration) []Configuration {
+	// DBLINP
 	var inpConfs []Configuration
 	for _, conf := range confs {
 		if getElemSetType(conf.Process) == ElemSetInp {
@@ -321,8 +310,7 @@ func dblTrans(cmap map[LabelType][]Configuration) map[LabelType][]Configuration 
 	var dblInps []Configuration
 
 	for _, conf := range inpConfs {
-		dblcmap := trans(conf)
-		dblConfs := configMapToList(dblcmap)
+		dblConfs := trans(conf)
 
 		var inpConfs []Configuration
 		for _, dblConf := range dblConfs {
@@ -333,15 +321,14 @@ func dblTrans(cmap map[LabelType][]Configuration) map[LabelType][]Configuration 
 
 		for _, inpConf := range inpConfs {
 			inpConf.Label = Label{
-				Type:   LabelTypDblInput,
-				Label:  conf.Label.Label,
-				Label2: inpConf.Label.Label,
+				Double:  true,
+				Symbol:  conf.Label.Symbol,
+				Symbol2: inpConf.Label.Symbol,
 			}
 			dblInps = append(dblInps, inpConf)
 		}
 	}
-
-	return appendToConfigMap(make(map[LabelType][]Configuration), dblInps...)
+	return dblInps
 }
 
 func popDirs(dirs []Direction) (Direction, []Direction) {
