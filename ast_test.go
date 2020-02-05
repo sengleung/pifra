@@ -132,9 +132,9 @@ func TestSubstituteName(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			output := substituteName(tc.input, tc.oldName, tc.newName)
-			if err := deep.Equal(tc.output, output); err != nil {
-				spew.Dump(output)
+			substituteName(tc.input, tc.oldName, tc.newName)
+			if err := deep.Equal(tc.input, tc.output); err != nil {
+				spew.Dump(tc.input)
 				t.Error(err)
 			}
 		})
