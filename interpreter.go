@@ -53,56 +53,10 @@ const (
 	LabelTypDblOutput
 )
 
-type Label interface {
-	Type() LabelType
-}
-
-type LabelTau struct{}
-
-func (*LabelTau) Type() LabelType {
-	return LabelTypTau
-}
-
-type LabelInput struct {
-	Label int
-}
-
-func (*LabelInput) Type() LabelType {
-	return LabelTypInput
-}
-
-type LabelFreshInput struct {
-	Label int
-}
-
-func (*LabelFreshInput) Type() LabelType {
-	return LabelTypFreshInput
-}
-
-type LabelFreshOutput struct {
-	Label int
-}
-
-func (*LabelFreshOutput) Type() LabelType {
-	return LabelTypFreshOutput
-}
-
-type LabelDblInput struct {
-	Label1 int
+type Label struct {
+	Type   LabelType
+	Label  int
 	Label2 int
-}
-
-func (*LabelDblInput) Type() LabelType {
-	return LabelTypDblInput
-}
-
-type LabelDblOutput struct {
-	Label1 int
-	Label2 int
-}
-
-func (*LabelDblOutput) Type() LabelType {
-	return LabelTypDblOutput
 }
 
 type Labell struct {
@@ -221,11 +175,23 @@ func newTransitionStateRoot(process Element) *TransitionState {
 }
 
 func appendToConfigMap(
-	config Configuration,
-	cmap map[LabelType][]Configuration) map[LabelType][]Configuration {
-	label := config.Label.Type()
-	cmap[label] = append(cmap[label], config)
+	cmap map[LabelType][]Configuration,
+	configs ...Configuration) map[LabelType][]Configuration {
+	for _, config := range configs {
+		label := config.Label.Type
+		cmap[label] = append(cmap[label], config)
+	}
+
 	return cmap
+}
+
+func configMapToList(
+	cmap map[LabelType][]Configuration) []Configuration {
+	var confs []Configuration
+	for i := LabelTypTau; i <= LabelTypDblOutput; i++ {
+		confs = append(confs, cmap[i]...)
+	}
+	return confs
 }
 
 func trans(conf Configuration) map[LabelType][]Configuration {
@@ -238,18 +204,47 @@ func trans(conf Configuration) map[LabelType][]Configuration {
 
 		// Find the input channel label in the register.
 		inpLabel := inp1Conf.Register.GetLabel(inpElem.Channel.Name)
-		inp1Conf.Label = &LabelInput{
+		inp1Conf.Label = Label{
+			Type:  LabelTypInput,
 			Label: inpLabel,
 		}
 
 		// Replace the input element with the inp element.
 		inp1Conf.Process = &ElemInpInput{
-			Input: inpElem.Input,
-			Next:  inpElem.Next,
+			Input:   inpElem.Input,
+			Next:    inpElem.Next,
+			SetType: ElemSetInp,
 		}
-		return appendToConfigMap(inp1Conf, make(map[LabelType][]Configuration))
+
+		return appendToConfigMap(make(map[LabelType][]Configuration), inp1Conf)
 	// INP2A / INP2B
 	case ElemTypInpInput:
+		// INP2A
+		cmap := make(map[LabelType][]Configuration)
+		for _, label := range conf.Register.Labels() {
+			inp2aConf := deepcopy.Copy(conf).(Configuration)
+			inpInputElem := inp2aConf.Process.(*ElemInpInput)
+			substituteName(inpInputElem, inpInputElem.Input, Name{
+				Name: inp2aConf.Register.GetName(label),
+				Type: Fresh,
+			})
+			inp2aConf.Label = Label{
+				Type:  LabelTypInput,
+				Label: label,
+			}
+			inp2aConf.Process = inpInputElem.Next
+			cmap = appendToConfigMap(cmap, inp2aConf)
+		}
+
+		// INP2B
+		inp2bConf := deepcopy.Copy(conf).(Configuration)
+		inp2bConf.Label = Label{
+			Type:  LabelTypFreshInput,
+			Label: inp2bConf.Register.Update(),
+		}
+		inp2bConf.Process = inp2bConf.Process.(*ElemInpInput).Next
+		return appendToConfigMap(cmap, inp2bConf)
+
 	// OUT1
 	case ElemTypOutput:
 	// OUT2
@@ -267,9 +262,86 @@ func trans(conf Configuration) map[LabelType][]Configuration {
 	case ElemTypRoot:
 		rootConf := deepcopy.Copy(conf).(Configuration)
 		rootConf.Process = rootConf.Process.(*ElemRoot).Next
-		return trans(rootConf)
+		return dblTrans(trans(rootConf))
 	}
 	return nil
+}
+
+func getElemSetType(elem Element) ElemSetType {
+	switch elem.Type() {
+	case ElemTypNil:
+		nilElem := elem.(*ElemNil)
+		return nilElem.SetType
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		return outElem.SetType
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		return inpElem.SetType
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		return matchElem.SetType
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		return resElem.SetType
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		return sumElem.SetType
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		return parElem.SetType
+	case ElemTypProcess:
+		procElem := elem.(*ElemProcess)
+		return procElem.SetType
+	case ElemTypProcessConstants:
+		pcsElem := elem.(*ElemProcessConstants)
+		return pcsElem.SetType
+	case ElemTypOutOutput:
+		elemOutOut := elem.(*ElemOutOutput)
+		return elemOutOut.SetType
+	case ElemTypInpInput:
+		elemInpInp := elem.(*ElemInpInput)
+		return elemInpInp.SetType
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return rootElem.SetType
+	}
+	return ElemSetReg
+}
+
+func dblTrans(cmap map[LabelType][]Configuration) map[LabelType][]Configuration {
+	confs := configMapToList(cmap)
+	// Find inp states
+	var inpConfs []Configuration
+	for _, conf := range confs {
+		if getElemSetType(conf.Process) == ElemSetInp {
+			inpConfs = append(inpConfs, conf)
+		}
+	}
+	var dblInps []Configuration
+
+	for _, conf := range inpConfs {
+		dblcmap := trans(conf)
+		dblConfs := configMapToList(dblcmap)
+
+		var inpConfs []Configuration
+		for _, dblConf := range dblConfs {
+			if getElemSetType(dblConf.Process) == ElemSetReg {
+				inpConfs = append(inpConfs, dblConf)
+			}
+		}
+
+		for _, inpConf := range inpConfs {
+			inpConf.Label = Label{
+				Type:   LabelTypDblInput,
+				Label:  conf.Label.Label,
+				Label2: inpConf.Label.Label,
+			}
+			dblInps = append(dblInps, inpConf)
+		}
+	}
+
+	return appendToConfigMap(make(map[LabelType][]Configuration), dblInps...)
 }
 
 func popDirs(dirs []Direction) (Direction, []Direction) {
