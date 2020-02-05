@@ -42,7 +42,70 @@ const (
 	InpFreshInput
 )
 
-type Label struct {
+type LabelType int
+
+const (
+	LabelTypTau LabelType = iota
+	LabelTypInput
+	LabelTypFreshInput
+	LabelTypFreshOutput
+	LabelTypDblInput
+	LabelTypDblOutput
+)
+
+type Label interface {
+	Type() LabelType
+}
+
+type LabelTau struct{}
+
+func (*LabelTau) Type() LabelType {
+	return LabelTypTau
+}
+
+type LabelInput struct {
+	Label int
+}
+
+func (*LabelInput) Type() LabelType {
+	return LabelTypInput
+}
+
+type LabelFreshInput struct {
+	Label int
+}
+
+func (*LabelFreshInput) Type() LabelType {
+	return LabelTypFreshInput
+}
+
+type LabelFreshOutput struct {
+	Label int
+}
+
+func (*LabelFreshOutput) Type() LabelType {
+	return LabelTypFreshOutput
+}
+
+type LabelDblInput struct {
+	Label1 int
+	Label2 int
+}
+
+func (*LabelDblInput) Type() LabelType {
+	return LabelTypDblInput
+}
+
+type LabelDblOutput struct {
+	Label1 int
+	Label2 int
+}
+
+func (*LabelDblOutput) Type() LabelType {
+	return LabelTypDblOutput
+}
+
+type Labell struct {
 	Type   TransitionLabelType
 	Label1 int
 	Label2 int
@@ -80,17 +143,23 @@ func (reg *Register) GetName(label int) string {
 	return reg.Register[label]
 }
 
+// GetLabel returns register label corresponding to the name.
+func (reg *Register) GetLabel(name string) int {
+	return reg.NameRange[name]
+}
+
 func (reg *Register) find(i int) string { return "" }         // TODO
 func (reg *Register) findAll() []string { return []string{} } // TODO
 
 type Configuration struct {
 	Process  Element
 	Register Register
+	Label    Label
 }
 
 type TransitionLabel struct {
 	Rule  TransitionType
-	Label Label
+	Label Labell
 }
 
 type TransitionState struct {
@@ -151,11 +220,28 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	}
 }
 
-func trans(config Configuration) {
-	process := config.Process
+func trans(conf Configuration) []Configuration {
+	process := conf.Process
 	switch process.Type() {
 	// INP1
 	case ElemTypInput:
+		inp1Conf := deepcopy.Copy(conf).(Configuration)
+		inpElem := inp1Conf.Process.(*ElemInput)
+
+		// Find the input channel label in the register.
+		inpLabel := inp1Conf.Register.GetLabel(inpElem.Channel.Name)
+		inp1Conf.Label = &LabelInput{
+			Label: inpLabel,
+		}
+
+		// Replace the input element with the inp element.
+		inp1Conf.Process = &ElemInpInput{
+			Input: inpElem.Input,
+			Next:  inpElem.Next,
+		}
+
+		return []Configuration{inp1Conf}
+
 	// INP2A / INP2B
 	case ElemTypInpInput:
 	// OUT1
@@ -172,7 +258,12 @@ func trans(config Configuration) {
 	case ElemTypSum:
 	// PAR1, PAR2, COMM, CLOSE
 	case ElemTypParallel:
+	case ElemTypRoot:
+		rootConf := deepcopy.Copy(conf).(Configuration)
+		rootConf.Process = rootConf.Process.(*ElemRoot).Next
+		return trans(rootConf)
 	}
+	return nil
 }
 
 func popDirs(dirs []Direction) (Direction, []Direction) {
@@ -312,7 +403,7 @@ func doDblInp(tsState Configuration, prefixPath []Direction) []*TransitionState 
 				Configuration: inp2a,
 				Label: TransitionLabel{
 					Rule: DblInp,
-					Label: Label{
+					Label: Labell{
 						Type:   InpKnown,
 						Label1: inpLabel,
 						Label2: label,
@@ -335,7 +426,7 @@ func doDblInp(tsState Configuration, prefixPath []Direction) []*TransitionState 
 			Configuration: inp2b,
 			Label: TransitionLabel{
 				Rule: DblInp,
-				Label: Label{
+				Label: Labell{
 					Type:   InpFreshInput,
 					Label1: inpLabel,
 					Label2: inp2b.Register.Update(),
