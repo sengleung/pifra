@@ -151,6 +151,30 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	}
 }
 
+func trans(config Configuration) {
+	process := config.Process
+	switch process.Type() {
+	// INP1
+	case ElemTypInput:
+	// INP2A / INP2B
+	case ElemTypInpInput:
+	// OUT1
+	case ElemTypOutput:
+	// OUT2
+	case ElemTypOutOutput:
+	// MATCH
+	case ElemTypMatch:
+	// RES, OPEN
+	case ElemTypRestriction:
+	// REC
+	case ElemTypProcess, ElemTypProcessConstants:
+	// SUM
+	case ElemTypSum:
+	// PAR1, PAR2, COMM, CLOSE
+	case ElemTypParallel:
+	}
+}
+
 func popDirs(dirs []Direction) (Direction, []Direction) {
 	var direction Direction
 	direction, dirs = dirs[len(dirs)-1], dirs[:len(dirs)-1]
