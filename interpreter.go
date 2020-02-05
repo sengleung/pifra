@@ -220,7 +220,15 @@ func newTransitionStateRoot(process Element) *TransitionState {
 	}
 }
 
-func trans(conf Configuration) []Configuration {
+func appendToConfigMap(
+	config Configuration,
+	cmap map[LabelType][]Configuration) map[LabelType][]Configuration {
+	label := config.Label.Type()
+	cmap[label] = append(cmap[label], config)
+	return cmap
+}
+
+func trans(conf Configuration) map[LabelType][]Configuration {
 	process := conf.Process
 	switch process.Type() {
 	// INP1
@@ -239,9 +247,7 @@ func trans(conf Configuration) []Configuration {
 			Input: inpElem.Input,
 			Next:  inpElem.Next,
 		}
-
-		return []Configuration{inp1Conf}
-
+		return appendToConfigMap(inp1Conf, make(map[LabelType][]Configuration))
 	// INP2A / INP2B
 	case ElemTypInpInput:
 	// OUT1
