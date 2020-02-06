@@ -913,3 +913,27 @@ func prettyPrintTransitionLabel(label TransitionLabel) string {
 	}
 	return ""
 }
+
+func prettyPrintSymbol(symbol Symbol) string {
+	s := symbol.Value
+	switch symbol.Type {
+	case SymbolTypInput:
+		return strconv.Itoa(s) + " "
+	case SymbolTypOutput:
+		return strconv.Itoa(s) + "'"
+	case SymbolTypFreshInput:
+		return strconv.Itoa(s) + "*"
+	case SymbolTypFreshOutput:
+		return strconv.Itoa(s) + "^"
+	case SymbolTypTau:
+		return "t "
+	}
+	return ""
+}
+
+func prettyPrintLabel(label Label) string {
+	if !label.Double {
+		return prettyPrintSymbol(label.Symbol) + " "
+	}
+	return prettyPrintSymbol(label.Symbol) + prettyPrintSymbol(label.Symbol2) + " "
+}
