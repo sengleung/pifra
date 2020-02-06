@@ -262,6 +262,23 @@ func trans(conf Configuration) []Configuration {
 
 	// OUT1
 	case ElemTypOutput:
+		out1Conf := deepcopy.Copy(conf).(Configuration)
+		outElem := out1Conf.Process.(*ElemOutput)
+
+		outLabel := out1Conf.Register.GetLabel(outElem.Channel.Name)
+		out1Conf.Label = Label{
+			Symbol: Symbol{
+				Type:  SymbolTypOutput,
+				Value: outLabel,
+			},
+		}
+		out1Conf.Process = &ElemOutOutput{
+			Output:  outElem.Output,
+			Next:    outElem.Next,
+			SetType: ElemSetOut,
+		}
+		return []Configuration{out1Conf}
+
 	// OUT2
 	case ElemTypOutOutput:
 	// MATCH
