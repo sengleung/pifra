@@ -96,6 +96,26 @@ func (reg *Register) Labels() []int {
 	return labels
 }
 
+// UpdateMin updates the register with a name at the minimum label
+// where it does not exist in the set of free names.
+func (reg *Register) UpdateMin(name string, freshNames []string) int {
+	freshNamesSet := make(map[string]bool)
+	for _, freshName := range freshNames {
+		freshNamesSet[freshName] = true
+	}
+	labels := reg.Labels()
+	for _, label := range labels {
+		if !freshNamesSet[reg.GetName(label)] {
+			reg.Register[label] = name
+			return label
+		}
+	}
+	label := reg.Index
+	reg.Register[label] = name
+	reg.Index = reg.Index + 1
+	return label
+}
+
 // GetName returns register name corresponding to the label.
 func (reg *Register) GetName(label int) string {
 	return reg.Register[label]
@@ -226,13 +246,17 @@ func trans(conf Configuration) []Configuration {
 
 		// INP2B
 		inp2bConf := deepcopy.Copy(conf).(Configuration)
+		inpInpElem := inp2bConf.Process.(*ElemInpInput)
+
+		name := inpInpElem.Input.Name
+		freshNamesP := GetAllFreshNames(inpInpElem.Next)
 		inp2bConf.Label = Label{
 			Symbol: Symbol{
 				Type:  SymbolTypFreshInput,
-				Value: inp2bConf.Register.Update(),
+				Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
 			},
 		}
-		inp2bConf.Process = inp2bConf.Process.(*ElemInpInput).Next
+		inp2bConf.Process = inpInpElem.Next
 
 		return append(confs, inp2bConf)
 
