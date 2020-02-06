@@ -294,6 +294,48 @@ func trans(conf Configuration) []Configuration {
 
 	// PAR1, PAR2, COMM, CLOSE
 	case ElemTypParallel:
+		var confs []Configuration
+		proc := conf.Process.(*ElemParallel)
+		basePar := deepcopy.Copy(conf).(Configuration)
+
+		// PAR1_L
+		if getElemSetType(proc.ProcessL) == ElemSetReg {
+			parConf := deepcopy.Copy(conf).(Configuration)
+			parElem := parConf.Process.(*ElemParallel)
+			parConf.Process = parElem.ProcessL
+			lconfs := trans(parConf)
+			dconfs := dblTrans(lconfs)
+
+			// PAR2_L
+			for _, conf := range dconfs {
+				parConf = deepcopy.Copy(basePar).(Configuration)
+
+				// When DBPINP/DBPOUT and the 2nd label is fresh input.
+				if conf.Label.Double && conf.Label.Symbol2.Type == SymbolTypFreshInput {
+					// Find fn(P', Q).
+					freeNamesP := GetAllFreshNames(conf.Process)
+					freeNamesQ := GetAllFreshNames(parElem.ProcessR)
+					// Get the name reg(i).
+					name := conf.Register.GetName(conf.Label.Symbol2.Value)
+					// Update register to be j = min{j | reg(j) \notin fn(P′,Q)}.
+					newLabel := parConf.Register.UpdateMin(name,
+						append(freeNamesP, freeNamesQ...))
+					// Update the label j.
+					parConf.Label = conf.Label
+					parConf.Label.Symbol2.Value = newLabel
+				} else {
+					parConf.Label = conf.Label
+					parConf.Register = conf.Register
+				}
+				// Insert P' to P' | Q.
+				parConf.Process.(*ElemParallel).ProcessL = conf.Process
+
+				confs = append(confs, parConf)
+			}
+		}
+
+		return confs
+
 	case ElemTypRoot:
 		rootConf := deepcopy.Copy(conf).(Configuration)
 		rootConf.Process = rootConf.Process.(*ElemRoot).Next
