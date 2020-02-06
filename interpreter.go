@@ -294,7 +294,8 @@ func trans(conf Configuration) []Configuration {
 
 	// PAR1, PAR2, COMM, CLOSE
 	case ElemTypParallel:
-		var confs []Configuration
+		var lconfs []Configuration
+		var rconfs []Configuration
 		proc := conf.Process.(*ElemParallel)
 		basePar := deepcopy.Copy(conf).(Configuration)
 
@@ -303,15 +304,17 @@ func trans(conf Configuration) []Configuration {
 			parConf := deepcopy.Copy(conf).(Configuration)
 			parElem := parConf.Process.(*ElemParallel)
 			parConf.Process = parElem.ProcessL
-			lconfs := trans(parConf)
-			dconfs := dblTrans(lconfs)
+			tconfs := trans(parConf)
+			dconfs := dblTrans(tconfs)
 
 			// PAR2_L
 			for _, conf := range dconfs {
 				parConf = deepcopy.Copy(basePar).(Configuration)
 
-				// When DBPINP/DBPOUT and the 2nd label is fresh input.
-				if conf.Label.Double && conf.Label.Symbol2.Type == SymbolTypFreshInput {
+				// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
+				if conf.Label.Double &&
+					(conf.Label.Symbol2.Type == SymbolTypFreshInput ||
+						conf.Label.Symbol2.Type == SymbolTypFreshOutput) {
 					// Find fn(P', Q).
 					freeNamesP := GetAllFreshNames(conf.Process)
 					freeNamesQ := GetAllFreshNames(parElem.ProcessR)
@@ -330,11 +333,48 @@ func trans(conf Configuration) []Configuration {
 				// Insert P' to P' | Q.
 				parConf.Process.(*ElemParallel).ProcessL = conf.Process
 
-				confs = append(confs, parConf)
+				lconfs = append(lconfs, parConf)
 			}
 		}
 
-		return confs
+		// PAR1_R
+		if getElemSetType(proc.ProcessR) == ElemSetReg {
+			parConf := deepcopy.Copy(conf).(Configuration)
+			parElem := parConf.Process.(*ElemParallel)
+			parConf.Process = parElem.ProcessR
+			tconfs := trans(parConf)
+			dconfs := dblTrans(tconfs)
+
+			// PAR2_R
+			for _, conf := range dconfs {
+				parConf = deepcopy.Copy(basePar).(Configuration)
+				// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
+				if conf.Label.Double &&
+					(conf.Label.Symbol2.Type == SymbolTypFreshInput ||
+						conf.Label.Symbol2.Type == SymbolTypFreshOutput) {
+					// Find fn(P, Q').
+					freeNamesQ := GetAllFreshNames(conf.Process)
+					freeNamesP := GetAllFreshNames(parElem.ProcessL)
+					// Get the name reg(i).
+					name := conf.Register.GetName(conf.Label.Symbol2.Value)
+					// Update register to be j = min{j | reg(j) \notin fn(P,Q')}.
+					newLabel := parConf.Register.UpdateMin(name,
+						append(freeNamesP, freeNamesQ...))
+					// Update the label j.
+					parConf.Label = conf.Label
+					parConf.Label.Symbol2.Value = newLabel
+				} else {
+					parConf.Label = conf.Label
+					parConf.Register = conf.Register
+				}
+				// Insert P' to P | Q'.
+				parConf.Process.(*ElemParallel).ProcessR = conf.Process
+
+				rconfs = append(rconfs, parConf)
+			}
+		}
+
+		return append(lconfs, rconfs...)
 
 	case ElemTypRoot:
 		rootConf := deepcopy.Copy(conf).(Configuration)
