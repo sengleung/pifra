@@ -281,6 +281,21 @@ func trans(conf Configuration) []Configuration {
 
 	// OUT2
 	case ElemTypOutOutput:
+		var confs []Configuration
+		for _, label := range conf.Register.Labels() {
+			out2Conf := deepcopy.Copy(conf).(Configuration)
+			outOutputElem := out2Conf.Process.(*ElemOutOutput)
+			out2Conf.Label = Label{
+				Symbol: Symbol{
+					Type:  SymbolTypOutput,
+					Value: label,
+				},
+			}
+			out2Conf.Process = outOutputElem.Next
+			confs = append(confs, out2Conf)
+		}
+		return confs
+
 	// MATCH
 	case ElemTypMatch:
 	// RES, OPEN
