@@ -201,8 +201,8 @@ func trans(conf Configuration) []Configuration {
 			Next:    inpElem.Next,
 			SetType: ElemSetInp,
 		}
-
 		return []Configuration{inp1Conf}
+
 	// INP2A / INP2B
 	case ElemTypInpInput:
 		// INP2A
@@ -233,6 +233,7 @@ func trans(conf Configuration) []Configuration {
 			},
 		}
 		inp2bConf.Process = inp2bConf.Process.(*ElemInpInput).Next
+
 		return append(confs, inp2bConf)
 
 	// OUT1
@@ -247,12 +248,34 @@ func trans(conf Configuration) []Configuration {
 	case ElemTypProcess, ElemTypProcessConstants:
 	// SUM
 	case ElemTypSum:
+		var confs []Configuration
+
+		// SUM_L
+		sumConf := deepcopy.Copy(conf).(Configuration)
+		sumElem := sumConf.Process.(*ElemSum)
+		sumConf.Process = sumElem.ProcessL
+		lconfs := trans(sumConf)
+		dconfs := dblTrans(lconfs)
+		confs = append(confs, dconfs...)
+
+		// SUM_R
+		sumConf = deepcopy.Copy(conf).(Configuration)
+		sumElem = sumConf.Process.(*ElemSum)
+		sumConf.Process = sumElem.ProcessR
+		rconfs := trans(sumConf)
+		dconfs = dblTrans(rconfs)
+		confs = append(confs, dconfs...)
+
+		return confs
+
 	// PAR1, PAR2, COMM, CLOSE
 	case ElemTypParallel:
 	case ElemTypRoot:
 		rootConf := deepcopy.Copy(conf).(Configuration)
 		rootConf.Process = rootConf.Process.(*ElemRoot).Next
-		return dblTrans(trans(rootConf))
+		tconfs := trans(rootConf)
+		dconfs := dblTrans(tconfs)
+		return dconfs
 	}
 	return nil
 }
@@ -301,13 +324,23 @@ func getElemSetType(elem Element) ElemSetType {
 
 func dblTrans(confs []Configuration) []Configuration {
 	// DBLINP
+	var dblInps []Configuration
+
+	// Keep existing double inputs.
+	for _, conf := range confs {
+		if conf.Label.Double {
+			dblInps = append(dblInps, conf)
+		}
+	}
+
+	// trans() intermediate input processes.
 	var inpConfs []Configuration
+
 	for _, conf := range confs {
 		if getElemSetType(conf.Process) == ElemSetInp && !conf.Label.Double {
 			inpConfs = append(inpConfs, conf)
 		}
 	}
-	var dblInps []Configuration
 
 	for _, conf := range inpConfs {
 		dblConfs := trans(conf)
@@ -328,6 +361,7 @@ func dblTrans(confs []Configuration) []Configuration {
 			dblInps = append(dblInps, inpConf)
 		}
 	}
+
 	return dblInps
 }
 
@@ -834,12 +868,16 @@ func nextElement(elem Element, direction Direction) Element {
 }
 
 func prettyPrintTransitionState(ts *TransitionState) string {
-	return prettyPrintState(ts.Configuration) + " ¦- " + PrettyPrintAst(ts.Configuration.Process) + " : " +
+	return prettyPrintConfiguration(ts.Configuration) + " ¦- " + PrettyPrintAst(ts.Configuration.Process) + " : " +
 		prettyPrintTransitionRule(ts.Label) + " : " +
 		prettyPrintTransitionLabel(ts.Label)
 }
 
-func prettyPrintState(state Configuration) string {
+func prettyPrintState(conf Configuration) string {
+	return prettyPrintConfiguration(conf) + " ¦- " + PrettyPrintAst(conf.Process) + " : " + prettyPrintLabel(conf.Label)
+}
+
+func prettyPrintConfiguration(state Configuration) string {
 	str := "{"
 	labels := state.Register.Labels()
 	reg := state.Register.Register
