@@ -50,6 +50,7 @@ const (
 	SymbolTypOutput
 	SymbolTypFreshInput
 	SymbolTypFreshOutput
+	SymbolTypTransition
 )
 
 type Symbol struct {
@@ -287,7 +288,7 @@ func trans(conf Configuration) []Configuration {
 			outOutputElem := out2Conf.Process.(*ElemOutOutput)
 			out2Conf.Label = Label{
 				Symbol: Symbol{
-					Type:  SymbolTypOutput,
+					Type:  SymbolTypTransition,
 					Value: label,
 				},
 			}
@@ -461,46 +462,46 @@ func getElemSetType(elem Element) ElemSetType {
 }
 
 func dblTrans(confs []Configuration) []Configuration {
-	// DBLINP
-	var dblInps []Configuration
+	var dblInpOuts []Configuration
 
-	// Keep existing double inputs.
+	// Keep existing double inputs/double outputs.
 	for _, conf := range confs {
 		if conf.Label.Double {
-			dblInps = append(dblInps, conf)
+			dblInpOuts = append(dblInpOuts, conf)
 		}
 	}
 
 	// trans() intermediate input processes.
-	var inpConfs []Configuration
+	var interConfs []Configuration
 
 	for _, conf := range confs {
-		if getElemSetType(conf.Process) == ElemSetInp && !conf.Label.Double {
-			inpConfs = append(inpConfs, conf)
+		elemSetType := getElemSetType(conf.Process)
+		if !conf.Label.Double && (elemSetType == ElemSetInp || elemSetType == ElemSetOut) {
+			interConfs = append(interConfs, conf)
 		}
 	}
 
-	for _, conf := range inpConfs {
-		dblConfs := trans(conf)
+	for _, conf := range interConfs {
+		tconfs := trans(conf)
 
-		var inpConfs []Configuration
-		for _, dblConf := range dblConfs {
+		var dconfs []Configuration
+		for _, dblConf := range tconfs {
 			if getElemSetType(dblConf.Process) == ElemSetReg && !conf.Label.Double {
-				inpConfs = append(inpConfs, dblConf)
+				dconfs = append(dconfs, dblConf)
 			}
 		}
 
-		for _, inpConf := range inpConfs {
-			inpConf.Label = Label{
+		for _, dconf := range dconfs {
+			dconf.Label = Label{
 				Double:  true,
 				Symbol:  conf.Label.Symbol,
-				Symbol2: inpConf.Label.Symbol,
+				Symbol2: dconf.Label.Symbol,
 			}
-			dblInps = append(dblInps, inpConf)
+			dblInpOuts = append(dblInpOuts, dconf)
 		}
 	}
 
-	return dblInps
+	return dblInpOuts
 }
 
 func popDirs(dirs []Direction) (Direction, []Direction) {
@@ -1103,6 +1104,8 @@ func prettyPrintSymbol(symbol Symbol) string {
 		return strconv.Itoa(s) + "^"
 	case SymbolTypTau:
 		return "t "
+	case SymbolTypTransition:
+		return strconv.Itoa(s) + " "
 	}
 	return ""
 }
