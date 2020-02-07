@@ -38,9 +38,9 @@ type Register struct {
 	NameRange map[string]int
 }
 
-// Update adds a fresh name to the register at the minimum index.
-func (reg *Register) Update() int {
-	freeName := generateFreshName("fn")
+// UpdateAfter adds a free name to the register at the next label.
+// reg+v = reg U {(|reg|+1, v)}.
+func (reg *Register) UpdateAfter(freeName string) int {
 	index := reg.Index
 	reg.Register[index] = freeName
 	reg.NameRange[freeName] = index
