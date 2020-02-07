@@ -80,12 +80,18 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 
 // GetName returns register name corresponding to the label.
 func (reg *Register) GetName(label int) string {
-	return reg.Register[label]
+	if name, ok := reg.Register[label]; ok {
+		return name
+	}
+	return "NAME_NOT_FOUND"
 }
 
 // GetLabel returns register label corresponding to the name.
 func (reg *Register) GetLabel(name string) int {
-	return reg.NameRange[name]
+	if label, ok := reg.NameRange[name]; ok {
+		return label
+	}
+	return -1
 }
 
 func (reg *Register) find(i int) string { return "" }         // TODO
@@ -243,18 +249,55 @@ func trans(conf Configuration) []Configuration {
 	// RES, OPEN
 	case ElemTypRestriction:
 		var confs []Configuration
+		baseResConf := deepcopy.Copy(conf).(Configuration)
+
+		// RES
 		resConf := deepcopy.Copy(conf).(Configuration)
 		resElem := resConf.Process.(*ElemRestriction)
+		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
+		// (reg+a)
+		disallowedLabel := resConf.Register.UpdateAfter(resName)
 		tconfs := trans(resConf)
 		dconfs := dblTrans(tconfs)
 		for _, conf := range dconfs {
+			// Exclude all labels where (|reg|+1).
+			if conf.Label.Symbol.Value == disallowedLabel {
+				continue
+			}
+			// Do not append DBLOUTs as they are found in OPEN.
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
+				continue
+			}
+			conf.Process = &ElemRestriction{
+				Restrict: resElem.Restrict,
+				Next:     conf.Process,
+			}
+			confs = append(confs, conf)
+		}
 
-			} else {
+		// OPEN
+		openConf := deepcopy.Copy(baseResConf).(Configuration)
+		openConf.Process = openConf.Process.(*ElemRestriction).Next
+		// Find fn(P).
+		freeNamesP := GetAllFreshNames(conf.Process)
+		// Update register to be i = min{i | reg(i) \notin fn(P)}.
+		openConf.Register.UpdateMin(resName, freeNamesP)
+		otconfs := trans(openConf)
+		odconfs := dblTrans(otconfs)
+
+		for _, conf := range odconfs {
+			// Simulating exclude all labels where (|σ|+1).
+			if conf.Label.Symbol.Value == -1 {
+				continue
+			}
+			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
+				conf.Label.Symbol2.Type = SymbolTypFreshOutput
 				confs = append(confs, conf)
 			}
 		}
+
+		return confs
 
 	// REC
 	case ElemTypProcess, ElemTypProcessConstants:
