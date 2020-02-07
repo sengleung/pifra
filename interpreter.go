@@ -301,6 +301,20 @@ func trans(conf Configuration) []Configuration {
 	case ElemTypMatch:
 	// RES, OPEN
 	case ElemTypRestriction:
+		var confs []Configuration
+		resConf := deepcopy.Copy(conf).(Configuration)
+		resElem := resConf.Process.(*ElemRestriction)
+		resConf.Process = resElem.Next
+		tconfs := trans(resConf)
+		dconfs := dblTrans(tconfs)
+		for _, conf := range dconfs {
+			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
+
+			} else {
+				confs = append(confs, conf)
+			}
+		}
+
 	// REC
 	case ElemTypProcess, ElemTypProcessConstants:
 	// SUM
