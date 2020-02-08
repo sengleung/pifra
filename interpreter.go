@@ -17,7 +17,7 @@ const (
 	SymbolTypOutput
 	SymbolTypFreshInput
 	SymbolTypFreshOutput
-	SymbolTypTransition
+	SymbolTypKnown
 )
 
 type Symbol struct {
@@ -191,7 +191,7 @@ func trans(conf Configuration) []Configuration {
 			})
 			inp2aConf.Label = Label{
 				Symbol: Symbol{
-					Type:  SymbolTypInput,
+					Type:  SymbolTypKnown,
 					Value: label,
 				},
 			}
@@ -242,7 +242,7 @@ func trans(conf Configuration) []Configuration {
 			outOutputElem := out2Conf.Process.(*ElemOutOutput)
 			out2Conf.Label = Label{
 				Symbol: Symbol{
-					Type:  SymbolTypTransition,
+					Type:  SymbolTypKnown,
 					Value: label,
 				},
 			}
@@ -362,6 +362,7 @@ func trans(conf Configuration) []Configuration {
 
 	// PAR1, PAR2, COMM, CLOSE
 	case ElemTypParallel:
+		var confs []Configuration
 		var lconfs []Configuration
 		var rconfs []Configuration
 		proc := conf.Process.(*ElemParallel)
@@ -435,14 +436,64 @@ func trans(conf Configuration) []Configuration {
 					parConf.Label = conf.Label
 					parConf.Register = conf.Register
 				}
-				// Insert P' to P | Q'.
+				// Insert Q' to P | Q'.
 				parConf.Process.(*ElemParallel).ProcessR = conf.Process
 
 				rconfs = append(rconfs, parConf)
 			}
 		}
 
-		return append(lconfs, rconfs...)
+		confs = append(confs, append(lconfs, rconfs...)...)
+
+		// COMM_L
+		for _, lconf := range lconfs {
+			for _, rconf := range rconfs {
+				if lconf.Label.Double && lconf.Label.Symbol.Type == SymbolTypOutput &&
+					lconf.Label.Symbol2.Type == SymbolTypKnown &&
+					rconf.Label.Double && rconf.Label.Symbol.Type == SymbolTypInput &&
+					rconf.Label.Symbol2.Type == SymbolTypKnown {
+					lproc := deepcopy.Copy(lconf.Process).(Element).(*ElemParallel).ProcessL
+					rproc := deepcopy.Copy(rconf.Process).(Element).(*ElemParallel).ProcessR
+					comm := deepcopy.Copy(basePar).(Configuration)
+					comm.Process = &ElemParallel{
+						ProcessL: lproc,
+						ProcessR: rproc,
+					}
+					comm.Label = Label{
+						Symbol: Symbol{
+							Type: SymbolTypTau,
+						},
+					}
+					confs = append(confs, comm)
+				}
+			}
+		}
+
+		// COMM_R
+		for _, lconf := range lconfs {
+			for _, rconf := range rconfs {
+				if rconf.Label.Double && rconf.Label.Symbol.Type == SymbolTypOutput &&
+					rconf.Label.Symbol2.Type == SymbolTypKnown &&
+					lconf.Label.Double && lconf.Label.Symbol.Type == SymbolTypInput &&
+					lconf.Label.Symbol2.Type == SymbolTypKnown {
+					lproc := deepcopy.Copy(lconf.Process).(Element).(*ElemParallel).ProcessL
+					rproc := deepcopy.Copy(rconf.Process).(Element).(*ElemParallel).ProcessR
+					comm := deepcopy.Copy(basePar).(Configuration)
+					comm.Process = &ElemParallel{
+						ProcessL: lproc,
+						ProcessR: rproc,
+					}
+					comm.Label = Label{
+						Symbol: Symbol{
+							Type: SymbolTypTau,
+						},
+					}
+					confs = append(confs, comm)
+				}
+			}
+		}
+
+		return confs
 
 	case ElemTypRoot:
 		rootConf := deepcopy.Copy(conf).(Configuration)
@@ -457,9 +508,10 @@ func trans(conf Configuration) []Configuration {
 func dblTrans(confs []Configuration) []Configuration {
 	var dblInpOuts []Configuration
 
-	// Keep existing double inputs/double outputs.
+	// Keep existing double inputs/double outputs and taus.
 	for _, conf := range confs {
-		if conf.Label.Double {
+		if conf.Label.Double ||
+			(!conf.Label.Double && conf.Label.Symbol.Type == SymbolTypTau) {
 			dblInpOuts = append(dblInpOuts, conf)
 		}
 	}
@@ -581,7 +633,7 @@ func prettyPrintSymbol(symbol Symbol) string {
 		return strconv.Itoa(s) + "^"
 	case SymbolTypTau:
 		return "t "
-	case SymbolTypTransition:
+	case SymbolTypKnown:
 		return strconv.Itoa(s) + " "
 	}
 	return ""
