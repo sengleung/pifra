@@ -257,7 +257,7 @@ func trans(conf Configuration) []Configuration {
 	case ElemTypRestriction:
 		var confs []Configuration
 
-		// reg |- $a.P^
+		// o |- $a.P^
 		baseResConf := deepcopy.Copy(conf).(Configuration)
 
 		// RES
@@ -268,7 +268,7 @@ func trans(conf Configuration) []Configuration {
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
 		disallowedLabel := resConf.Register.UpdateAfter(resName)
-		// -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
+		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'    // NOTE DBL TRANS
 		tconfs := trans(resConf)
 		dconfs := dblTrans(tconfs)
 		// (o'+a) ¦- P^
@@ -292,20 +292,24 @@ func trans(conf Configuration) []Configuration {
 		}
 
 		// OPEN
+		// o ¦- $a.P^
 		openConf := deepcopy.Copy(baseResConf).(Configuration)
 		openConf.Process = openConf.Process.(*ElemRestriction).Next
 		// Find fn(P).
 		freeNamesP := GetAllFreshNames(conf.Process)
 		// Update register to be i = min{i | reg(i) \notin fn(P)}.
 		openConf.Register.UpdateMin(resName, freeNamesP)
+		// o[i->a] ¦- P^ -t-> o[i->a] ¦- P^' -t-> o[i->a] ¦- P   // NOTE DBL TRANS
 		otconfs := trans(openConf)
 		odconfs := dblTrans(otconfs)
-
 		for _, conf := range odconfs {
-			// Simulate exclude all labels where (|σ|+1).
+			// Simulate exclude all labels where (|o|+1).
+			// Label (|o|+1) will not be found.
+			// Rule OPEN states t != (|σ|+1).
 			if conf.Label.Symbol.Value == -1 || conf.Label.Symbol2.Value == -1 {
 				continue
 			}
+			// Intercept DBLOUTs and modify the second label to be fresh.
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
 				conf.Label.Symbol2.Type = SymbolTypFreshOutput
 				confs = append(confs, conf)
