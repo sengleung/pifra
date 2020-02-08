@@ -332,8 +332,7 @@ func trans(conf Configuration) []Configuration {
 		odconfs := dblTrans(otconfs)
 		for _, conf := range odconfs {
 			// t != (|o|+1)
-			if conf.Label.Symbol.Value == conf.Register.GetLabel(resName) ||
-				conf.Label.Symbol2.Value == conf.Register.GetLabel(resName) {
+			if conf.Label.Symbol.Value == conf.Register.GetLabel(resName) {
 				continue
 			}
 			// Intercept DBLOUTs and modify the second label to be fresh.
