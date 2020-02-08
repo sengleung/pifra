@@ -253,6 +253,24 @@ func trans(conf Configuration) []Configuration {
 
 	// MATCH
 	case ElemTypMatch:
+		var confs []Configuration
+
+		matchElem := conf.Process.(*ElemMatch)
+		// o ¦- [a=a]P
+		if matchElem.NameL.Name == matchElem.NameR.Name {
+			// o ¦- P
+			matchConf := deepcopy.Copy(conf).(Configuration)
+			matchElem = matchConf.Process.(*ElemMatch)
+			matchConf.Process = matchElem.Next
+			// o ¦- P -t-> o ¦- P^'
+			tconfs := trans(matchConf)
+			dconfs := dblTrans(tconfs)
+			// o ¦- P^'
+			confs = append(confs, dconfs...)
+		}
+
+		return confs
+
 	// RES, OPEN
 	case ElemTypRestriction:
 		var confs []Configuration
