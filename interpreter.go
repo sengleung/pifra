@@ -32,10 +32,9 @@ type Label struct {
 }
 
 type Register struct {
-	Size      int
-	Index     int
-	Register  map[int]string
-	NameRange map[string]int
+	Size     int
+	Index    int
+	Register map[int]string
 }
 
 // UpdateAfter adds a free name to the register at the next label.
@@ -43,7 +42,6 @@ type Register struct {
 func (reg *Register) UpdateAfter(freeName string) int {
 	index := reg.Index
 	reg.Register[index] = freeName
-	reg.NameRange[freeName] = index
 	reg.Index = reg.Index + 1
 	return index
 }
@@ -108,8 +106,12 @@ func (reg *Register) GetName(label int) string {
 
 // GetLabel returns register label corresponding to the name.
 func (reg *Register) GetLabel(name string) int {
-	if label, ok := reg.NameRange[name]; ok {
-		return label
+	labels := reg.Labels()
+	for _, label := range labels {
+		n := reg.Register[label]
+		if n == name {
+			return label
+		}
 	}
 	return -1
 }
@@ -148,18 +150,13 @@ func newTransitionStateRoot(process Element) *TransitionState {
 		register[index] = name
 		index = index + 1
 	}
-	nameRange := make(map[string]int, registerSize)
-	for label, name := range register {
-		nameRange[name] = label
-	}
 	return &TransitionState{
 		Configuration: Configuration{
 			Process: process,
 			Register: Register{
-				Size:      registerSize,
-				Index:     len(register) + 1,
-				Register:  register,
-				NameRange: nameRange,
+				Size:     registerSize,
+				Index:    len(register) + 1,
+				Register: register,
 			},
 		},
 		Transitions: []*TransitionState{},
