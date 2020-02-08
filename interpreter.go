@@ -301,7 +301,7 @@ func trans(conf Configuration) []Configuration {
 		dconfs := dblTrans(tconfs)
 		// (o'+a) ¦- P^
 		for _, conf := range dconfs {
-			// t != (|o|+1).
+			// t != (|o|+1)
 			if conf.Label.Symbol.Value == disallowedLabel || conf.Label.Symbol2.Value == disallowedLabel {
 				continue
 			}
@@ -331,10 +331,9 @@ func trans(conf Configuration) []Configuration {
 		otconfs := trans(openConf)
 		odconfs := dblTrans(otconfs)
 		for _, conf := range odconfs {
-			// Simulate exclude all labels where (|o|+1).
-			// Label (|o|+1) will not be found.
-			// Rule OPEN states t != (|σ|+1).
-			if conf.Label.Symbol.Value == -1 || conf.Label.Symbol2.Value == -1 {
+			// t != (|o|+1)
+			if conf.Label.Symbol.Value == disallowedLabel ||
+				conf.Label.Symbol2.Value == disallowedLabel {
 				continue
 			}
 			// Intercept DBLOUTs and modify the second label to be fresh.
