@@ -55,6 +55,19 @@ func (reg *Register) RemoveLastLabel() {
 	delete(reg.Register, reg.Index)
 }
 
+// AddEmptyName increments all labels by one while retaining mapping
+// to their name and leaves an empty name (#) at label 1.
+// #+o = {(1, #)} U {(i+1, v′) | (i, v′) E o}.
+func (reg *Register) AddEmptyName() {
+	labels := reg.Labels()
+	for i := len(labels) - 1; i >= 0; i-- {
+		label := labels[i]
+		reg.Register[label+1] = reg.GetName(label)
+	}
+	reg.Register[1] = "#"
+	reg.Index = reg.Index + 1
+}
+
 // Labels returns register labels in sorted order.
 func (reg *Register) Labels() []int {
 	var labels []int
@@ -74,7 +87,7 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	}
 	labels := reg.Labels()
 	for _, label := range labels {
-		if !freshNamesSet[reg.GetName(label)] {
+		if reg.Register[label] == "#" || !freshNamesSet[reg.GetName(label)] {
 			reg.Register[label] = name
 			return label
 		}
