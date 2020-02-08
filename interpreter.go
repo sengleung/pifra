@@ -48,6 +48,13 @@ func (reg *Register) UpdateAfter(freeName string) int {
 	return index
 }
 
+// RemoveLastLabel removes the last label from the register.
+// Undos UpdateAfter, but retains the modified registers.
+func (reg *Register) RemoveLastLabel() {
+	reg.Index = reg.Index - 1
+	delete(reg.Register, reg.Index)
+}
+
 // Labels returns register labels in sorted order.
 func (reg *Register) Labels() []int {
 	var labels []int
@@ -249,30 +256,38 @@ func trans(conf Configuration) []Configuration {
 	// RES, OPEN
 	case ElemTypRestriction:
 		var confs []Configuration
+
+		// reg |- $a.P^
 		baseResConf := deepcopy.Copy(conf).(Configuration)
 
 		// RES
+		// P^
 		resConf := deepcopy.Copy(conf).(Configuration)
 		resElem := resConf.Process.(*ElemRestriction)
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
-		// (reg+a)
+		// (o+a) ¦- P^
 		disallowedLabel := resConf.Register.UpdateAfter(resName)
+		// -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		dconfs := dblTrans(tconfs)
+		// (o'+a) ¦- P^
 		for _, conf := range dconfs {
-			// Exclude all labels where (|reg|+1).
-			if conf.Label.Symbol.Value == disallowedLabel {
+			// t != (|o|+1).
+			if conf.Label.Symbol.Value == disallowedLabel || conf.Label.Symbol2.Value == disallowedLabel {
 				continue
 			}
-			// Do not append DBLOUTs as they are found in OPEN.
+			// Ignore DBLOUTs as they are found in OPEN.
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
 				continue
 			}
+			// $a.P^'
 			conf.Process = &ElemRestriction{
 				Restrict: resElem.Restrict,
 				Next:     conf.Process,
 			}
+			// o' ¦- $a.P^'
+			conf.Register.RemoveLastLabel()
 			confs = append(confs, conf)
 		}
 
@@ -287,8 +302,8 @@ func trans(conf Configuration) []Configuration {
 		odconfs := dblTrans(otconfs)
 
 		for _, conf := range odconfs {
-			// Simulating exclude all labels where (|σ|+1).
-			if conf.Label.Symbol.Value == -1 {
+			// Simulate exclude all labels where (|σ|+1).
+			if conf.Label.Symbol.Value == -1 || conf.Label.Symbol2.Value == -1 {
 				continue
 			}
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
