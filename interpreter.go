@@ -501,6 +501,94 @@ func trans(conf Configuration) []Configuration {
 			}
 		}
 
+		// CLOSE
+		clconf := deepcopy.Copy(conf).(Configuration)
+		// (#+o)
+		clconf.Register.AddEmptyName()
+		parElem := clconf.Process.(*ElemParallel)
+		// (#+o) ¦- P
+		clconf.Process = parElem.ProcessL
+		// -t-> (b+o) ¦- P'
+		tconfs := trans(clconf)
+		clconfs := dblTrans(tconfs)
+
+		crconf := deepcopy.Copy(conf).(Configuration)
+		// (#+o)
+		crconf.Register.AddEmptyName()
+		parElem = crconf.Process.(*ElemParallel)
+		// (#+o) ¦- Q
+		crconf.Process = parElem.ProcessR
+		// -t-> (b+o) ¦- Q'
+		tconfs = trans(crconf)
+		crconfs := dblTrans(tconfs)
+
+		for _, lconf := range clconfs {
+			for _, rconf := range crconfs {
+				// CLOSE_L
+				if lconf.Label.Double &&
+					lconf.Label.Symbol.Type == SymbolTypOutput &&
+					lconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
+					lconf.Label.Symbol2.Value == 1 &&
+					rconf.Label.Double &&
+					rconf.Label.Symbol.Type == SymbolTypInput &&
+					rconf.Label.Symbol2.Type == SymbolTypFreshInput &&
+					rconf.Label.Symbol2.Value == 1 {
+					{
+						close := deepcopy.Copy(basePar).(Configuration)
+						lproc := deepcopy.Copy(lconf.Process).(Element)
+						rproc := deepcopy.Copy(rconf.Process).(Element)
+						close.Process = &ElemRestriction{
+							Restrict: Name{
+								Name: lconf.Register.GetName(1),
+								Type: Bound,
+							},
+							Next: &ElemParallel{
+								ProcessL: lproc,
+								ProcessR: rproc,
+							},
+						}
+						close.Label = Label{
+							Symbol: Symbol{
+								Type: SymbolTypTau,
+							},
+						}
+						confs = append(confs, close)
+					}
+				}
+				// CLOSE_R
+				if rconf.Label.Double &&
+					rconf.Label.Symbol.Type == SymbolTypOutput &&
+					rconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
+					rconf.Label.Symbol2.Value == 1 &&
+					lconf.Label.Double &&
+					lconf.Label.Symbol.Type == SymbolTypInput &&
+					lconf.Label.Symbol2.Type == SymbolTypFreshInput &&
+					lconf.Label.Symbol2.Value == 1 {
+					{
+						close := deepcopy.Copy(basePar).(Configuration)
+						lproc := deepcopy.Copy(lconf.Process).(Element)
+						rproc := deepcopy.Copy(rconf.Process).(Element)
+						close.Process = &ElemRestriction{
+							Restrict: Name{
+								Name: lconf.Register.GetName(1),
+								Type: Bound,
+							},
+							Next: &ElemParallel{
+								ProcessL: lproc,
+								ProcessR: rproc,
+							},
+						}
+						close.Label = Label{
+							Symbol: Symbol{
+								Type: SymbolTypTau,
+							},
+						}
+						confs = append(confs, close)
+					}
+				}
+			}
+		}
+
 		return confs
 
 	case ElemTypRoot:
