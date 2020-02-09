@@ -6,12 +6,6 @@ import (
     "github.com/davecgh/go-spew/spew"
 )
 
-type DeclaredProcess struct {
-	Process    Element
-	Parameters []string
-}
-
-var DeclaredProcs map[string]DeclaredProcess
 var undeclaredProcs []Element
 
 var curProcParams []string

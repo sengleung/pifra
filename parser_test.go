@@ -559,7 +559,7 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			lex := newLexer(tc.input)
 			yyParse(lex)
 			if err := deep.Equal(tc.declaredProcs, DeclaredProcs); err != nil {
-				//spew.Dump(DeclaredProcs, undeclaredProcs)
+				spew.Dump(DeclaredProcs, undeclaredProcs)
 				t.Error(err)
 			}
 			if err := deep.Equal(tc.undeclaredProcs, undeclaredProcs); err != nil {
