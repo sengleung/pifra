@@ -345,7 +345,7 @@ func trans(conf Configuration) []Configuration {
 		return confs
 
 	// REC
-	case ElemTypProcess, ElemTypProcessConstants:
+	case ElemTypProcessConstants:
 	// SUM
 	case ElemTypSum:
 		var confs []Configuration
@@ -668,9 +668,6 @@ func getElemSetType(elem Element) ElemSetType {
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
 		return parElem.SetType
-	case ElemTypProcess:
-		procElem := elem.(*ElemProcess)
-		return procElem.SetType
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		return pcsElem.SetType

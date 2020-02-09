@@ -49,7 +49,6 @@ func resolveProcs(elem Element) Element {
 		parElem := elem.(*ElemParallel)
 		parElem.ProcessL = resolveProcs(parElem.ProcessL)
 		parElem.ProcessR = resolveProcs(parElem.ProcessR)
-	case ElemTypProcess:
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		processName := pcsElem.Name
@@ -118,8 +117,6 @@ func subName(elem Element, oldName Name, newName Name) {
 		parElem := elem.(*ElemParallel)
 		subName(parElem.ProcessL, oldName, newName)
 		subName(parElem.ProcessR, oldName, newName)
-	case ElemTypProcess:
-		// TODO
 	case ElemTypProcessConstants:
 		// TODO
 	case ElemTypOutOutput:
@@ -221,7 +218,6 @@ func doAlphaConversion(elem Element) {
 		parElem := elem.(*ElemParallel)
 		doAlphaConversion(parElem.ProcessL)
 		doAlphaConversion(parElem.ProcessR)
-	case ElemTypProcess:
 	case ElemTypProcessConstants:
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
@@ -287,7 +283,6 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 		parElem := elem.(*ElemParallel)
 		substituteNamesInput(parElem.ProcessL, boundName, newName)
 		substituteNamesInput(parElem.ProcessR, boundName, newName)
-	case ElemTypProcess:
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		for i, param := range pcsElem.Parameters {
@@ -360,7 +355,6 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 		parElem := elem.(*ElemParallel)
 		substituteNamesRestriction(parElem.ProcessL, boundName, newName)
 		substituteNamesRestriction(parElem.ProcessR, boundName, newName)
-	case ElemTypProcess:
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		for i, param := range pcsElem.Parameters {
@@ -407,20 +401,21 @@ func prettyPrintAcc(elem Element, str string) string {
 		left := prettyPrintAcc(parElem.ProcessL, "")
 		right := prettyPrintAcc(parElem.ProcessR, "")
 		str = str + "(" + left + " | " + right + ")"
-	case ElemTypProcess:
-		procElem := elem.(*ElemProcess)
-		str = str + procElem.Name
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
-		params := "("
-		for i, param := range pcsElem.Parameters {
-			if i == len(pcsElem.Parameters)-1 {
-				params = params + param.Name + ")"
-			} else {
-				params = params + param.Name + ", "
+		if len(pcsElem.Parameters) == 0 {
+			str = str + pcsElem.Name
+		} else {
+			params := "("
+			for i, param := range pcsElem.Parameters {
+				if i == len(pcsElem.Parameters)-1 {
+					params = params + param.Name + ")"
+				} else {
+					params = params + param.Name + ", "
+				}
 			}
+			str = str + pcsElem.Name + params
 		}
-		str = str + pcsElem.Name + params
 	case ElemTypOutOutput:
 		outOutput := elem.(*ElemOutOutput)
 		str = str + "'<" + outOutput.Output.Name + ">."
@@ -485,7 +480,6 @@ func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
 		parElem := elem.(*ElemParallel)
 		freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
 		freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
-	case ElemTypProcess:
 	case ElemTypProcessConstants:
 		pcsElem := elem.(*ElemProcessConstants)
 		for _, param := range pcsElem.Parameters {

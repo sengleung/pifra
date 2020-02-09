@@ -37,7 +37,7 @@ a'<b>.P
 					Output: Name{
 						Name: "b",
 					},
-					Next: &ElemProcess{
+					Next: &ElemProcessConstants{
 						Name: "P",
 					},
 				},
@@ -56,7 +56,7 @@ a(b).P
 					Input: Name{
 						Name: "b",
 					},
-					Next: &ElemProcess{
+					Next: &ElemProcessConstants{
 						Name: "P",
 					},
 				},
@@ -75,7 +75,7 @@ a(b).P
 					NameR: Name{
 						Name: "b",
 					},
-					Next: &ElemProcess{
+					Next: &ElemProcessConstants{
 						Name: "P",
 					},
 				},
@@ -91,7 +91,7 @@ $a.P
 					Restrict: Name{
 						Name: "a",
 					},
-					Next: &ElemProcess{
+					Next: &ElemProcessConstants{
 						Name: "P",
 					},
 				},
@@ -104,10 +104,10 @@ P + Q
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemSum{
-					ProcessL: &ElemProcess{
+					ProcessL: &ElemProcessConstants{
 						Name: "P",
 					},
-					ProcessR: &ElemProcess{
+					ProcessR: &ElemProcessConstants{
 						Name: "Q",
 					},
 				},
@@ -120,10 +120,10 @@ P | Q
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
-					ProcessL: &ElemProcess{
+					ProcessL: &ElemProcessConstants{
 						Name: "P",
 					},
-					ProcessR: &ElemProcess{
+					ProcessR: &ElemProcessConstants{
 						Name: "Q",
 					},
 				},
@@ -135,7 +135,7 @@ P
 			`),
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
-				&ElemProcess{
+				&ElemProcessConstants{
 					Name: "P",
 				},
 			},
@@ -201,7 +201,7 @@ Q(x,y,z) = $x.[y=z]P
 							NameR: Name{
 								Name: "z",
 							},
-							Next: &ElemProcess{
+							Next: &ElemProcessConstants{
 								Name: "P",
 							},
 						},
@@ -250,7 +250,7 @@ i(j).k'<l>.0
 							NameR: Name{
 								Name: "z",
 							},
-							Next: &ElemProcess{
+							Next: &ElemProcessConstants{
 								Name: "P",
 							},
 						},
@@ -340,7 +340,7 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 									Input: Name{
 										Name: "j",
 									},
-									Next: &ElemProcess{
+									Next: &ElemProcessConstants{
 										Name: "Proc1",
 									},
 								},
@@ -360,23 +360,23 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 			undeclaredProcs: []Element{
 				&ElemParallel{
 					ProcessL: &ElemParallel{
-						ProcessL: &ElemProcess{
+						ProcessL: &ElemProcessConstants{
 							Name: "A",
 						},
-						ProcessR: &ElemProcess{
+						ProcessR: &ElemProcessConstants{
 							Name: "B",
 						},
 					},
 					ProcessR: &ElemParallel{
 						ProcessL: &ElemParallel{
-							ProcessL: &ElemProcess{
+							ProcessL: &ElemProcessConstants{
 								Name: "C",
 							},
-							ProcessR: &ElemProcess{
+							ProcessR: &ElemProcessConstants{
 								Name: "D",
 							},
 						},
-						ProcessR: &ElemProcess{
+						ProcessR: &ElemProcessConstants{
 							Name: "E",
 						},
 					},
@@ -390,36 +390,36 @@ A | B + C | D | E + (F + G) + H
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
-					ProcessL: &ElemProcess{
+					ProcessL: &ElemProcessConstants{
 						Name: "A",
 					},
 					ProcessR: &ElemParallel{
 						ProcessL: &ElemSum{
-							ProcessL: &ElemProcess{
+							ProcessL: &ElemProcessConstants{
 								Name: "B",
 							},
-							ProcessR: &ElemProcess{
+							ProcessR: &ElemProcessConstants{
 								Name: "C",
 							},
 						},
 						ProcessR: &ElemParallel{
-							ProcessL: &ElemProcess{
+							ProcessL: &ElemProcessConstants{
 								Name: "D",
 							},
 							ProcessR: &ElemSum{
-								ProcessL: &ElemProcess{
+								ProcessL: &ElemProcessConstants{
 									Name: "E",
 								},
 								ProcessR: &ElemSum{
 									ProcessL: &ElemSum{
-										ProcessL: &ElemProcess{
+										ProcessL: &ElemProcessConstants{
 											Name: "F",
 										},
-										ProcessR: &ElemProcess{
+										ProcessR: &ElemProcessConstants{
 											Name: "G",
 										},
 									},
-									ProcessR: &ElemProcess{
+									ProcessR: &ElemProcessConstants{
 										Name: "H",
 									},
 								},
@@ -436,51 +436,51 @@ A | B + C | D | E + (F + G | (P + R | Q)) + H
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
-					ProcessL: &ElemProcess{
+					ProcessL: &ElemProcessConstants{
 						Name: "A",
 					},
 					ProcessR: &ElemParallel{
 						ProcessL: &ElemSum{
-							ProcessL: &ElemProcess{
+							ProcessL: &ElemProcessConstants{
 								Name: "B",
 							},
-							ProcessR: &ElemProcess{
+							ProcessR: &ElemProcessConstants{
 								Name: "C",
 							},
 						},
 						ProcessR: &ElemParallel{
-							ProcessL: &ElemProcess{
+							ProcessL: &ElemProcessConstants{
 								Name: "D",
 							},
 							ProcessR: &ElemSum{
-								ProcessL: &ElemProcess{
+								ProcessL: &ElemProcessConstants{
 									Name: "E",
 								},
 								ProcessR: &ElemSum{
 									ProcessL: &ElemParallel{
 										ProcessL: &ElemSum{
-											ProcessL: &ElemProcess{
+											ProcessL: &ElemProcessConstants{
 												Name: "F",
 											},
-											ProcessR: &ElemProcess{
+											ProcessR: &ElemProcessConstants{
 												Name: "G",
 											},
 										},
 										ProcessR: &ElemParallel{
 											ProcessL: &ElemSum{
-												ProcessL: &ElemProcess{
+												ProcessL: &ElemProcessConstants{
 													Name: "P",
 												},
-												ProcessR: &ElemProcess{
+												ProcessR: &ElemProcessConstants{
 													Name: "R",
 												},
 											},
-											ProcessR: &ElemProcess{
+											ProcessR: &ElemProcessConstants{
 												Name: "Q",
 											},
 										},
 									},
-									ProcessR: &ElemProcess{
+									ProcessR: &ElemProcessConstants{
 										Name: "H",
 									},
 								},

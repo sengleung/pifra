@@ -368,7 +368,7 @@ process:
     NAME        %prec LOWER_THAN_LBRACKET
     {
         name := $1
-        processElem := &ElemProcess{
+        processElem := &ElemProcessConstants{
             Name: name,
         }
         curElem = processElem
