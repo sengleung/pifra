@@ -115,9 +115,9 @@ func close(elem Element, freshName Name) Element {
 	return elem
 }
 
-// InitAst performs alpha-conversion and adds a root element to the AST as the head,
+// InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
 // for use in the interpreter.
-func InitAst(elem Element) Element {
+func InitRootAst(elem Element) Element {
 	DoAlphaConversion(elem)
 	return &ElemRoot{
 		Next: elem,

@@ -49,8 +49,9 @@ func initParser() {
 	undeclaredProcs = []Element{}
 }
 
-// ParseProgram returns the undeclared process.
-func ParseProgram(program []byte) (Element, error) {
+// InitProgram returns the root undeclared process.
+func InitProgram(program []byte) (Element, error) {
+	initParser()
 	lex := newLexer(program)
 	yyParse(lex)
 	if len(undeclaredProcs) == 0 {
@@ -59,5 +60,9 @@ func ParseProgram(program []byte) (Element, error) {
 	if len(undeclaredProcs) > 1 {
 		return nil, fmt.Errorf("there cannot be more than one undeclared processes")
 	}
-	return undeclaredProcs[0], nil
+	root := InitRootAst(undeclaredProcs[0])
+	for _, dp := range DeclaredProcs {
+		DoAlphaConversion(dp.Process)
+	}
+	return root, nil
 }
