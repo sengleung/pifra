@@ -340,7 +340,7 @@ pconstants:
             curPconstNames[i], curPconstNames[j] = curPconstNames[j], curPconstNames[i]
         }
         name := $1
-        pconstElem := &ElemProcessConstants{
+        pconstElem := &ElemProcess{
             Name: name,
             Parameters: curPconstNames,
         }
@@ -368,7 +368,7 @@ process:
     NAME        %prec LOWER_THAN_LBRACKET
     {
         name := $1
-        processElem := &ElemProcessConstants{
+        processElem := &ElemProcess{
             Name: name,
         }
         curElem = processElem

@@ -10,7 +10,7 @@ const (
 	ElemTypRestriction
 	ElemTypSum
 	ElemTypParallel
-	ElemTypProcessConstants
+	ElemTypProcess
 
 	ElemTypOutOutput
 	ElemTypInpInput
@@ -113,14 +113,14 @@ func (e *ElemParallel) Type() ElementType {
 	return ElemTypParallel
 }
 
-type ElemProcessConstants struct {
+type ElemProcess struct {
 	SetType    ElemSetType
 	Name       string
 	Parameters []Name
 }
 
-func (e *ElemProcessConstants) Type() ElementType {
-	return ElemTypProcessConstants
+func (e *ElemProcess) Type() ElementType {
+	return ElemTypProcess
 }
 
 type ElemOutOutput struct {
