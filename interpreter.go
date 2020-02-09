@@ -116,9 +116,6 @@ func (reg *Register) GetLabel(name string) int {
 	return -1
 }
 
-func (reg *Register) find(i int) string { return "" }         // TODO
-func (reg *Register) findAll() []string { return []string{} } // TODO
-
 type Configuration struct {
 	Process  Element
 	Register Register
@@ -643,45 +640,6 @@ func dblTrans(confs []Configuration) []Configuration {
 	}
 
 	return dblInpOuts
-}
-
-func getElemSetType(elem Element) ElemSetType {
-	switch elem.Type() {
-	case ElemTypNil:
-		nilElem := elem.(*ElemNil)
-		return nilElem.SetType
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		return outElem.SetType
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		return inpElem.SetType
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		return matchElem.SetType
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		return resElem.SetType
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		return sumElem.SetType
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		return parElem.SetType
-	case ElemTypProcess:
-		pcsElem := elem.(*ElemProcess)
-		return pcsElem.SetType
-	case ElemTypOutOutput:
-		elemOutOut := elem.(*ElemOutOutput)
-		return elemOutOut.SetType
-	case ElemTypInpInput:
-		elemInpInp := elem.(*ElemInpInput)
-		return elemInpInp.SetType
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		return rootElem.SetType
-	}
-	return ElemSetReg
 }
 
 // PrettyPrintConfiguration returns a pretty printed string of the configuration.
