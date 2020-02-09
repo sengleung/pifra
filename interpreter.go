@@ -9,6 +9,17 @@ import (
 
 var registerSize = 10000
 
+type State struct {
+	Configuration Configuration
+	NextStates    []*State
+}
+
+type Configuration struct {
+	Process  Element
+	Register Register
+	Label    Label
+}
+
 type SymbolType int
 
 const (
@@ -116,18 +127,7 @@ func (reg *Register) GetLabel(name string) int {
 	return -1
 }
 
-type Configuration struct {
-	Process  Element
-	Register Register
-	Label    Label
-}
-
-type TransitionState struct {
-	Configuration Configuration
-	Transitions   []*TransitionState
-}
-
-func newTransitionStateRoot(process Element) *TransitionState {
+func newTransitionStateRoot(process Element) *State {
 	fns := GetAllFreshNames(process)
 	freshNamesSet := make(map[string]bool)
 
@@ -147,7 +147,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 		register[index] = name
 		index = index + 1
 	}
-	return &TransitionState{
+	return &State{
 		Configuration: Configuration{
 			Process: process,
 			Register: Register{
@@ -156,7 +156,7 @@ func newTransitionStateRoot(process Element) *TransitionState {
 				Register: register,
 			},
 		},
-		Transitions: []*TransitionState{},
+		NextStates: []*State{},
 	}
 }
 
