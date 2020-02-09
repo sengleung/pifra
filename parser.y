@@ -6,8 +6,12 @@ import (
     "github.com/davecgh/go-spew/spew"
 )
 
-var declaredProcs map[string]Element
-var procParams map[string][]string
+type DeclaredProcess struct {
+	Process    Element
+	Parameters []string
+}
+
+var DeclaredProcs map[string]DeclaredProcess
 var undeclaredProcs []Element
 
 var curProcParams []string
@@ -87,8 +91,10 @@ pconstants_decl:
             curProcParams[i], curProcParams[j] = curProcParams[j], curProcParams[i]
         }
         name := $1
-        declaredProcs[name] = curElem
-        procParams[name] = curProcParams
+        DeclaredProcs[name] = DeclaredProcess{
+            Process: curElem,
+            Parameters: curProcParams,
+        }
         curElem = nil
         curProcParams = []string{}
 
@@ -110,7 +116,10 @@ process_decl:
     NAME EQUAL elem
     {
         name := $1
-        declaredProcs[name] = curElem
+        DeclaredProcs[name] = DeclaredProcess{
+            Process: curElem,
+            Parameters: []string{},
+        }
         curElem = nil
 
         Log("process")

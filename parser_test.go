@@ -11,26 +11,24 @@ func TestParser(t *testing.T) {
 	log = false
 	tests := map[string]struct {
 		input           []byte
-		declaredProcs   map[string]Element
+		declaredProcs   map[string]DeclaredProcess
 		undeclaredProcs []Element
-		procParams      map[string][]string
 		err             error
 	}{
 		"nil": {
 			input: []byte(`
 0
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemNil{},
 			},
-			procParams: map[string][]string{},
 		},
 		"output": {
 			input: []byte(`
 a'<b>.P
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemOutput{
 					Channel: Name{
@@ -44,13 +42,12 @@ a'<b>.P
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"input": {
 			input: []byte(`
 a(b).P
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemInput{
 					Channel: Name{
@@ -64,13 +61,12 @@ a(b).P
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"match": {
 			input: []byte(`
 [a=b]P
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemMatch{
 					NameL: Name{
@@ -84,13 +80,12 @@ a(b).P
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"restriction": {
 			input: []byte(`
 $a.P
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemRestriction{
 					Restrict: Name{
@@ -101,13 +96,12 @@ $a.P
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"sum": {
 			input: []byte(`
 P + Q
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemSum{
 					ProcessL: &ElemProcess{
@@ -118,13 +112,12 @@ P + Q
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"parallel": {
 			input: []byte(`
 P | Q
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
 					ProcessL: &ElemProcess{
@@ -135,25 +128,23 @@ P | Q
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"process": {
 			input: []byte(`
 P
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemProcess{
 					Name: "P",
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"process_constants": {
 			input: []byte(`
 P(a,b,c)
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemProcessConstants{
 					Name: "P",
@@ -164,60 +155,61 @@ P(a,b,c)
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"declared_process": {
 			input: []byte(`
 P = a'<b>.c(d).0
 			`),
-			declaredProcs: map[string]Element{
-				"P": &ElemOutput{
-					Channel: Name{
-						Name: "a",
-					},
-					Output: Name{
-						Name: "b",
-					},
-					Next: &ElemInput{
+			declaredProcs: map[string]DeclaredProcess{
+				"P": DeclaredProcess{
+					Process: &ElemOutput{
 						Channel: Name{
-							Name: "c",
+							Name: "a",
 						},
-						Input: Name{
-							Name: "d",
+						Output: Name{
+							Name: "b",
 						},
-						Next: &ElemNil{},
+						Next: &ElemInput{
+							Channel: Name{
+								Name: "c",
+							},
+							Input: Name{
+								Name: "d",
+							},
+							Next: &ElemNil{},
+						},
 					},
+					Parameters: []string{},
 				},
 			},
 			undeclaredProcs: []Element{},
-			procParams:      map[string][]string{},
 		},
 		"declared_process_constants": {
 			input: []byte(`
 Q(x,y,z) = $x.[y=z]P
 			`),
-			declaredProcs: map[string]Element{
-				"Q": &ElemRestriction{
-					Restrict: Name{
-						Name: "x",
+			declaredProcs: map[string]DeclaredProcess{
+				"Q": DeclaredProcess{
+					Process: &ElemRestriction{
+						Restrict: Name{
+							Name: "x",
+						},
+						Next: &ElemMatch{
+							NameL: Name{
+								Name: "y",
+							},
+							NameR: Name{
+								Name: "z",
+							},
+							Next: &ElemProcess{
+								Name: "P",
+							},
+						},
 					},
-					Next: &ElemMatch{
-						NameL: Name{
-							Name: "y",
-						},
-						NameR: Name{
-							Name: "z",
-						},
-						Next: &ElemProcess{
-							Name: "P",
-						},
-					},
+					Parameters: []string{"x", "y", "z"},
 				},
 			},
 			undeclaredProcs: []Element{},
-			procParams: map[string][]string{
-				"Q": []string{"x", "y", "z"},
-			},
 		},
 		"undecl_decl_processes": {
 			input: []byte(`
@@ -225,39 +217,45 @@ P = a'<b>.c(d).0
 Q(x,y,z) = $x.[y=z]P
 i(j).k'<l>.0
 			`),
-			declaredProcs: map[string]Element{
-				"P": &ElemOutput{
-					Channel: Name{
-						Name: "a",
-					},
-					Output: Name{
-						Name: "b",
-					},
-					Next: &ElemInput{
+			declaredProcs: map[string]DeclaredProcess{
+				"P": DeclaredProcess{
+					Process: &ElemOutput{
 						Channel: Name{
-							Name: "c",
+							Name: "a",
 						},
-						Input: Name{
-							Name: "d",
+						Output: Name{
+							Name: "b",
 						},
-						Next: &ElemNil{},
+						Next: &ElemInput{
+							Channel: Name{
+								Name: "c",
+							},
+							Input: Name{
+								Name: "d",
+							},
+							Next: &ElemNil{},
+						},
 					},
+					Parameters: []string{},
 				},
-				"Q": &ElemRestriction{
-					Restrict: Name{
-						Name: "x",
+				"Q": DeclaredProcess{
+					Process: &ElemRestriction{
+						Restrict: Name{
+							Name: "x",
+						},
+						Next: &ElemMatch{
+							NameL: Name{
+								Name: "y",
+							},
+							NameR: Name{
+								Name: "z",
+							},
+							Next: &ElemProcess{
+								Name: "P",
+							},
+						},
 					},
-					Next: &ElemMatch{
-						NameL: Name{
-							Name: "y",
-						},
-						NameR: Name{
-							Name: "z",
-						},
-						Next: &ElemProcess{
-							Name: "P",
-						},
-					},
+					Parameters: []string{"x", "y", "z"},
 				},
 			},
 			undeclaredProcs: []Element{
@@ -279,89 +277,86 @@ i(j).k'<l>.0
 					},
 				},
 			},
-			procParams: map[string][]string{
-				"Q": []string{"x", "y", "z"},
-			},
 		},
 		"processes_parallel": {
 			input: []byte(`
 R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 			`),
-			declaredProcs: map[string]Element{
-				"R": &ElemParallel{
-					ProcessL: &ElemInput{
-						Channel: Name{
-							Name: "a",
-						},
-						Input: Name{
-							Name: "b",
-						},
-						Next: &ElemNil{},
-					},
-					ProcessR: &ElemParallel{
-						ProcessL: &ElemParallel{
-							ProcessL: &ElemOutput{
-								Channel: Name{
-									Name: "c",
-								},
-								Output: Name{
-									Name: "d",
-								},
-								Next: &ElemNil{},
+			declaredProcs: map[string]DeclaredProcess{
+				"R": DeclaredProcess{
+					Process: &ElemParallel{
+						ProcessL: &ElemInput{
+							Channel: Name{
+								Name: "a",
 							},
-							ProcessR: &ElemOutput{
-								Channel: Name{
-									Name: "e",
-								},
-								Output: Name{
-									Name: "f",
-								},
-								Next: &ElemNil{},
+							Input: Name{
+								Name: "b",
 							},
+							Next: &ElemNil{},
 						},
 						ProcessR: &ElemParallel{
-							ProcessL: &ElemInput{
-								Channel: Name{
-									Name: "g",
+							ProcessL: &ElemParallel{
+								ProcessL: &ElemOutput{
+									Channel: Name{
+										Name: "c",
+									},
+									Output: Name{
+										Name: "d",
+									},
+									Next: &ElemNil{},
 								},
-								Input: Name{
-									Name: "h",
+								ProcessR: &ElemOutput{
+									Channel: Name{
+										Name: "e",
+									},
+									Output: Name{
+										Name: "f",
+									},
+									Next: &ElemNil{},
 								},
-								Next: &ElemProcessConstants{
-									Name: "P",
-									Parameters: []Name{
-										{Name: "a"},
-										{Name: "b"},
-										{Name: "c"},
-										{Name: "d"},
+							},
+							ProcessR: &ElemParallel{
+								ProcessL: &ElemInput{
+									Channel: Name{
+										Name: "g",
+									},
+									Input: Name{
+										Name: "h",
+									},
+									Next: &ElemProcessConstants{
+										Name: "P",
+										Parameters: []Name{
+											{Name: "a"},
+											{Name: "b"},
+											{Name: "c"},
+											{Name: "d"},
+										},
+									},
+								},
+								ProcessR: &ElemInput{
+									Channel: Name{
+										Name: "i",
+									},
+									Input: Name{
+										Name: "j",
+									},
+									Next: &ElemProcess{
+										Name: "Proc1",
 									},
 								},
 							},
-							ProcessR: &ElemInput{
-								Channel: Name{
-									Name: "i",
-								},
-								Input: Name{
-									Name: "j",
-								},
-								Next: &ElemProcess{
-									Name: "Proc1",
-								},
-							},
 						},
 					},
+					Parameters: []string{"i", "j", "k"},
 				},
 			},
 			undeclaredProcs: []Element{},
-			procParams: map[string][]string{
-				"R": []string{"i", "j", "k"},
-			},
 		},
 		"parallel_brackets": {
 			input: []byte(`
 ((A | B) | (((C | D))) | E)
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
 					ProcessL: &ElemParallel{
@@ -387,13 +382,12 @@ R(i,j,k) = a(b).0 | (c'<d>.0 | e'<f>.0) | g(h).P(a,b,c,d) | i(j).Proc1
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"sum_parallel": {
 			input: []byte(`
 A | B + C | D | E + (F + G) + H
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
 					ProcessL: &ElemProcess{
@@ -434,13 +428,12 @@ A | B + C | D | E + (F + G) + H
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"sum_parallel_2": {
 			input: []byte(`
 A | B + C | D | E + (F + G | (P + R | Q)) + H
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemParallel{
 					ProcessL: &ElemProcess{
@@ -496,13 +489,12 @@ A | B + C | D | E + (F + G | (P + R | Q)) + H
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 		"parallel_restriction": {
 			input: []byte(`
 $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemRestriction{
 					Restrict: Name{
@@ -559,7 +551,6 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 	}
 	for name, tc := range tests {
@@ -567,16 +558,12 @@ $a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			initParser()
 			lex := newLexer(tc.input)
 			yyParse(lex)
-			if err := deep.Equal(tc.declaredProcs, declaredProcs); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
-				t.Error(err)
-			}
-			if err := deep.Equal(tc.procParams, procParams); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
+			if err := deep.Equal(tc.declaredProcs, DeclaredProcs); err != nil {
+				//spew.Dump(DeclaredProcs, undeclaredProcs)
 				t.Error(err)
 			}
 			if err := deep.Equal(tc.undeclaredProcs, undeclaredProcs); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
+				spew.Dump(DeclaredProcs, undeclaredProcs)
 				t.Error(err)
 			}
 		})

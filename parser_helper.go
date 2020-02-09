@@ -37,7 +37,6 @@ func init() {
 }
 
 func initParser() {
-	declaredProcs = make(map[string]Element)
+	DeclaredProcs = make(map[string]DeclaredProcess)
 	undeclaredProcs = []Element{}
-	procParams = make(map[string][]string)
 }

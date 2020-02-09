@@ -145,16 +145,15 @@ func TestAlphaConversion(t *testing.T) {
 	log = false
 	tests := map[string]struct {
 		input           []byte
-		declaredProcs   map[string]Element
+		declaredProcs   map[string]DeclaredProcess
 		undeclaredProcs []Element
-		procParams      map[string][]string
 		err             error
 	}{
 		"parallel_restriction": {
 			input: []byte(`
 a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			`),
-			declaredProcs: map[string]Element{},
+			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
 				&ElemInput{
 					Channel: Name{
@@ -230,7 +229,6 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 					},
 				},
 			},
-			procParams: map[string][]string{},
 		},
 	}
 	for name, tc := range tests {
@@ -238,22 +236,18 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			initParser()
 			lex := newLexer(tc.input)
 			yyParse(lex)
-			for _, elem := range declaredProcs {
-				DoAlphaConversion(elem)
+			for _, dp := range DeclaredProcs {
+				DoAlphaConversion(dp.Process)
 			}
 			for _, elem := range undeclaredProcs {
 				DoAlphaConversion(elem)
 			}
-			if err := deep.Equal(tc.declaredProcs, declaredProcs); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
-				t.Error(err)
-			}
-			if err := deep.Equal(tc.procParams, procParams); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
+			if err := deep.Equal(tc.declaredProcs, DeclaredProcs); err != nil {
+				spew.Dump(DeclaredProcs, undeclaredProcs)
 				t.Error(err)
 			}
 			if err := deep.Equal(tc.undeclaredProcs, undeclaredProcs); err != nil {
-				spew.Dump(declaredProcs, undeclaredProcs, procParams)
+				spew.Dump(DeclaredProcs, undeclaredProcs)
 				t.Error(err)
 			}
 		})
