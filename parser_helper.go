@@ -61,8 +61,5 @@ func InitProgram(program []byte) (Element, error) {
 		return nil, fmt.Errorf("there cannot be more than one undeclared processes")
 	}
 	root := InitRootAst(undeclaredProcs[0])
-	for _, dp := range DeclaredProcs {
-		DoAlphaConversion(dp.Process)
-	}
 	return root, nil
 }

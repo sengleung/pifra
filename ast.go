@@ -21,6 +21,59 @@ func generateBoundName(namePrefix string) string {
 	return name
 }
 
+func ResolveProcessConstants(elem Element) {
+	resolveProcs(elem)
+}
+
+func resolveProcs(elem Element) Element {
+	elemTyp := elem.Type()
+	switch elemTyp {
+	case ElemTypNil:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = resolveProcs(outElem.Next)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = resolveProcs(inpElem.Next)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		matchElem.Next = resolveProcs(matchElem.Next)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Next = resolveProcs(resElem.Next)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.ProcessL = resolveProcs(sumElem.ProcessL)
+		sumElem.ProcessR = resolveProcs(sumElem.ProcessR)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parElem.ProcessL = resolveProcs(parElem.ProcessL)
+		parElem.ProcessR = resolveProcs(parElem.ProcessR)
+	case ElemTypProcess:
+	case ElemTypProcessConstants:
+		pcsElem := elem.(*ElemProcessConstants)
+		processName := pcsElem.Name
+		if _, ok := DeclaredProcs[processName]; !ok {
+			return &ElemNil{}
+		}
+		dp := DeclaredProcs[processName]
+		if len(dp.Parameters) != len(pcsElem.Parameters) {
+			return &ElemNil{}
+		}
+		proc := deepcopy.Copy(dp.Process).(Element)
+		for i, oldName := range dp.Parameters {
+			subName(proc, Name{
+				Name: oldName,
+			}, pcsElem.Parameters[i])
+		}
+		return resolveProcs(proc)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = resolveProcs(rootElem.Next)
+	}
+	return elem
+}
+
 func substituteName(elem Element, oldName Name, newName Name) {
 	subName(elem, oldName, newName)
 }
@@ -118,6 +171,7 @@ func close(elem Element, freshName Name) Element {
 // InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
 // for use in the interpreter.
 func InitRootAst(elem Element) Element {
+	ResolveProcessConstants(elem)
 	DoAlphaConversion(elem)
 	return &ElemRoot{
 		Next: elem,
