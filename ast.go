@@ -6,6 +6,8 @@ import (
 	"github.com/mohae/deepcopy"
 )
 
+var depthLimit = 20
+
 var boundNameIndex int
 var freshNameIndex int
 
@@ -21,35 +23,40 @@ func generateBoundName(namePrefix string) string {
 	return name
 }
 
-func ResolveProcessConstants(elem Element) {
-	resolveProcs(elem)
+// ResolveProcs replaces declared process calls with their actual processes
+// and substitutes the names.
+func ResolveProcs(elem Element) {
+	resolveProcs(elem, 0)
 }
 
-func resolveProcs(elem Element) Element {
+func resolveProcs(elem Element, limit int) Element {
 	elemTyp := elem.Type()
 	switch elemTyp {
 	case ElemTypNil:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		outElem.Next = resolveProcs(outElem.Next)
+		outElem.Next = resolveProcs(outElem.Next, limit)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		inpElem.Next = resolveProcs(inpElem.Next)
+		inpElem.Next = resolveProcs(inpElem.Next, limit)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		matchElem.Next = resolveProcs(matchElem.Next)
+		matchElem.Next = resolveProcs(matchElem.Next, limit)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		resElem.Next = resolveProcs(resElem.Next)
+		resElem.Next = resolveProcs(resElem.Next, limit)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
-		sumElem.ProcessL = resolveProcs(sumElem.ProcessL)
-		sumElem.ProcessR = resolveProcs(sumElem.ProcessR)
+		sumElem.ProcessL = resolveProcs(sumElem.ProcessL, limit)
+		sumElem.ProcessR = resolveProcs(sumElem.ProcessR, limit)
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
-		parElem.ProcessL = resolveProcs(parElem.ProcessL)
-		parElem.ProcessR = resolveProcs(parElem.ProcessR)
+		parElem.ProcessL = resolveProcs(parElem.ProcessL, limit)
+		parElem.ProcessR = resolveProcs(parElem.ProcessR, limit)
 	case ElemTypProcess:
+		if limit >= depthLimit {
+			return &ElemNil{}
+		}
 		pcsElem := elem.(*ElemProcess)
 		processName := pcsElem.Name
 		if _, ok := DeclaredProcs[processName]; !ok {
@@ -65,10 +72,10 @@ func resolveProcs(elem Element) Element {
 				Name: oldName,
 			}, pcsElem.Parameters[i])
 		}
-		return resolveProcs(proc)
+		return resolveProcs(proc, limit+1)
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
-		rootElem.Next = resolveProcs(rootElem.Next)
+		rootElem.Next = resolveProcs(rootElem.Next, limit)
 	}
 	return elem
 }
@@ -168,7 +175,7 @@ func close(elem Element, freshName Name) Element {
 // InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
 // for use in the interpreter.
 func InitRootAst(elem Element) Element {
-	ResolveProcessConstants(elem)
+	ResolveProcs(elem)
 	DoAlphaConversion(elem)
 	return &ElemRoot{
 		Next: elem,
