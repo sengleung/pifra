@@ -1,5 +1,5 @@
 %{
-package main
+package pifra
 
 import (
     "fmt"

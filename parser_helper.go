@@ -1,4 +1,4 @@
-package main
+package pifra
 
 import (
 	"fmt"
@@ -19,7 +19,9 @@ var log = false
 func InitProgram(program []byte) (Element, error) {
 	initParser()
 	lex := newLexer(program)
-	yyParse(lex)
+	if code := yyParse(lex); code != 0 {
+		return nil, fmt.Errorf(parseError)
+	}
 	if len(undeclaredProcs) == 0 {
 		return nil, fmt.Errorf("a process must be undeclared to initialise the program")
 	}

@@ -1,8 +1,6 @@
-package main
+package pifra
 
-import (
-        "fmt"
-)
+var parseError string
 
 %%{ 
     machine parser;
@@ -56,6 +54,6 @@ func (lex *lexer) Lex(out *yySymType) int {
     return tok;
 }
 
-func (lex *lexer) Error(e string) {
-    fmt.Println("error:", e)
+func (lex *lexer) Error(err string) {
+    parseError = err
 }

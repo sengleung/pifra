@@ -1,4 +1,4 @@
-package main
+package pifra
 
 import (
 	"testing"
