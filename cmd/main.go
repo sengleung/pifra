@@ -58,10 +58,7 @@ pi-calculus represented by fresh-register automata.`,
 			os.Exit(1)
 		}
 		if interactiveMode {
-			if err := pifra.InteractiveMode(registerSize); err != nil {
-				fmt.Println("error:", err)
-				os.Exit(1)
-			}
+			pifra.InteractiveMode(registerSize)
 		} else {
 			if len(args) < 1 {
 				fmt.Println("error: input file required for LTS generation")

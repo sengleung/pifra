@@ -1,6 +1,7 @@
 package pifra
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,9 +9,23 @@ import (
 
 // InteractiveMode allows the user to inspect interactively the next transition(s)
 // after providing a pi-calculus syntax input.
-func InteractiveMode(regSize int) error {
+func InteractiveMode(regSize int) {
 	registerSize = regSize
-	return nil
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		text, _ := reader.ReadString('\n')
+		proc, err := InitProgram([]byte(text))
+		if err != nil {
+			fmt.Println("error: ", err)
+		} else {
+			fmt.Println(PrettyPrintAst(proc))
+			state := newTransitionStateRoot(proc)
+			confs := trans(state.Configuration)
+			for _, conf := range confs {
+				fmt.Println(PrettyPrintConfiguration(conf))
+			}
+		}
+	}
 }
 
 // OutputMode generates an LTS from the pi-calculus program file and either writes
