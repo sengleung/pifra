@@ -11,11 +11,12 @@ import (
 // after providing a pi-calculus syntax input.
 func InteractiveMode() {
 	for {
+		fmt.Print("> ")
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
 		proc, err := InitProgram([]byte(text))
 		if err != nil {
-			fmt.Println("error: ", err)
+			fmt.Println("error:", err)
 		} else {
 			fmt.Println(PrettyPrintAst(proc))
 			state := newTransitionStateRoot(proc)
