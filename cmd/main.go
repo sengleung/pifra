@@ -57,10 +57,12 @@ pi-calculus represented by fresh-register automata.`,
 		} else {
 			if len(args) < 1 {
 				fmt.Println("error: input file required for LTS generation")
+				fmt.Println(cmd.UsageString())
 				os.Exit(1)
 			}
 			if len(args) > 1 {
 				fmt.Println("error: more than one argument encountered")
+				fmt.Println(cmd.UsageString())
 				os.Exit(1)
 			}
 			inputFile := args[0]
