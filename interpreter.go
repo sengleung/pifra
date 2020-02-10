@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -8,6 +9,7 @@ import (
 )
 
 var registerSize = 10000
+var maxStatesExplored = 1
 
 type State struct {
 	Configuration Configuration
@@ -157,6 +159,36 @@ func newTransitionStateRoot(process Element) *State {
 			},
 		},
 		NextStates: []*State{},
+	}
+}
+
+func exploreTransitions(root *State) {
+	states := []*State{root}
+	popStates := func() *State {
+		var s *State
+		s, states = states[len(states)-1], states[:len(states)-1]
+		return s
+	}
+
+	var statesExplored int
+
+	// BFS traversal state exploration.
+	for len(states) > 0 && statesExplored < maxStatesExplored {
+		state := popStates()
+		confs := trans(state.Configuration)
+		for _, conf := range confs {
+			fmt.Println(PrettyPrintConfiguration(conf))
+			nextState := &State{
+				Configuration: conf,
+				NextStates:    []*State{},
+			}
+			state.NextStates = append(state.NextStates, nextState)
+			states = append(states, nextState)
+		}
+		if len(confs) > 0 {
+			fmt.Println(len(states))
+			statesExplored = statesExplored + 1
+		}
 	}
 }
 
@@ -593,6 +625,12 @@ func trans(conf Configuration) []Configuration {
 		rootConf.Process = rootConf.Process.(*ElemRoot).Next
 		tconfs := trans(rootConf)
 		dconfs := dblTrans(tconfs)
+		// Reattach the root element.
+		for i, conf := range dconfs {
+			dconfs[i].Process = &ElemRoot{
+				Next: conf.Process,
+			}
+		}
 		return dconfs
 	}
 	return nil
