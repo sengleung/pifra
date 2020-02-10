@@ -9,8 +9,7 @@ import (
 
 // InteractiveMode allows the user to inspect interactively the next transition(s)
 // after providing a pi-calculus syntax input.
-func InteractiveMode(regSize int) {
-	registerSize = regSize
+func InteractiveMode() {
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
@@ -30,9 +29,8 @@ func InteractiveMode(regSize int) {
 
 // OutputMode generates an LTS from the pi-calculus program file and either writes
 // the output to a file, or prints the output if an output file is not specified.
-func OutputMode(maxProcessDepth int, regSize int, maxStates int, inputFile string, outputFile string) error {
+func OutputMode(maxProcessDepth int, maxStates int, inputFile string, outputFile string) error {
 	depthLimit = maxProcessDepth
-	registerSize = regSize
 	maxStatesExplored = maxStates
 
 	input, err := ioutil.ReadFile(inputFile)

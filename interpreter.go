@@ -8,7 +8,6 @@ import (
 	"github.com/mohae/deepcopy"
 )
 
-var registerSize = 10000
 var maxStatesExplored = 1
 
 type State struct {
@@ -45,7 +44,6 @@ type Label struct {
 }
 
 type Register struct {
-	Size     int
 	Index    int
 	Register map[int]string
 }
@@ -143,7 +141,7 @@ func newTransitionStateRoot(process Element) *State {
 	}
 	sort.Strings(freshNames)
 
-	register := make(map[int]string, registerSize)
+	register := make(map[int]string)
 	index := 1
 	for _, name := range freshNames {
 		register[index] = name
@@ -153,7 +151,6 @@ func newTransitionStateRoot(process Element) *State {
 		Configuration: Configuration{
 			Process: process,
 			Register: Register{
-				Size:     registerSize,
 				Index:    len(register) + 1,
 				Register: register,
 			},

@@ -9,7 +9,6 @@ import (
 )
 
 var maxStates int
-var registerSize int
 var maxProcessDepth int
 var interactiveMode bool
 var outputFile string
@@ -58,7 +57,7 @@ pi-calculus represented by fresh-register automata.`,
 			os.Exit(1)
 		}
 		if interactiveMode {
-			pifra.InteractiveMode(registerSize)
+			pifra.InteractiveMode()
 		} else {
 			if len(args) < 1 {
 				fmt.Println("error: input file required for LTS generation")
@@ -69,7 +68,7 @@ pi-calculus represented by fresh-register automata.`,
 				os.Exit(1)
 			}
 			inputFile := args[0]
-			if err := pifra.OutputMode(maxProcessDepth, registerSize, maxStates, inputFile, outputFile); err != nil {
+			if err := pifra.OutputMode(maxProcessDepth, maxStates, inputFile, outputFile); err != nil {
 				fmt.Println("error:", err)
 				os.Exit(1)
 			}
@@ -95,7 +94,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output the LTS to a Graphviz DOT file")
 	rootCmd.PersistentFlags().IntVarP(&maxProcessDepth, "depth", "d", 50, "maximum process depth during parsing\nexample: P = a(b).P will only resolve to the maximum depth and\nthen assign the nil process 0, i.e. a(b)...a(b).0")
 	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "s", 50, "maximum number of transition states explored")
-	rootCmd.PersistentFlags().IntVarP(&registerSize, "register-size", "r", 10000, "register size")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }
