@@ -44,10 +44,6 @@ var rootCmd = &cobra.Command{
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if registerSize < 1 {
-			fmt.Println("error: register size must be greater or equal to 1")
-			os.Exit(1)
-		}
 		if maxProcessDepth < 0 {
 			fmt.Println("error: maximum process depth must be positive")
 			os.Exit(1)
