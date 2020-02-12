@@ -591,9 +591,22 @@ func trans(conf Configuration) []Configuration {
 						close := deepcopy.Copy(basePar).(Configuration)
 						lproc := deepcopy.Copy(lconf.Process).(Element)
 						rproc := deepcopy.Copy(rconf.Process).(Element)
+
+						// Q'{a/b}
+						resName := lconf.Register.GetName(1)
+						oldName := Name{
+							Name: rconf.Register.GetName(1),
+							Type: Bound,
+						}
+						newName := Name{
+							Name: resName,
+							Type: Bound,
+						}
+						substituteName(rproc, oldName, newName)
+
 						close.Process = &ElemRestriction{
 							Restrict: Name{
-								Name: lconf.Register.GetName(1),
+								Name: resName,
 								Type: Bound,
 							},
 							Next: &ElemParallel{
@@ -610,21 +623,34 @@ func trans(conf Configuration) []Configuration {
 					}
 				}
 				// CLOSE_R
-				if rconf.Label.Double &&
-					rconf.Label.Symbol.Type == SymbolTypOutput &&
-					rconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
-					rconf.Label.Symbol2.Value == 1 &&
-					lconf.Label.Double &&
+				if lconf.Label.Double &&
 					lconf.Label.Symbol.Type == SymbolTypInput &&
 					lconf.Label.Symbol2.Type == SymbolTypFreshInput &&
-					lconf.Label.Symbol2.Value == 1 {
+					lconf.Label.Symbol2.Value == 1 &&
+					rconf.Label.Double &&
+					rconf.Label.Symbol.Type == SymbolTypOutput &&
+					rconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
+					rconf.Label.Symbol2.Value == 1 {
 					{
 						close := deepcopy.Copy(basePar).(Configuration)
 						lproc := deepcopy.Copy(lconf.Process).(Element)
 						rproc := deepcopy.Copy(rconf.Process).(Element)
+
+						// P'{a/b}
+						resName := rconf.Register.GetName(1)
+						oldName := Name{
+							Name: lconf.Register.GetName(1),
+							Type: Bound,
+						}
+						newName := Name{
+							Name: resName,
+							Type: Bound,
+						}
+						substituteName(lproc, oldName, newName)
+
 						close.Process = &ElemRestriction{
 							Restrict: Name{
-								Name: lconf.Register.GetName(1),
+								Name: resName,
 								Type: Bound,
 							},
 							Next: &ElemParallel{
