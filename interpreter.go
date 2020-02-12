@@ -510,10 +510,14 @@ func trans(conf Configuration) []Configuration {
 		// COMM_L
 		for _, lconf := range lconfs {
 			for _, rconf := range rconfs {
-				if lconf.Label.Double && lconf.Label.Symbol.Type == SymbolTypOutput &&
+				if lconf.Label.Double &&
+					lconf.Label.Symbol.Type == SymbolTypOutput &&
 					lconf.Label.Symbol2.Type == SymbolTypKnown &&
-					rconf.Label.Double && rconf.Label.Symbol.Type == SymbolTypInput &&
-					rconf.Label.Symbol2.Type == SymbolTypKnown {
+					rconf.Label.Double &&
+					rconf.Label.Symbol.Type == SymbolTypInput &&
+					rconf.Label.Symbol2.Type == SymbolTypKnown &&
+					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value &&
+					lconf.Label.Symbol2.Value == rconf.Label.Symbol2.Value {
 					lproc := deepcopy.Copy(lconf.Process).(Element).(*ElemParallel).ProcessL
 					rproc := deepcopy.Copy(rconf.Process).(Element).(*ElemParallel).ProcessR
 					comm := deepcopy.Copy(basePar).(Configuration)
@@ -534,10 +538,14 @@ func trans(conf Configuration) []Configuration {
 		// COMM_R
 		for _, lconf := range lconfs {
 			for _, rconf := range rconfs {
-				if rconf.Label.Double && rconf.Label.Symbol.Type == SymbolTypOutput &&
+				if lconf.Label.Double &&
+					lconf.Label.Symbol.Type == SymbolTypInput &&
+					lconf.Label.Symbol2.Type == SymbolTypKnown &&
+					rconf.Label.Double &&
+					rconf.Label.Symbol.Type == SymbolTypOutput &&
 					rconf.Label.Symbol2.Type == SymbolTypKnown &&
-					lconf.Label.Double && lconf.Label.Symbol.Type == SymbolTypInput &&
-					lconf.Label.Symbol2.Type == SymbolTypKnown {
+					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value &&
+					lconf.Label.Symbol2.Value == rconf.Label.Symbol2.Value {
 					lproc := deepcopy.Copy(lconf.Process).(Element).(*ElemParallel).ProcessL
 					rproc := deepcopy.Copy(rconf.Process).(Element).(*ElemParallel).ProcessR
 					comm := deepcopy.Copy(basePar).(Configuration)
