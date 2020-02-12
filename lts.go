@@ -27,7 +27,7 @@ type EdgeTemplate struct {
 func generateGraphVizFile(vertices map[int]Configuration, edges []GraphEdge) []byte {
 	var buffer bytes.Buffer
 	buffer.WriteString(`digraph {
-	size="8.3,11.7!";
+    size="8.3,11.7!";
     ratio="fill";
     margin=0;
     rankdir = TB;
