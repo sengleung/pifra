@@ -23,63 +23,6 @@ func generateBoundName(namePrefix string) string {
 	return name
 }
 
-// ResolveProcs replaces declared process calls with their actual processes
-// and substitutes the names.
-func ResolveProcs(elem Element) {
-	resolveProcs(elem, 0)
-}
-
-func resolveProcs(elem Element, limit int) Element {
-	elemTyp := elem.Type()
-	switch elemTyp {
-	case ElemTypNil:
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		outElem.Next = resolveProcs(outElem.Next, limit)
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		inpElem.Next = resolveProcs(inpElem.Next, limit)
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		matchElem.Next = resolveProcs(matchElem.Next, limit)
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		resElem.Next = resolveProcs(resElem.Next, limit)
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		sumElem.ProcessL = resolveProcs(sumElem.ProcessL, limit)
-		sumElem.ProcessR = resolveProcs(sumElem.ProcessR, limit)
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		parElem.ProcessL = resolveProcs(parElem.ProcessL, limit)
-		parElem.ProcessR = resolveProcs(parElem.ProcessR, limit)
-	case ElemTypProcess:
-		if limit >= depthLimit {
-			return &ElemNil{}
-		}
-		pcsElem := elem.(*ElemProcess)
-		processName := pcsElem.Name
-		if _, ok := DeclaredProcs[processName]; !ok {
-			return &ElemNil{}
-		}
-		dp := DeclaredProcs[processName]
-		if len(dp.Parameters) != len(pcsElem.Parameters) {
-			return &ElemNil{}
-		}
-		proc := deepcopy.Copy(dp.Process).(Element)
-		for i, oldName := range dp.Parameters {
-			subName(proc, Name{
-				Name: oldName,
-			}, pcsElem.Parameters[i])
-		}
-		return resolveProcs(proc, limit+1)
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		rootElem.Next = resolveProcs(rootElem.Next, limit)
-	}
-	return elem
-}
-
 func substituteName(elem Element, oldName Name, newName Name) {
 	subName(elem, oldName, newName)
 }
@@ -125,7 +68,12 @@ func subName(elem Element, oldName Name, newName Name) {
 		subName(parElem.ProcessL, oldName, newName)
 		subName(parElem.ProcessR, oldName, newName)
 	case ElemTypProcess:
-		// TODO
+		procElem := elem.(*ElemProcess)
+		for i, param := range procElem.Parameters {
+			if param == oldName {
+				procElem.Parameters[i] = newName
+			}
+		}
 	case ElemTypOutOutput:
 		outOutput := elem.(*ElemOutOutput)
 		if outOutput.Output == oldName {
@@ -175,7 +123,6 @@ func close(elem Element, freshName Name) Element {
 // InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
 // for use in the interpreter.
 func InitRootAst(elem Element) Element {
-	ResolveProcs(elem)
 	DoAlphaConversion(elem)
 	return &ElemRoot{
 		Next: elem,

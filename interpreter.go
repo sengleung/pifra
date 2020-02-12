@@ -160,6 +160,8 @@ func newTransitionStateRoot(process Element) *State {
 	}
 }
 
+var infProc bool
+
 func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 	queue := list.New()
 	queue.PushBack(root)
@@ -391,6 +393,40 @@ func trans(conf Configuration) []Configuration {
 
 	// REC
 	case ElemTypProcess:
+		procConf := deepcopy.Copy(conf).(Configuration)
+		procElem := procConf.Process.(*ElemProcess)
+
+		processName := procElem.Name
+		if _, ok := DeclaredProcs[processName]; !ok {
+			return []Configuration{}
+		}
+		dp := DeclaredProcs[processName]
+		if len(dp.Parameters) != len(procElem.Parameters) {
+			return []Configuration{}
+		}
+
+		// P{a/b}
+		proc := deepcopy.Copy(dp.Process).(Element)
+		for i, oldName := range dp.Parameters {
+			subName(proc, Name{
+				Name: oldName,
+			}, procElem.Parameters[i])
+		}
+
+		procConf.Process = proc
+		doAlphaConversion(proc)
+
+		// Detects infinitely recursive processes such as P(a) = P(a).
+		if infProc {
+			return []Configuration{}
+		}
+		infProc = true
+		tconfs := trans(procConf)
+		infProc = false
+		dconfs := dblTrans(tconfs)
+
+		return dconfs
+
 	// SUM
 	case ElemTypSum:
 		var confs []Configuration
