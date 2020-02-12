@@ -1,6 +1,7 @@
 package pifra
 
 import (
+	"container/list"
 	"fmt"
 	"sort"
 	"strconv"
@@ -160,14 +161,13 @@ func newTransitionStateRoot(process Element) *State {
 }
 
 func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
-	states := []*State{root}
-	popStates := func() *State {
-		var s *State
-		s, states = states[len(states)-1], states[:len(states)-1]
-		return s
+	queue := list.New()
+	queue.PushBack(root)
+	dequeue := func() *State {
+		s := queue.Front()
+		queue.Remove(s)
+		return s.Value.(*State)
 	}
-
-	var statesExplored int
 
 	visited := make(map[string]int)
 	vertices := make(map[int]Configuration)
@@ -175,8 +175,9 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 	var vertexId int
 
 	// BFS traversal state exploration.
-	for len(states) > 0 && statesExplored < maxStatesExplored {
-		state := popStates()
+	var statesExplored int
+	for queue.Len() > 0 && statesExplored < maxStatesExplored {
+		state := dequeue()
 
 		srcKey := prettyPrintRegister(state.Configuration.Register) + PrettyPrintAst(state.Configuration.Process)
 		if _, ok := visited[srcKey]; !ok {
@@ -206,10 +207,10 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 				NextStates:    []*State{},
 			}
 			state.NextStates = append(state.NextStates, nextState)
-			states = append(states, nextState)
+			queue.PushBack(nextState)
 		}
 		if len(confs) > 0 {
-			fmt.Println(len(states))
+			fmt.Println(len(confs))
 			statesExplored = statesExplored + 1
 		}
 	}
