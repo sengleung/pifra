@@ -768,7 +768,7 @@ func dblTrans(confs []Configuration) []Configuration {
 
 // PrettyPrintConfiguration returns a pretty printed string of the configuration.
 func PrettyPrintConfiguration(conf Configuration) string {
-	return prettyPrintLabel(conf.Label) + "-> " + prettyPrintRegister(conf.Register) + " ¦- " +
+	return prettyPrintLabel(conf.Label) + " -> " + prettyPrintRegister(conf.Register) + " ¦- " +
 		PrettyPrintAst(conf.Process)
 
 }
@@ -807,7 +807,7 @@ func prettyPrintSymbol(symbol Symbol) string {
 	case SymbolTypFreshOutput:
 		return strconv.Itoa(s) + "^"
 	case SymbolTypTau:
-		return "t "
+		return "t   "
 	case SymbolTypKnown:
 		return strconv.Itoa(s) + " "
 	}
