@@ -30,8 +30,7 @@ func InteractiveMode() {
 
 // OutputMode generates an LTS from the pi-calculus program file and either writes
 // the output to a file, or prints the output if an output file is not specified.
-func OutputMode(maxProcessDepth int, maxStates int, inputFile string, outputFile string) error {
-	depthLimit = maxProcessDepth
+func OutputMode(maxStates int, inputFile string, outputFile string) error {
 	maxStatesExplored = maxStates
 
 	input, err := ioutil.ReadFile(inputFile)

@@ -9,7 +9,6 @@ import (
 )
 
 var maxStates int
-var maxProcessDepth int
 var interactiveMode bool
 var outputFile string
 
@@ -44,10 +43,6 @@ var rootCmd = &cobra.Command{
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if maxProcessDepth < 0 {
-			fmt.Println("error: maximum process depth must be positive")
-			os.Exit(1)
-		}
 		if maxStates < 0 {
 			fmt.Println("error: error: maximum states explored must be positive")
 			os.Exit(1)
@@ -66,7 +61,7 @@ pi-calculus represented by fresh-register automata.`,
 				os.Exit(1)
 			}
 			inputFile := args[0]
-			if err := pifra.OutputMode(maxProcessDepth, maxStates, inputFile, outputFile); err != nil {
+			if err := pifra.OutputMode(maxStates, inputFile, outputFile); err != nil {
 				fmt.Println("error:", err)
 				os.Exit(1)
 			}
@@ -88,9 +83,8 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 
-	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "inspect interactively the next transition(s) after providing input")
+	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output the LTS to a Graphviz DOT file")
-	rootCmd.PersistentFlags().IntVarP(&maxProcessDepth, "depth", "d", 50, "maximum process depth during parsing\nexample: P = a(b).P will only resolve to the maximum depth and\nthen assign the nil process 0, i.e. a(b)...a(b).0")
 	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "s", 50, "maximum number of transition states explored")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")

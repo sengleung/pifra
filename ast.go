@@ -6,8 +6,6 @@ import (
 	"github.com/mohae/deepcopy"
 )
 
-var depthLimit = 20
-
 var boundNameIndex int
 var freshNameIndex int
 
