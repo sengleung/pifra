@@ -768,9 +768,9 @@ func dblTrans(confs []Configuration) []Configuration {
 
 // PrettyPrintConfiguration returns a pretty printed string of the configuration.
 func PrettyPrintConfiguration(conf Configuration) string {
-	return prettyPrintRegister(conf.Register) + " ¦- " +
-		PrettyPrintAst(conf.Process) + " : " +
-		prettyPrintLabel(conf.Label)
+	return prettyPrintLabel(conf.Label) + "-> " + prettyPrintRegister(conf.Register) + " ¦- " +
+		PrettyPrintAst(conf.Process)
+
 }
 
 func prettyPrintRegister(register Register) string {
@@ -790,9 +790,9 @@ func prettyPrintRegister(register Register) string {
 
 func prettyPrintLabel(label Label) string {
 	if !label.Double {
-		return prettyPrintSymbol(label.Symbol) + " "
+		return prettyPrintSymbol(label.Symbol)
 	}
-	return prettyPrintSymbol(label.Symbol) + prettyPrintSymbol(label.Symbol2) + " "
+	return prettyPrintSymbol(label.Symbol) + prettyPrintSymbol(label.Symbol2)
 }
 
 func prettyPrintSymbol(symbol Symbol) string {

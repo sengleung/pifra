@@ -76,9 +76,9 @@ func generateGraphVizFile(vertices map[int]Configuration, edges []GraphEdge) []b
 
 func prettyPrintGraphLabel(label Label) string {
 	if !label.Double {
-		return prettyPrintGraphSymbol(label.Symbol) + " "
+		return prettyPrintGraphSymbol(label.Symbol)
 	}
-	return prettyPrintGraphSymbol(label.Symbol) + prettyPrintGraphSymbol(label.Symbol2) + " "
+	return prettyPrintGraphSymbol(label.Symbol) + prettyPrintGraphSymbol(label.Symbol2)
 }
 
 func prettyPrintGraphSymbol(symbol Symbol) string {
