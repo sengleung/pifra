@@ -159,7 +159,7 @@ func newTransitionStateRoot(process Element) *State {
 	}
 }
 
-func exploreTransitions(root *State) {
+func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 	states := []*State{root}
 	popStates := func() *State {
 		var s *State
@@ -169,12 +169,38 @@ func exploreTransitions(root *State) {
 
 	var statesExplored int
 
+	visited := make(map[string]int)
+	vertices := make(map[int]Configuration)
+	var edges []GraphEdge
+	var vertexId int
+
 	// BFS traversal state exploration.
 	for len(states) > 0 && statesExplored < maxStatesExplored {
 		state := popStates()
+
+		srcKey := prettyPrintRegister(state.Configuration.Register) + PrettyPrintAst(state.Configuration.Process)
+		if _, ok := visited[srcKey]; !ok {
+			visited[srcKey] = vertexId
+			vertices[vertexId] = state.Configuration
+			vertexId = vertexId + 1
+		}
+
 		confs := trans(state.Configuration)
 		for _, conf := range confs {
 			fmt.Println(PrettyPrintConfiguration(conf))
+
+			dstKey := prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
+			if _, ok := visited[dstKey]; !ok {
+				visited[dstKey] = vertexId
+				vertices[vertexId] = conf
+				vertexId = vertexId + 1
+			}
+			edges = append(edges, GraphEdge{
+				Source:      visited[srcKey],
+				Destination: visited[dstKey],
+				Label:       conf.Label,
+			})
+
 			nextState := &State{
 				Configuration: conf,
 				NextStates:    []*State{},
@@ -187,6 +213,7 @@ func exploreTransitions(root *State) {
 			statesExplored = statesExplored + 1
 		}
 	}
+	return vertices, edges
 }
 
 func trans(conf Configuration) []Configuration {
