@@ -350,7 +350,7 @@ func trans(conf Configuration) []Configuration {
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
 		disallowedLabel := resConf.Register.UpdateAfter(resName)
-		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'    // NOTE DBL TRANS
+		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		dconfs := dblTrans(tconfs)
 		// (o'+a) ¦- P^
@@ -359,10 +359,24 @@ func trans(conf Configuration) []Configuration {
 			if conf.Label.Symbol.Value == disallowedLabel || conf.Label.Symbol2.Value == disallowedLabel {
 				continue
 			}
-			// Ignore DBLOUTs as they are found in OPEN.
+
+			// OPEN
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
+				// o
+				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
+				// fn(P')
+				freeNamesP := GetAllFreshNames(conf.Process)
+				// o[j -> a], j = min{j | reg(j) !E fn(P')}
+				label := conf.Register.UpdateMin(resName, freeNamesP)
+				// ij
+				conf.Label.Symbol2.Value = label
+				// ij^
+				conf.Label.Symbol2.Type = SymbolTypFreshOutput
+				// o |- P'
+				confs = append(confs, conf)
 				continue
 			}
+
 			// $a.P^'
 			conf.Process = &ElemRestriction{
 				Restrict: resElem.Restrict,
@@ -371,29 +385,6 @@ func trans(conf Configuration) []Configuration {
 			// o' ¦- $a.P^'
 			conf.Register.RemoveLastLabel()
 			confs = append(confs, conf)
-		}
-
-		// OPEN
-		// o ¦- $a.P^
-		openConf := deepcopy.Copy(baseResConf).(Configuration)
-		openConf.Process = openConf.Process.(*ElemRestriction).Next
-		// Find fn(P).
-		freeNamesP := GetAllFreshNames(conf.Process)
-		// Update register to be i = min{i | reg(i) \notin fn(P)}.
-		openConf.Register.UpdateMin(resName, freeNamesP)
-		// o[i->a] ¦- P^ -t-> o[i->a] ¦- P^' -t-> o[i->a] ¦- P   // NOTE DBL TRANS
-		otconfs := trans(openConf)
-		odconfs := dblTrans(otconfs)
-		for _, conf := range odconfs {
-			// t != (|o|+1)
-			if conf.Label.Symbol.Value == conf.Register.GetLabel(resName) {
-				continue
-			}
-			// Intercept DBLOUTs and modify the second label to be fresh.
-			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
-				conf.Label.Symbol2.Type = SymbolTypFreshOutput
-				confs = append(confs, conf)
-			}
 		}
 
 		return confs
