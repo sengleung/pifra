@@ -322,9 +322,8 @@ func trans(conf Configuration) []Configuration {
 			matchConf.Process = matchElem.Next
 			// o ¦- P -t-> o ¦- P^'
 			tconfs := trans(matchConf)
-			dconfs := dblTrans(tconfs)
 			// o ¦- P^'
-			confs = append(confs, dconfs...)
+			confs = append(confs, tconfs...)
 		}
 
 		return confs
@@ -346,9 +345,8 @@ func trans(conf Configuration) []Configuration {
 		disallowedLabel := resConf.Register.UpdateAfter(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
-		dconfs := dblTrans(tconfs)
 		// (o'+a) ¦- P^
-		for _, conf := range dconfs {
+		for _, conf := range tconfs {
 			// t != (|o|+1)
 			if conf.Label.Symbol.Value == disallowedLabel || conf.Label.Symbol2.Value == disallowedLabel {
 				continue
@@ -415,9 +413,8 @@ func trans(conf Configuration) []Configuration {
 		infProc = true
 		tconfs := trans(procConf)
 		infProc = false
-		dconfs := dblTrans(tconfs)
 
-		return dconfs
+		return tconfs
 
 	// SUM
 	case ElemTypSum:
@@ -428,16 +425,14 @@ func trans(conf Configuration) []Configuration {
 		sumElem := sumConf.Process.(*ElemSum)
 		sumConf.Process = sumElem.ProcessL
 		lconfs := trans(sumConf)
-		dconfs := dblTrans(lconfs)
-		confs = append(confs, dconfs...)
+		confs = append(confs, lconfs...)
 
 		// SUM_R
 		sumConf = deepcopy.Copy(conf).(Configuration)
 		sumElem = sumConf.Process.(*ElemSum)
 		sumConf.Process = sumElem.ProcessR
 		rconfs := trans(sumConf)
-		dconfs = dblTrans(rconfs)
-		confs = append(confs, dconfs...)
+		confs = append(confs, rconfs...)
 
 		return confs
 
@@ -455,10 +450,9 @@ func trans(conf Configuration) []Configuration {
 			parElem := parConf.Process.(*ElemParallel)
 			parConf.Process = parElem.ProcessL
 			tconfs := trans(parConf)
-			dconfs := dblTrans(tconfs)
 
 			// PAR2_L
-			for _, conf := range dconfs {
+			for _, conf := range tconfs {
 				parConf = deepcopy.Copy(basePar).(Configuration)
 
 				// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
@@ -493,10 +487,9 @@ func trans(conf Configuration) []Configuration {
 			parElem := parConf.Process.(*ElemParallel)
 			parConf.Process = parElem.ProcessR
 			tconfs := trans(parConf)
-			dconfs := dblTrans(tconfs)
 
 			// PAR2_R
-			for _, conf := range dconfs {
+			for _, conf := range tconfs {
 				parConf = deepcopy.Copy(basePar).(Configuration)
 				// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
 				if conf.Label.Double &&
@@ -590,8 +583,7 @@ func trans(conf Configuration) []Configuration {
 		// (#+o) ¦- P
 		clconf.Process = parElem.ProcessL
 		// -t-> (b+o) ¦- P'
-		tconfs := trans(clconf)
-		clconfs := dblTrans(tconfs)
+		clconfs := trans(clconf)
 
 		crconf := deepcopy.Copy(conf).(Configuration)
 		// (#+o)
@@ -600,8 +592,7 @@ func trans(conf Configuration) []Configuration {
 		// (#+o) ¦- Q
 		crconf.Process = parElem.ProcessR
 		// -t-> (b+o) ¦- Q'
-		tconfs = trans(crconf)
-		crconfs := dblTrans(tconfs)
+		crconfs := trans(crconf)
 
 		for _, lconf := range clconfs {
 			for _, rconf := range crconfs {
@@ -702,60 +693,15 @@ func trans(conf Configuration) []Configuration {
 		rootConf := deepcopy.Copy(conf).(Configuration)
 		rootConf.Process = rootConf.Process.(*ElemRoot).Next
 		tconfs := trans(rootConf)
-		dconfs := dblTrans(tconfs)
 		// Reattach the root element.
-		for i, conf := range dconfs {
-			dconfs[i].Process = &ElemRoot{
+		for i, conf := range tconfs {
+			tconfs[i].Process = &ElemRoot{
 				Next: conf.Process,
 			}
 		}
-		return dconfs
+		return tconfs
 	}
 	return nil
-}
-
-func dblTrans(confs []Configuration) []Configuration {
-	var dblInpOuts []Configuration
-
-	// Keep existing double inputs/double outputs and taus.
-	for _, conf := range confs {
-		if conf.Label.Double ||
-			(!conf.Label.Double && conf.Label.Symbol.Type == SymbolTypTau) {
-			dblInpOuts = append(dblInpOuts, conf)
-		}
-	}
-
-	// trans() intermediate input processes.
-	var interConfs []Configuration
-
-	for _, conf := range confs {
-		elemSetType := getElemSetType(conf.Process)
-		if !conf.Label.Double && (elemSetType == ElemSetInp || elemSetType == ElemSetOut) {
-			interConfs = append(interConfs, conf)
-		}
-	}
-
-	for _, conf := range interConfs {
-		tconfs := trans(conf)
-
-		var dconfs []Configuration
-		for _, dblConf := range tconfs {
-			if getElemSetType(dblConf.Process) == ElemSetReg && !conf.Label.Double {
-				dconfs = append(dconfs, dblConf)
-			}
-		}
-
-		for _, dconf := range dconfs {
-			dconf.Label = Label{
-				Double:  true,
-				Symbol:  conf.Label.Symbol,
-				Symbol2: dconf.Label.Symbol,
-			}
-			dblInpOuts = append(dblInpOuts, dconf)
-		}
-	}
-
-	return dblInpOuts
 }
 
 // PrettyPrintConfiguration returns a pretty printed string of the configuration.
