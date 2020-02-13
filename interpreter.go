@@ -222,7 +222,7 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 func trans(conf Configuration) []Configuration {
 	process := conf.Process
 	switch process.Type() {
-	// INP1
+	// DBLINP = INP1 + INP2A/INP2B
 	case ElemTypInput:
 		inp1Conf := deepcopy.Copy(conf).(Configuration)
 		inpElem := inp1Conf.Process.(*ElemInput)
@@ -242,40 +242,35 @@ func trans(conf Configuration) []Configuration {
 			Next:    inpElem.Next,
 			SetType: ElemSetInp,
 		}
-		return []Configuration{inp1Conf}
 
-	// INP2A / INP2B
-	case ElemTypInpInput:
 		// INP2A
 		var confs []Configuration
-		for _, label := range conf.Register.Labels() {
-			inp2aConf := deepcopy.Copy(conf).(Configuration)
+		for _, label := range inp1Conf.Register.Labels() {
+			inp2aConf := deepcopy.Copy(inp1Conf).(Configuration)
 			inpInputElem := inp2aConf.Process.(*ElemInpInput)
 			substituteName(inpInputElem, inpInputElem.Input, Name{
 				Name: inp2aConf.Register.GetName(label),
 				Type: Fresh,
 			})
-			inp2aConf.Label = Label{
-				Symbol: Symbol{
-					Type:  SymbolTypKnown,
-					Value: label,
-				},
+			inp2aConf.Label.Double = true
+			inp2aConf.Label.Symbol2 = Symbol{
+				Type:  SymbolTypKnown,
+				Value: label,
 			}
 			inp2aConf.Process = inpInputElem.Next
 			confs = append(confs, inp2aConf)
 		}
 
 		// INP2B
-		inp2bConf := deepcopy.Copy(conf).(Configuration)
+		inp2bConf := deepcopy.Copy(inp1Conf).(Configuration)
 		inpInpElem := inp2bConf.Process.(*ElemInpInput)
 
 		name := inpInpElem.Input.Name
 		freshNamesP := GetAllFreshNames(inpInpElem.Next)
-		inp2bConf.Label = Label{
-			Symbol: Symbol{
-				Type:  SymbolTypFreshInput,
-				Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
-			},
+		inp2bConf.Label.Double = true
+		inp2bConf.Label.Symbol2 = Symbol{
+			Type:  SymbolTypFreshInput,
+			Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
 		}
 		inp2bConf.Process = inpInpElem.Next
 
