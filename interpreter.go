@@ -276,7 +276,7 @@ func trans(conf Configuration) []Configuration {
 
 		return append(confs, inp2bConf)
 
-	// OUT1
+	// DBLOUT = OUT1 + OUT2
 	case ElemTypOutput:
 		out1Conf := deepcopy.Copy(conf).(Configuration)
 		outElem := out1Conf.Process.(*ElemOutput)
@@ -293,19 +293,16 @@ func trans(conf Configuration) []Configuration {
 			Next:    outElem.Next,
 			SetType: ElemSetOut,
 		}
-		return []Configuration{out1Conf}
 
-	// OUT2
-	case ElemTypOutOutput:
+		// OUT2
 		var confs []Configuration
-		for _, label := range conf.Register.Labels() {
-			out2Conf := deepcopy.Copy(conf).(Configuration)
+		for _, label := range out1Conf.Register.Labels() {
+			out2Conf := deepcopy.Copy(out1Conf).(Configuration)
 			outOutputElem := out2Conf.Process.(*ElemOutOutput)
-			out2Conf.Label = Label{
-				Symbol: Symbol{
-					Type:  SymbolTypKnown,
-					Value: label,
-				},
+			out2Conf.Label.Double = true
+			out2Conf.Label.Symbol2 = Symbol{
+				Type:  SymbolTypKnown,
+				Value: label,
 			}
 			out2Conf.Process = outOutputElem.Next
 			confs = append(confs, out2Conf)
