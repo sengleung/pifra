@@ -342,18 +342,19 @@ func trans(conf Configuration) []Configuration {
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
-		disallowedLabel := resConf.Register.UpdateAfter(resName)
+		resLabel := resConf.Register.UpdateAfter(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
 		for _, conf := range tconfs {
 			// t != (|o|+1)
-			if conf.Label.Symbol.Value == disallowedLabel || conf.Label.Symbol2.Value == disallowedLabel {
+			if conf.Label.Symbol.Value == resLabel {
 				continue
 			}
 
 			// OPEN
-			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput {
+			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput &&
+				conf.Label.Symbol2.Value == resLabel {
 				// o
 				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
 				// fn(P')
