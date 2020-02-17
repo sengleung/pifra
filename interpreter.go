@@ -605,7 +605,8 @@ func trans(conf Configuration) []Configuration {
 					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypInput &&
 					rconf.Label.Symbol2.Type == SymbolTypFreshInput &&
-					rconf.Label.Symbol2.Value == 1 {
+					rconf.Label.Symbol2.Value == 1 &&
+					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value {
 					{
 						close := deepcopy.Copy(basePar).(Configuration)
 						lproc := deepcopy.Copy(lconf.Process).(Element)
@@ -649,7 +650,8 @@ func trans(conf Configuration) []Configuration {
 					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypOutput &&
 					rconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
-					rconf.Label.Symbol2.Value == 1 {
+					rconf.Label.Symbol2.Value == 1 &&
+					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value {
 					{
 						close := deepcopy.Copy(basePar).(Configuration)
 						lproc := deepcopy.Copy(lconf.Process).(Element)
