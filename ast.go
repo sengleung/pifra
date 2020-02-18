@@ -57,6 +57,8 @@ func subName(elem Element, oldName Name, newName Name) {
 		}
 		subName(matchElem.Next, oldName, newName)
 	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		subName(resElem.Next, oldName, newName)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
 		subName(sumElem.ProcessL, oldName, newName)
