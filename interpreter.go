@@ -65,6 +65,16 @@ func (reg *Register) RemoveLastLabel() {
 	delete(reg.Register, reg.Index)
 }
 
+// RemoveName removes the name from the register.
+// Undos UpdateAfter, but retains the modified registers.
+func (reg *Register) RemoveName(name string) {
+	for _, label := range reg.Labels() {
+		if reg.GetName(label) == name {
+			delete(reg.Register, label)
+		}
+	}
+}
+
 // AddEmptyName increments all labels by one while retaining mapping
 // to their name and leaves an empty name (#) at label 1.
 // #+o = {(1, #)} U {(i+1, v′) | (i, v′) E o}.
@@ -95,9 +105,12 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	for _, freshName := range freshNames {
 		freshNamesSet[freshName] = true
 	}
-	labels := reg.Labels()
-	for _, label := range labels {
+	for label := 1; label < reg.Index; label++ {
 		if reg.Register[label] == "#" || !freshNamesSet[reg.GetName(label)] {
+			reg.Register[label] = name
+			return label
+		}
+		if _, ok := reg.Register[label]; !ok {
 			reg.Register[label] = name
 			return label
 		}
@@ -392,7 +405,7 @@ func trans(conf Configuration) []Configuration {
 				Next:     conf.Process,
 			}
 			// o' ¦- $a.P^'
-			conf.Register.RemoveLastLabel()
+			conf.Register.RemoveName(resName)
 			confs = append(confs, conf)
 		}
 
