@@ -368,6 +368,21 @@ func trans(conf Configuration) []Configuration {
 				conf.Label.Symbol2.Type = SymbolTypFreshOutput
 				// o |- P'
 				confs = append(confs, conf)
+
+				// Substitute the bound name type to a fresh name type.
+				subName(conf.Process, Name{
+					Name: resName,
+					Type: Bound,
+				}, Name{
+					Name: resName,
+					Type: Fresh,
+				})
+				continue
+			}
+
+			// t != (|o|+1)
+			if conf.Label.Double && conf.Label.Symbol2.Type != SymbolTypFreshOutput &&
+				conf.Label.Symbol2.Value == resLabel {
 				continue
 			}
 
