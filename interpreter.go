@@ -354,6 +354,7 @@ func trans(conf Configuration) []Configuration {
 
 			// OPEN
 			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput &&
+				conf.Label.Symbol2.Type == SymbolTypKnown &&
 				conf.Label.Symbol2.Value == resLabel {
 				// o
 				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
