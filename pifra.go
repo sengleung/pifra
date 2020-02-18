@@ -68,9 +68,12 @@ func writeFile(output []byte, outputFile string) error {
 }
 
 func generateLts(input []byte) ([]byte, error) {
-	_, err := InitProgram(input)
+	proc, err := InitProgram(input)
 	if err != nil {
 		return nil, err
 	}
-	return []byte{}, nil
+	root := newTransitionStateRoot(proc)
+	vertices, edges := exploreTransitions(root)
+	output := generateGraphVizFile(vertices, edges)
+	return output, nil
 }
