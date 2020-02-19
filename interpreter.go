@@ -143,8 +143,31 @@ func (reg *Register) GetLabel(name string) int {
 
 func newTransitionStateRoot(process Element) *State {
 	fns := GetAllFreshNames(process)
-	freshNamesSet := make(map[string]bool)
 
+	for _, dp := range DeclaredProcs {
+		// Perform alpha conversion on the declared process
+		// to determine scope.
+		proc := deepcopy.Copy(dp.Process).(Element)
+		bni := boundNameIndex
+		DoAlphaConversion(proc)
+		boundNameIndex = bni
+
+		// Change the parameter names to bound so they are not
+		// included in the free names.
+		for _, oldName := range dp.Parameters {
+			subName(proc, Name{
+				Name: oldName,
+			}, Name{
+				Name: oldName,
+				Type: Bound,
+			})
+		}
+
+		// Gather free names in declared process.
+		fns = append(fns, GetAllFreshNames(proc)...)
+	}
+
+	freshNamesSet := make(map[string]bool)
 	for _, freshName := range fns {
 		freshNamesSet[freshName] = true
 	}
