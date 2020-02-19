@@ -241,7 +241,10 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 		pcsElem := elem.(*ElemProcess)
 		for i, param := range pcsElem.Parameters {
 			if param.Name == boundName {
-				pcsElem.Parameters[i].Name = newName
+				pcsElem.Parameters[i] = Name{
+					Name: newName,
+					Type: Bound,
+				}
 			}
 		}
 	}
@@ -313,7 +316,10 @@ func substituteNamesRestriction(elem Element, boundName string, newName string) 
 		pcsElem := elem.(*ElemProcess)
 		for i, param := range pcsElem.Parameters {
 			if param.Name == boundName {
-				pcsElem.Parameters[i].Name = newName
+				pcsElem.Parameters[i] = Name{
+					Name: newName,
+					Type: Bound,
+				}
 			}
 		}
 	}
@@ -387,77 +393,107 @@ func prettyPrintAcc(elem Element, str string) string {
 
 // GetAllFreshNames returns all fresh names in the AST.
 func GetAllFreshNames(elem Element) []string {
-	return getAllFreshNamesAcc(elem, []string{})
-}
+	visitedProcs := make(map[string]bool)
 
-func getAllFreshNamesAcc(elem Element, freshNames []string) []string {
-	switch elem.Type() {
-	case ElemTypNil:
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		if outElem.Channel.Type == Fresh {
-			freshNames = append(freshNames, outElem.Channel.Name)
-		}
-		if outElem.Output.Type == Fresh {
-			freshNames = append(freshNames, outElem.Output.Name)
-		}
-		return getAllFreshNamesAcc(outElem.Next, freshNames)
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		if inpElem.Channel.Type == Fresh {
-			freshNames = append(freshNames, inpElem.Channel.Name)
-		}
-		if inpElem.Input.Type == Fresh {
-			freshNames = append(freshNames, inpElem.Input.Name)
-		}
-		return getAllFreshNamesAcc(inpElem.Next, freshNames)
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		if matchElem.NameL.Type == Fresh {
-			freshNames = append(freshNames, matchElem.NameL.Name)
-		}
-		if matchElem.NameR.Type == Fresh {
-			freshNames = append(freshNames, matchElem.NameR.Name)
-		}
-		return getAllFreshNamesAcc(matchElem.Next, freshNames)
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		if resElem.Restrict.Type == Fresh {
-			freshNames = append(freshNames, resElem.Restrict.Name)
-		}
-		return getAllFreshNamesAcc(resElem.Next, freshNames)
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		freshNames = getAllFreshNamesAcc(sumElem.ProcessL, freshNames)
-		freshNames = getAllFreshNamesAcc(sumElem.ProcessR, freshNames)
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
-		freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
-	case ElemTypProcess:
-		pcsElem := elem.(*ElemProcess)
-		for _, param := range pcsElem.Parameters {
-			if param.Type == Fresh {
-				freshNames = append(freshNames, param.Name)
+	var getAllFreshNamesAcc func(Element, []string) []string
+	getAllFreshNamesAcc = func(elem Element, freshNames []string) []string {
+		switch elem.Type() {
+		case ElemTypNil:
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			if outElem.Channel.Type == Fresh {
+				freshNames = append(freshNames, outElem.Channel.Name)
 			}
+			if outElem.Output.Type == Fresh {
+				freshNames = append(freshNames, outElem.Output.Name)
+			}
+			return getAllFreshNamesAcc(outElem.Next, freshNames)
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			if inpElem.Channel.Type == Fresh {
+				freshNames = append(freshNames, inpElem.Channel.Name)
+			}
+			if inpElem.Input.Type == Fresh {
+				freshNames = append(freshNames, inpElem.Input.Name)
+			}
+			return getAllFreshNamesAcc(inpElem.Next, freshNames)
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			if matchElem.NameL.Type == Fresh {
+				freshNames = append(freshNames, matchElem.NameL.Name)
+			}
+			if matchElem.NameR.Type == Fresh {
+				freshNames = append(freshNames, matchElem.NameR.Name)
+			}
+			return getAllFreshNamesAcc(matchElem.Next, freshNames)
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			if resElem.Restrict.Type == Fresh {
+				freshNames = append(freshNames, resElem.Restrict.Name)
+			}
+			return getAllFreshNamesAcc(resElem.Next, freshNames)
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			freshNames = getAllFreshNamesAcc(sumElem.ProcessL, freshNames)
+			freshNames = getAllFreshNamesAcc(sumElem.ProcessR, freshNames)
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
+			freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
+		case ElemTypProcess:
+			procElem := elem.(*ElemProcess)
+
+			// Parameter checks.
+			processName := procElem.Name
+			if _, ok := DeclaredProcs[processName]; !ok {
+				return freshNames
+			}
+			dp := DeclaredProcs[processName]
+			if len(dp.Parameters) != len(procElem.Parameters) {
+				return freshNames
+			}
+
+			// Do alpha conversion on declared process.
+			// Restore original boundNameIndex because process is only used
+			// for finding free names. Bound names are disregarded.
+			proc := deepcopy.Copy(dp.Process).(Element)
+			bni := boundNameIndex
+			doAlphaConversion(proc)
+			boundNameIndex = bni
+
+			// Substitute parameter names to the new process.
+			for i, oldName := range dp.Parameters {
+				subName(proc, Name{
+					Name: oldName,
+				}, procElem.Parameters[i])
+			}
+
+			// Prevent infinitely looping processes.
+			if !visitedProcs[processName] {
+				visitedProcs[processName] = true
+				// Find free names in declared process.
+				freshNames = getAllFreshNamesAcc(proc, freshNames)
+			}
+		case ElemTypOutOutput:
+			outOutput := elem.(*ElemOutOutput)
+			if outOutput.Output.Type == Fresh {
+				freshNames = append(freshNames, outOutput.Output.Name)
+			}
+			return getAllFreshNamesAcc(outOutput.Next, freshNames)
+		case ElemTypInpInput:
+			inpInput := elem.(*ElemInpInput)
+			if inpInput.Input.Type == Fresh {
+				freshNames = append(freshNames, inpInput.Input.Name)
+			}
+			return getAllFreshNamesAcc(inpInput.Next, freshNames)
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			return getAllFreshNamesAcc(rootElem.Next, freshNames)
 		}
-	case ElemTypOutOutput:
-		outOutput := elem.(*ElemOutOutput)
-		if outOutput.Output.Type == Fresh {
-			freshNames = append(freshNames, outOutput.Output.Name)
-		}
-		return getAllFreshNamesAcc(outOutput.Next, freshNames)
-	case ElemTypInpInput:
-		inpInput := elem.(*ElemInpInput)
-		if inpInput.Input.Type == Fresh {
-			freshNames = append(freshNames, inpInput.Input.Name)
-		}
-		return getAllFreshNamesAcc(inpInput.Next, freshNames)
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		return getAllFreshNamesAcc(rootElem.Next, freshNames)
+		return freshNames
 	}
-	return freshNames
+
+	return getAllFreshNamesAcc(elem, []string{})
 }
 
 func getElemSetType(elem Element) ElemSetType {
