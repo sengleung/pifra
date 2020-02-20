@@ -75,6 +75,35 @@ func (reg *Register) RemoveName(name string) {
 	}
 }
 
+// AddNameBefore increments all labels by one while retaining
+// mapping to their name and leaves a name at label 1.
+// a+σ = {(1, a)} ∪ {(i+1, v) | (i, v) ∈ σ}.
+func (reg *Register) AddNameBefore(name string) int {
+	labels := reg.Labels()
+	for i := len(labels) - 1; i >= 0; i-- {
+		label := labels[i]
+		reg.Register[label+1] = reg.GetName(label)
+	}
+	reg.Register[1] = name
+	reg.Index = reg.Index + 1
+	return 1
+}
+
+// RemoveNameBefore decrements all labels by one while retaining
+// mapping to their name. The name at label 1 is overwritten, and
+// is therefore removed.
+// σ-1 = {(i-1, v) | (i, v) ∈ σ ∧ i > 1}.
+func (reg *Register) RemoveNameBefore() {
+	labels := reg.Labels()
+	for i := 1; i < len(labels); i++ {
+		label := labels[i]
+		reg.Register[label-1] = reg.GetName(label)
+	}
+	// Delete the last label and name because everything is shifted left.
+	delete(reg.Register, reg.Index-1)
+	reg.Index = reg.Index - 1
+}
+
 // AddEmptyName increments all labels by one while retaining mapping
 // to their name and leaves an empty name (#) at label 1.
 // #+o = {(1, #)} U {(i+1, v′) | (i, v′) E o}.
@@ -105,12 +134,9 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	for _, freshName := range freshNames {
 		freshNamesSet[freshName] = true
 	}
-	for label := 1; label < reg.Index; label++ {
+	labels := reg.Labels()
+	for _, label := range labels {
 		if reg.Register[label] == "#" || !freshNamesSet[reg.GetName(label)] {
-			reg.Register[label] = name
-			return label
-		}
-		if _, ok := reg.Register[label]; !ok {
 			reg.Register[label] = name
 			return label
 		}
@@ -378,47 +404,13 @@ func trans(conf Configuration) []Configuration {
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
-		resLabel := resConf.Register.UpdateAfter(resName)
+		resLabel := resConf.Register.AddNameBefore(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
 		for _, conf := range tconfs {
 			// t != (|o|+1)
-			if conf.Label.Symbol.Value == resLabel {
-				continue
-			}
-
-			// OPEN
-			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput &&
-				conf.Label.Symbol2.Type == SymbolTypKnown &&
-				conf.Label.Symbol2.Value == resLabel {
-				// o
-				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
-				// fn(P')
-				freeNamesP := GetAllFreshNames(conf.Process)
-				// o[j -> a], j = min{j | reg(j) !E fn(P')}
-				label := conf.Register.UpdateMin(resName, freeNamesP)
-				// ij
-				conf.Label.Symbol2.Value = label
-				// ij^
-				conf.Label.Symbol2.Type = SymbolTypFreshOutput
-				// o |- P'
-				confs = append(confs, conf)
-
-				// Substitute the bound name type to a fresh name type.
-				subName(conf.Process, Name{
-					Name: resName,
-					Type: Bound,
-				}, Name{
-					Name: resName,
-					Type: Fresh,
-				})
-				continue
-			}
-
-			// t != (|o|+1)
-			if conf.Label.Double && conf.Label.Symbol2.Type != SymbolTypFreshOutput &&
-				conf.Label.Symbol2.Value == resLabel {
+			if conf.Label.Symbol.Value == resLabel || conf.Label.Symbol2.Value == resLabel {
 				continue
 			}
 
@@ -428,8 +420,50 @@ func trans(conf Configuration) []Configuration {
 				Next:     conf.Process,
 			}
 			// o' ¦- $a.P^'
-			conf.Register.RemoveName(resName)
+			conf.Register.RemoveNameBefore()
+
+			// Decrement labels.
+			conf.Label.Symbol.Value--
+			conf.Label.Symbol2.Value--
+
 			confs = append(confs, conf)
+		}
+
+		// OPEN
+		openConf := deepcopy.Copy(baseResConf).(Configuration)
+		openElem := openConf.Process.(*ElemRestriction)
+		openName := openElem.Restrict.Name
+		openConf.Process = openElem.Next
+		openLabel := openConf.Register.UpdateAfter(openName)
+		tconfs = trans(openConf)
+
+		for _, conf := range tconfs {
+			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput &&
+				conf.Label.Symbol2.Type == SymbolTypKnown &&
+				conf.Label.Symbol2.Value == openLabel {
+				// o
+				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
+				// fn(P')
+				freeNamesP := GetAllFreshNames(conf.Process)
+				// o[j -> a], j = min{j | reg(j) !E fn(P')}
+				label := conf.Register.UpdateMin(openName, freeNamesP)
+				// ij
+				conf.Label.Symbol2.Value = label
+				// ij^
+				conf.Label.Symbol2.Type = SymbolTypFreshOutput
+
+				// Substitute the bound name type to a fresh name type.
+				subName(conf.Process, Name{
+					Name: resName,
+					Type: Bound,
+				}, Name{
+					Name: resName,
+					Type: Fresh,
+				})
+
+				// o |- P'
+				confs = append(confs, conf)
+			}
 		}
 
 		return confs
