@@ -225,6 +225,8 @@ var infProc bool
 
 func exploreTransitions(root *State) Lts {
 	visited := make(map[string]int)
+	edgesSeen := make(map[Edge]bool)
+
 	vertices := make(map[int]Configuration)
 	var edges []Edge
 	var vertexId int
@@ -259,18 +261,23 @@ func exploreTransitions(root *State) Lts {
 				vertices[vertexId] = conf
 				vertexId = vertexId + 1
 			}
-			edges = append(edges, Edge{
+
+			edge := Edge{
 				Source:      visited[srcKey],
 				Destination: visited[dstKey],
 				Label:       conf.Label,
-			})
-
-			nextState := &State{
-				Configuration: conf,
-				NextStates:    []*State{},
 			}
-			state.NextStates = append(state.NextStates, nextState)
-			queue.PushBack(nextState)
+			if !edgesSeen[edge] {
+				edgesSeen[edge] = true
+				edges = append(edges, edge)
+
+				nextState := &State{
+					Configuration: conf,
+					NextStates:    []*State{},
+				}
+				state.NextStates = append(state.NextStates, nextState)
+				queue.PushBack(nextState)
+			}
 		}
 		if len(confs) > 0 {
 			statesExplored = statesExplored + 1
