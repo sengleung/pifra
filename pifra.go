@@ -37,14 +37,18 @@ func OutputMode(maxStates int, inputFile string, outputFile string) error {
 	if err != nil {
 		return err
 	}
-	output, err := generateLts(input)
+	lts, err := generateLts(input)
 	if err != nil {
 		return err
 	}
 
 	if outputFile == "" {
+		// No output file specified. Print LTS.
+		output := generatePrettyLts(lts)
 		fmt.Println(string(output))
 	} else {
+		// Output file specified. Write to file as GraphViz DOT file.
+		output := generateGraphVizFile(lts)
 		return writeFile(output, outputFile)
 	}
 	return nil
@@ -67,13 +71,12 @@ func writeFile(output []byte, outputFile string) error {
 	return nil
 }
 
-func generateLts(input []byte) ([]byte, error) {
+func generateLts(input []byte) (Lts, error) {
 	proc, err := InitProgram(input)
 	if err != nil {
-		return nil, err
+		return Lts{}, err
 	}
 	root := newTransitionStateRoot(proc)
 	lts := exploreTransitions(root)
-	output := generateGraphVizFile(lts)
-	return output, nil
+	return lts, nil
 }
