@@ -107,3 +107,41 @@ func prettyPrintGraphSymbol(symbol Symbol) string {
 	}
 	return ""
 }
+
+func generatePrettyLts(lts Lts) []byte {
+	vertices := lts.Vertices
+	edges := lts.Edges
+
+	// When there is no root state.
+	if _, ok := vertices[0]; !ok {
+		return []byte{}
+	}
+	var buffer bytes.Buffer
+
+	root := vertices[0]
+	rootString := "s0 = " +
+		prettyPrintRegister(root.Register) + " ¦- " + PrettyPrintAst(root.Process)
+	buffer.WriteString(rootString)
+
+	// Prevent extraneous new line if there are no edges.
+	if len(edges) != 0 {
+		buffer.WriteString("\n\n")
+	}
+
+	for i, edge := range edges {
+		vertex := vertices[edge.Destination]
+		transString := "s" + strconv.Itoa(edge.Source) + "  " +
+			prettyPrintLabel(edge.Label) + "  s" + strconv.Itoa(edge.Destination) + " = " +
+			prettyPrintRegister(vertex.Register) + " ¦- " + PrettyPrintAst(vertex.Process)
+		buffer.WriteString(transString)
+
+		// Prevent extraneous new line at last edge.
+		if i != len(edges)-1 {
+			buffer.WriteString("\n")
+		}
+	}
+
+	var output bytes.Buffer
+	buffer.WriteTo(&output)
+	return output.Bytes()
+}

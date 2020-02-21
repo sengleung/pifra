@@ -2,7 +2,6 @@ package pifra
 
 import (
 	"container/list"
-	"fmt"
 	"sort"
 	"strconv"
 
@@ -274,7 +273,6 @@ func exploreTransitions(root *State) Lts {
 			queue.PushBack(nextState)
 		}
 		if len(confs) > 0 {
-			fmt.Println(len(confs))
 			statesExplored = statesExplored + 1
 		}
 	}
