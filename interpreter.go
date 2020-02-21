@@ -413,7 +413,7 @@ func trans(conf Configuration) []Configuration {
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
-		resLabel := resConf.Register.AddNameBefore(resName)
+		resLabel := resConf.Register.UpdateAfter(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
@@ -429,11 +429,11 @@ func trans(conf Configuration) []Configuration {
 				Next:     conf.Process,
 			}
 			// o' ¦- $a.P^'
-			conf.Register.RemoveNameBefore()
+			conf.Register.RemoveName(resName)
 
 			// Decrement labels.
-			conf.Label.Symbol.Value--
-			conf.Label.Symbol2.Value--
+			// conf.Label.Symbol.Value--
+			// conf.Label.Symbol2.Value--
 
 			confs = append(confs, conf)
 		}
