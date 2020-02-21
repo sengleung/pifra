@@ -225,6 +225,17 @@ func newTransitionStateRoot(process Element) *State {
 var infProc bool
 
 func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
+	visited := make(map[string]int)
+	vertices := make(map[int]Configuration)
+	var edges []GraphEdge
+	var vertexId int
+
+	rootKey := prettyPrintRegister(root.Configuration.Register) +
+		PrettyPrintAst(root.Configuration.Process)
+	visited[rootKey] = vertexId
+	vertices[vertexId] = root.Configuration
+	vertexId = vertexId + 1
+
 	queue := list.New()
 	queue.PushBack(root)
 	dequeue := func() *State {
@@ -233,26 +244,15 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 		return s.Value.(*State)
 	}
 
-	visited := make(map[string]int)
-	vertices := make(map[int]Configuration)
-	var edges []GraphEdge
-	var vertexId int
-
 	// BFS traversal state exploration.
 	var statesExplored int
 	for queue.Len() > 0 && statesExplored < maxStatesExplored {
 		state := dequeue()
 
 		srcKey := prettyPrintRegister(state.Configuration.Register) + PrettyPrintAst(state.Configuration.Process)
-		if _, ok := visited[srcKey]; !ok {
-			visited[srcKey] = vertexId
-			vertices[vertexId] = state.Configuration
-			vertexId = vertexId + 1
-		}
 
 		confs := trans(state.Configuration)
 		for _, conf := range confs {
-			fmt.Println(PrettyPrintConfiguration(conf))
 
 			dstKey := prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
 			if _, ok := visited[dstKey]; !ok {
