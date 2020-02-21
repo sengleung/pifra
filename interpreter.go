@@ -231,8 +231,7 @@ func exploreTransitions(root *State) Lts {
 	var edges []Edge
 	var vertexId int
 
-	rootKey := prettyPrintRegister(root.Configuration.Register) +
-		PrettyPrintAst(root.Configuration.Process)
+	rootKey := getConfigurationKey(root.Configuration)
 	visited[rootKey] = vertexId
 	vertices[vertexId] = root.Configuration
 	vertexId = vertexId + 1
@@ -250,12 +249,12 @@ func exploreTransitions(root *State) Lts {
 	for queue.Len() > 0 && statesExplored < maxStatesExplored {
 		state := dequeue()
 
-		srcKey := prettyPrintRegister(state.Configuration.Register) + PrettyPrintAst(state.Configuration.Process)
+		srcKey := getConfigurationKey(state.Configuration)
 
 		confs := trans(state.Configuration)
 		for _, conf := range confs {
 
-			dstKey := prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
+			dstKey := getConfigurationKey(conf)
 			if _, ok := visited[dstKey]; !ok {
 				visited[dstKey] = vertexId
 				vertices[vertexId] = conf
