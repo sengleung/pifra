@@ -231,6 +231,7 @@ func exploreTransitions(root *State) Lts {
 	var edges []Edge
 	var vertexId int
 
+	applyStructrualCongruence(root.Configuration)
 	rootKey := getConfigurationKey(root.Configuration)
 	visited[rootKey] = vertexId
 	vertices[vertexId] = root.Configuration
@@ -254,6 +255,7 @@ func exploreTransitions(root *State) Lts {
 		confs := trans(state.Configuration)
 		for _, conf := range confs {
 
+			applyStructrualCongruence(conf)
 			dstKey := getConfigurationKey(conf)
 			if _, ok := visited[dstKey]; !ok {
 				visited[dstKey] = vertexId
