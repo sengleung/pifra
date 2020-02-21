@@ -7,7 +7,12 @@ import (
 	"text/template"
 )
 
-type GraphEdge struct {
+type Lts struct {
+	Vertices map[int]Configuration
+	Edges    []Edge
+}
+
+type Edge struct {
 	Source      int
 	Destination int
 	Label       Label
@@ -24,7 +29,10 @@ type EdgeTemplate struct {
 	Label       string
 }
 
-func generateGraphVizFile(vertices map[int]Configuration, edges []GraphEdge) []byte {
+func generateGraphVizFile(lts Lts) []byte {
+	vertices := lts.Vertices
+	edges := lts.Edges
+
 	var buffer bytes.Buffer
 	buffer.WriteString(`digraph {
     size="8.3,11.7!";

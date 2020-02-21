@@ -73,7 +73,7 @@ func generateLts(input []byte) ([]byte, error) {
 		return nil, err
 	}
 	root := newTransitionStateRoot(proc)
-	vertices, edges := exploreTransitions(root)
-	output := generateGraphVizFile(vertices, edges)
+	lts := exploreTransitions(root)
+	output := generateGraphVizFile(lts)
 	return output, nil
 }

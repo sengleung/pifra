@@ -224,10 +224,10 @@ func newTransitionStateRoot(process Element) *State {
 
 var infProc bool
 
-func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
+func exploreTransitions(root *State) Lts {
 	visited := make(map[string]int)
 	vertices := make(map[int]Configuration)
-	var edges []GraphEdge
+	var edges []Edge
 	var vertexId int
 
 	rootKey := prettyPrintRegister(root.Configuration.Register) +
@@ -260,7 +260,7 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 				vertices[vertexId] = conf
 				vertexId = vertexId + 1
 			}
-			edges = append(edges, GraphEdge{
+			edges = append(edges, Edge{
 				Source:      visited[srcKey],
 				Destination: visited[dstKey],
 				Label:       conf.Label,
@@ -278,7 +278,10 @@ func exploreTransitions(root *State) (map[int]Configuration, []GraphEdge) {
 			statesExplored = statesExplored + 1
 		}
 	}
-	return vertices, edges
+	return Lts{
+		Vertices: vertices,
+		Edges:    edges,
+	}
 }
 
 func trans(conf Configuration) []Configuration {
