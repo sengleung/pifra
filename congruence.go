@@ -13,8 +13,7 @@ func removeNilRestrictions(elem Element) {
 }
 
 func rmNilRes(elem Element) Element {
-	elemTyp := elem.Type()
-	switch elemTyp {
+	switch elem.Type() {
 	case ElemTypNil:
 	case ElemTypProcess:
 	case ElemTypOutput:
