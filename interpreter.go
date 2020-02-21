@@ -44,6 +44,7 @@ type Label struct {
 }
 
 type Register struct {
+	Size     int
 	Index    int
 	Register map[int]string
 }
@@ -62,6 +63,24 @@ func (reg *Register) UpdateAfter(freeName string) int {
 func (reg *Register) RemoveLastLabel() {
 	reg.Index = reg.Index - 1
 	delete(reg.Register, reg.Index)
+}
+
+// UpdateMax adds a free name to the register at the register size + 1 and
+// increments the register size.
+// σ+v = σ U {(|σ|+1, v)}.
+func (reg *Register) UpdateMax(freeName string) int {
+	index := reg.Size
+	reg.Register[index] = freeName
+	reg.Size = reg.Size + 1
+	return index
+}
+
+// RemoveMax removes a free name from the register at the register size + 1
+// and decrements the register size.
+// Undos UpdateMax.
+func (reg *Register) RemoveMax() {
+	reg.Size = reg.Size - 1
+	delete(reg.Register, reg.Size)
 }
 
 // RemoveName removes the name from the register.
@@ -133,8 +152,7 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	for _, freshName := range freshNames {
 		freshNamesSet[freshName] = true
 	}
-	labels := reg.Labels()
-	for _, label := range labels {
+	for label := 1; label < len(reg.Register)+1; label++ {
 		if reg.Register[label] == "#" || !freshNamesSet[reg.GetName(label)] {
 			reg.Register[label] = name
 			return label
@@ -213,6 +231,7 @@ func newTransitionStateRoot(process Element) *State {
 		Configuration: Configuration{
 			Process: process,
 			Register: Register{
+				Size:     1000000,
 				Index:    len(register) + 1,
 				Register: register,
 			},
@@ -413,7 +432,7 @@ func trans(conf Configuration) []Configuration {
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
-		resLabel := resConf.Register.UpdateAfter(resName)
+		resLabel := resConf.Register.UpdateMax(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
@@ -429,11 +448,7 @@ func trans(conf Configuration) []Configuration {
 				Next:     conf.Process,
 			}
 			// o' ¦- $a.P^'
-			conf.Register.RemoveName(resName)
-
-			// Decrement labels.
-			// conf.Label.Symbol.Value--
-			// conf.Label.Symbol2.Value--
+			conf.Register.RemoveMax()
 
 			confs = append(confs, conf)
 		}
