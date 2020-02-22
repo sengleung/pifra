@@ -4,6 +4,7 @@ import "sort"
 
 func applyStructrualCongruence(conf Configuration) {
 	rmNilRes(conf.Process)
+	rmNilPar(conf.Process)
 	sortRes(conf.Process)
 	sortPar(conf.Process)
 }
@@ -42,6 +43,43 @@ func rmNilRes(elem Element) Element {
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
 		rootElem.Next = rmNilRes(rootElem.Next)
+	}
+	return elem
+}
+
+func rmNilPar(elem Element) Element {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypProcess:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = rmNilPar(outElem.Next)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = rmNilPar(inpElem.Next)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		matchElem.Next = rmNilPar(matchElem.Next)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Next = rmNilPar(resElem.Next)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.ProcessL = rmNilPar(sumElem.ProcessL)
+		sumElem.ProcessR = rmNilPar(sumElem.ProcessR)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parElem.ProcessL = rmNilPar(parElem.ProcessL)
+		parElem.ProcessR = rmNilPar(parElem.ProcessR)
+		if parElem.ProcessL.Type() == ElemTypNil {
+			return parElem.ProcessR
+		}
+		if parElem.ProcessR.Type() == ElemTypNil {
+			return parElem.ProcessL
+		}
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = rmNilPar(rootElem.Next)
 	}
 	return elem
 }
