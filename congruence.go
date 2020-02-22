@@ -3,16 +3,13 @@ package pifra
 import "sort"
 
 func applyStructrualCongruence(conf Configuration) {
-	removeNilRestrictions(conf.Process)
+	rmNilRes(conf.Process)
 	sortRes(conf.Process)
+	sortPar(conf.Process)
 }
 
 func getConfigurationKey(conf Configuration) string {
 	return prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
-}
-
-func removeNilRestrictions(elem Element) {
-	elem = rmNilRes(elem)
 }
 
 func rmNilRes(elem Element) Element {
@@ -102,4 +99,82 @@ func getRes(elem Element, names []Name) ([]Name, Element) {
 		return getRes(resElem.Next, append(names, resElem.Restrict))
 	}
 	return names, elem
+}
+
+func sortPar(elem Element) Element {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypProcess:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = sortPar(outElem.Next)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = sortPar(inpElem.Next)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemMatch)
+		matchElem.Next = sortPar(matchElem.Next)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Next = sortPar(resElem.Next)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.ProcessL = sortPar(sumElem.ProcessL)
+		sumElem.ProcessR = sortPar(sumElem.ProcessR)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parChildren := getPar(parElem)
+		for _, child := range parChildren {
+			sortPar(child)
+		}
+		// Size of procs is minimum of 2.
+		procs := []struct {
+			Rank    string
+			Process Element
+		}{}
+		for _, child := range parChildren {
+			procs = append(procs, struct {
+				Rank    string
+				Process Element
+			}{PrettyPrintAst(child), child})
+		}
+		sort.Slice(procs, func(i, j int) bool {
+			return procs[i].Rank < procs[j].Rank
+		})
+		head := &ElemParallel{
+			ProcessL: procs[0].Process,
+		}
+		prev := head
+		for i := 1; i < len(procs)-1; i++ {
+			cur := &ElemParallel{
+				ProcessL: procs[i].Process,
+			}
+			prev.ProcessR = cur
+			prev = cur
+		}
+		prev.ProcessR = procs[len(procs)-1].Process
+		return head
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = sortPar(rootElem.Next)
+	}
+	return elem
+}
+
+func getPar(elem Element) []Element {
+	var parChildren []Element
+	if elem.Type() == ElemTypParallel {
+		parElem := elem.(*ElemParallel)
+		if parElem.ProcessL.Type() == ElemTypParallel {
+			parChildren = append(parChildren, getPar(parElem.ProcessL)...)
+		} else {
+			parChildren = append(parChildren, parElem.ProcessL)
+		}
+		if parElem.ProcessR.Type() == ElemTypParallel {
+			parChildren = append(parChildren, getPar(parElem.ProcessR)...)
+		} else {
+			parChildren = append(parChildren, parElem.ProcessR)
+		}
+	}
+	return parChildren
 }
