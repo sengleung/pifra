@@ -6,7 +6,7 @@ func applyStructrualCongruence(conf Configuration) {
 	rmNilRes(conf.Process)
 	rmNilPar(conf.Process)
 	sortRes(conf.Process)
-	sortPar(conf.Process)
+	sortSumPar(conf.Process)
 }
 
 func getConfigurationKey(conf Configuration) string {
@@ -139,31 +139,59 @@ func getRes(elem Element, names []Name) ([]Name, Element) {
 	return names, elem
 }
 
-func sortPar(elem Element) Element {
+func sortSumPar(elem Element) Element {
 	switch elem.Type() {
 	case ElemTypNil:
 	case ElemTypProcess:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		outElem.Next = sortPar(outElem.Next)
+		outElem.Next = sortSumPar(outElem.Next)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		inpElem.Next = sortPar(inpElem.Next)
+		inpElem.Next = sortSumPar(inpElem.Next)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		matchElem.Next = sortPar(matchElem.Next)
+		matchElem.Next = sortSumPar(matchElem.Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		resElem.Next = sortPar(resElem.Next)
+		resElem.Next = sortSumPar(resElem.Next)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
-		sumElem.ProcessL = sortPar(sumElem.ProcessL)
-		sumElem.ProcessR = sortPar(sumElem.ProcessR)
+		sumChildren := getSum(sumElem)
+		for i, child := range sumChildren {
+			sumChildren[i] = sortSumPar(child)
+		}
+		procs := []struct {
+			Rank    string
+			Process Element
+		}{}
+		for _, child := range sumChildren {
+			procs = append(procs, struct {
+				Rank    string
+				Process Element
+			}{PrettyPrintAst(child), child})
+		}
+		sort.Slice(procs, func(i, j int) bool {
+			return procs[i].Rank < procs[j].Rank
+		})
+		head := &ElemSum{
+			ProcessL: procs[0].Process,
+		}
+		prev := head
+		for i := 1; i < len(procs)-1; i++ {
+			cur := &ElemSum{
+				ProcessL: procs[i].Process,
+			}
+			prev.ProcessR = cur
+			prev = cur
+		}
+		prev.ProcessR = procs[len(procs)-1].Process
+		return head
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
 		parChildren := getPar(parElem)
-		for _, child := range parChildren {
-			sortPar(child)
+		for i, child := range parChildren {
+			parChildren[i] = sortSumPar(child)
 		}
 		// Size of procs is minimum of 2.
 		procs := []struct {
@@ -194,7 +222,7 @@ func sortPar(elem Element) Element {
 		return head
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
-		rootElem.Next = sortPar(rootElem.Next)
+		rootElem.Next = sortSumPar(rootElem.Next)
 	}
 	return elem
 }
@@ -215,4 +243,22 @@ func getPar(elem Element) []Element {
 		}
 	}
 	return parChildren
+}
+
+func getSum(elem Element) []Element {
+	var sumChildren []Element
+	if elem.Type() == ElemTypSum {
+		sumElem := elem.(*ElemSum)
+		if sumElem.ProcessL.Type() == ElemTypSum {
+			sumChildren = append(sumChildren, getSum(sumElem.ProcessL)...)
+		} else {
+			sumChildren = append(sumChildren, sumElem.ProcessL)
+		}
+		if sumElem.ProcessR.Type() == ElemTypSum {
+			sumChildren = append(sumChildren, getSum(sumElem.ProcessR)...)
+		} else {
+			sumChildren = append(sumChildren, sumElem.ProcessR)
+		}
+	}
+	return sumChildren
 }
