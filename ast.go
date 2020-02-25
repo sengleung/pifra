@@ -142,15 +142,13 @@ func doAlphaConversion(elem Element) {
 		doAlphaConversion(elem.(*ElemOutput).Next)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		if inpElem.Input.Type != Bound {
-			boundName := inpElem.Input.Name
-			newName := generateBoundName(boundName)
-			inpElem.Input = Name{
-				Name: newName,
-				Type: Bound,
-			}
-			substituteNamesInput(inpElem.Next, boundName, newName)
+		boundName := inpElem.Input.Name
+		newName := generateBoundName(boundName)
+		inpElem.Input = Name{
+			Name: newName,
+			Type: Bound,
 		}
+		subBoundNames(inpElem.Next, boundName, newName)
 		doAlphaConversion(inpElem.Next)
 	case ElemTypMatch:
 		doAlphaConversion(elem.(*ElemMatch).Next)
@@ -162,7 +160,7 @@ func doAlphaConversion(elem Element) {
 			Name: newName,
 			Type: Bound,
 		}
-		substituteNamesRestriction(resElem.Next, boundName, newName)
+		subBoundNames(resElem.Next, boundName, newName)
 		doAlphaConversion(resElem.Next)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
@@ -179,7 +177,7 @@ func doAlphaConversion(elem Element) {
 	}
 }
 
-func substituteNamesInput(elem Element, boundName string, newName string) {
+func subBoundNames(elem Element, boundName string, newName string) {
 	elemTyp := elem.Type()
 	switch elemTyp {
 	case ElemTypNil:
@@ -197,7 +195,7 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 				Type: Bound,
 			}
 		}
-		substituteNamesInput(outElem.Next, boundName, newName)
+		subBoundNames(outElem.Next, boundName, newName)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
 		if inpElem.Channel.Name == boundName {
@@ -207,7 +205,7 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 			}
 		}
 		if inpElem.Input.Name != boundName {
-			substituteNamesInput(inpElem.Next, boundName, newName)
+			subBoundNames(inpElem.Next, boundName, newName)
 		}
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
@@ -223,95 +221,20 @@ func substituteNamesInput(elem Element, boundName string, newName string) {
 				Type: Bound,
 			}
 		}
-		substituteNamesInput(matchElem.Next, boundName, newName)
+		subBoundNames(matchElem.Next, boundName, newName)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
 		if resElem.Restrict.Name != boundName {
-			substituteNamesInput(resElem.Next, boundName, newName)
+			subBoundNames(resElem.Next, boundName, newName)
 		}
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
-		substituteNamesInput(sumElem.ProcessL, boundName, newName)
-		substituteNamesInput(sumElem.ProcessR, boundName, newName)
+		subBoundNames(sumElem.ProcessL, boundName, newName)
+		subBoundNames(sumElem.ProcessR, boundName, newName)
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
-		substituteNamesInput(parElem.ProcessL, boundName, newName)
-		substituteNamesInput(parElem.ProcessR, boundName, newName)
-	case ElemTypProcess:
-		pcsElem := elem.(*ElemProcess)
-		for i, param := range pcsElem.Parameters {
-			if param.Name == boundName {
-				pcsElem.Parameters[i] = Name{
-					Name: newName,
-					Type: Bound,
-				}
-			}
-		}
-	}
-}
-
-func substituteNamesRestriction(elem Element, boundName string, newName string) {
-	elemTyp := elem.Type()
-	switch elemTyp {
-	case ElemTypNil:
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		if outElem.Channel.Name == boundName {
-			outElem.Channel = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		if outElem.Output.Name == boundName {
-			outElem.Output = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		substituteNamesRestriction(outElem.Next, boundName, newName)
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		if inpElem.Channel.Name == boundName {
-			inpElem.Channel = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		if inpElem.Input.Name == boundName {
-			inpElem.Input = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		substituteNamesRestriction(inpElem.Next, boundName, newName)
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		if matchElem.NameL.Name == boundName {
-			matchElem.NameL = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		if matchElem.NameR.Name == boundName {
-			matchElem.NameR = Name{
-				Name: newName,
-				Type: Bound,
-			}
-		}
-		substituteNamesRestriction(matchElem.Next, boundName, newName)
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		if resElem.Restrict.Name != boundName {
-			substituteNamesRestriction(resElem.Next, boundName, newName)
-		}
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		substituteNamesRestriction(sumElem.ProcessL, boundName, newName)
-		substituteNamesRestriction(sumElem.ProcessR, boundName, newName)
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		substituteNamesRestriction(parElem.ProcessL, boundName, newName)
-		substituteNamesRestriction(parElem.ProcessR, boundName, newName)
+		subBoundNames(parElem.ProcessL, boundName, newName)
+		subBoundNames(parElem.ProcessR, boundName, newName)
 	case ElemTypProcess:
 		pcsElem := elem.(*ElemProcess)
 		for i, param := range pcsElem.Parameters {

@@ -174,12 +174,12 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 								Type: Bound,
 							},
 							Input: Name{
-								Name: "a_1",
+								Name: "a_2",
 								Type: Bound,
 							},
 							Next: &ElemRestriction{
 								Restrict: Name{
-									Name: "a_2",
+									Name: "a_3",
 									Type: Bound,
 								},
 								Next: &ElemParallel{
@@ -189,24 +189,24 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 											Type: Bound,
 										},
 										Output: Name{
-											Name: "a_2",
+											Name: "a_3",
 											Type: Bound,
 										},
 										Next: &ElemNil{},
 									},
 									ProcessR: &ElemRestriction{
 										Restrict: Name{
-											Name: "b_3",
+											Name: "b_4",
 											Type: Bound,
 										},
 										Next: &ElemParallel{
 											ProcessL: &ElemInput{
 												Channel: Name{
-													Name: "a_2",
+													Name: "a_3",
 													Type: Bound,
 												},
 												Input: Name{
-													Name: "b_3",
+													Name: "b_5",
 													Type: Bound,
 												},
 												Next: &ElemNil{},
@@ -216,7 +216,7 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 													Name: "c",
 												},
 												Input: Name{
-													Name: "d_4",
+													Name: "d_6",
 													Type: Bound,
 												},
 												Next: &ElemNil{},
