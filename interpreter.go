@@ -459,6 +459,7 @@ func trans(conf Configuration) []Configuration {
 		openName := openElem.Restrict.Name
 		openConf.Process = openElem.Next
 		openLabel := openConf.Register.UpdateAfter(openName)
+		openReg := deepcopy.Copy(openConf.Register).(Register)
 		tconfs = trans(openConf)
 
 		for _, conf := range tconfs {
@@ -466,7 +467,7 @@ func trans(conf Configuration) []Configuration {
 				conf.Label.Symbol2.Type == SymbolTypKnown &&
 				conf.Label.Symbol2.Value == openLabel {
 				// o
-				conf.Register = deepcopy.Copy(baseResConf).(Configuration).Register
+				conf.Register = openReg
 				// fn(P')
 				freeNamesP := GetAllFreshNames(conf.Process)
 				// o[j -> a], j = min{j | reg(j) !E fn(P')}
