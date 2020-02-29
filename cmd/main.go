@@ -85,7 +85,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
-	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "s", 50, "maximum number of transition states explored")
+	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "s", 20, "maximum number of transition states explored")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }
