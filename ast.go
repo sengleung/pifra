@@ -245,6 +245,9 @@ func subBoundNames(elem Element, boundName string, newName string) {
 				}
 			}
 		}
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		subBoundNames(rootElem.Next, boundName, newName)
 	}
 }
 
