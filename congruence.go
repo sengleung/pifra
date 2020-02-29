@@ -512,7 +512,7 @@ func ppCongruentProc(elem Element) string {
 			return ppcpAcc(inpElem.Next, str)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemMatch)
-			str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameL.Name + "]"
+			str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
 			return ppcpAcc(matchElem.Next, str)
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)

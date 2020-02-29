@@ -271,7 +271,7 @@ func prettyPrintAcc(elem Element, str string) string {
 		return prettyPrintAcc(inpElem.Next, str)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameL.Name + "]"
+		str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
 		return prettyPrintAcc(matchElem.Next, str)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
