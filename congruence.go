@@ -1,17 +1,139 @@
 package pifra
 
-import "sort"
+import (
+	"sort"
+	"strconv"
+)
 
 func applyStructrualCongruence(conf Configuration) {
 	rmNilRes(conf.Process)
 	rmNilPar(conf.Process)
 	//scopeRes(conf.Process)
-	sortRes(conf.Process)
+	//sortRes(conf.Process)
+	normaliseBoundNames(conf)
 	sortSumPar(conf.Process)
 }
 
 func getConfigurationKey(conf Configuration) string {
-	return prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
+	return prettyPrintRegister(conf.Register) + ppCongruentProc(conf.Process)
+}
+
+func normaliseBoundNames(conf Configuration) {
+	var bni int
+	oldNames := make(map[string]string)
+
+	genBn := func(oldName string) string {
+		if newName, ok := oldNames[oldName]; ok {
+			return newName
+		}
+		newName := "&" + strconv.Itoa(bni)
+		bni = bni + 1
+		oldNames[oldName] = newName
+		return newName
+	}
+
+	var normaliseBn func(elem Element)
+	normaliseBn = func(elem Element) {
+		elemTyp := elem.Type()
+		switch elemTyp {
+		case ElemTypNil:
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			if outElem.Channel.Type == Bound {
+				outElem.Channel.Name = genBn(outElem.Channel.Name)
+			}
+			if outElem.Output.Type == Bound {
+				outElem.Output.Name = genBn(outElem.Output.Name)
+			}
+			normaliseBn(outElem.Next)
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			if inpElem.Channel.Type == Bound {
+				inpElem.Channel.Name = genBn(inpElem.Channel.Name)
+			}
+			if inpElem.Input.Type == Bound {
+				inpElem.Input.Name = genBn(inpElem.Input.Name)
+			}
+			normaliseBn(inpElem.Next)
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			if matchElem.NameL.Type == Bound {
+				matchElem.NameL.Name = genBn(matchElem.NameL.Name)
+			}
+			if matchElem.NameR.Type == Bound {
+				matchElem.NameR.Name = genBn(matchElem.NameR.Name)
+			}
+			normaliseBn(matchElem.Next)
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			normaliseBn(resElem.Next)
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			normaliseBn(sumElem.ProcessL)
+			normaliseBn(sumElem.ProcessR)
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			normaliseBn(parElem.ProcessL)
+			normaliseBn(parElem.ProcessR)
+		case ElemTypProcess:
+			procElem := elem.(*ElemProcess)
+			for i, param := range procElem.Parameters {
+				if param.Type == Bound {
+					procElem.Parameters[i].Name = genBn(param.Name)
+				}
+			}
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			normaliseBn(rootElem.Next)
+		}
+	}
+
+	var normaliseBnRes func(elem Element)
+	normaliseBnRes = func(elem Element) {
+		elemTyp := elem.Type()
+		switch elemTyp {
+		case ElemTypNil:
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			normaliseBnRes(outElem.Next)
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			normaliseBnRes(inpElem.Next)
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			normaliseBnRes(matchElem.Next)
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			if resElem.Restrict.Type == Bound {
+				resElem.Restrict.Name = genBn(resElem.Restrict.Name)
+			}
+			normaliseBnRes(resElem.Next)
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			normaliseBnRes(sumElem.ProcessL)
+			normaliseBnRes(sumElem.ProcessR)
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			normaliseBnRes(parElem.ProcessL)
+			normaliseBnRes(parElem.ProcessR)
+		case ElemTypProcess:
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			normaliseBnRes(rootElem.Next)
+		}
+	}
+
+	// Rename bound names, skipping restrictions.
+	normaliseBn(conf.Process)
+	// Rename bound names in restrictions.
+	normaliseBnRes(conf.Process)
+
+	// Rename bound names in register.
+	for label, name := range conf.Register.Register {
+		if newName, ok := oldNames[name]; ok {
+			conf.Register.Register[label] = newName
+		}
+	}
 }
 
 func rmNilRes(elem Element) Element {
@@ -279,7 +401,7 @@ func sortSumPar(elem Element) Element {
 			procs = append(procs, struct {
 				Rank    string
 				Process Element
-			}{PrettyPrintAst(child), child})
+			}{ppCongruentProc(child), child})
 		}
 		sort.Slice(procs, func(i, j int) bool {
 			return procs[i].Rank < procs[j].Rank
@@ -312,7 +434,7 @@ func sortSumPar(elem Element) Element {
 			procs = append(procs, struct {
 				Rank    string
 				Process Element
-			}{PrettyPrintAst(child), child})
+			}{ppCongruentProc(child), child})
 		}
 		sort.Slice(procs, func(i, j int) bool {
 			return procs[i].Rank < procs[j].Rank
@@ -371,4 +493,60 @@ func getSum(elem Element) []Element {
 		}
 	}
 	return sumChildren
+}
+
+func ppCongruentProc(elem Element) string {
+	var ppcpAcc func(Element, string) string
+	ppcpAcc = func(elem Element, str string) string {
+		elemTyp := elem.Type()
+		switch elemTyp {
+		case ElemTypNil:
+			str = str + "0"
+		case ElemTypOutput:
+			outElem := elem.(*ElemOutput)
+			str = str + outElem.Channel.Name + "'<" + outElem.Output.Name + ">."
+			return ppcpAcc(outElem.Next, str)
+		case ElemTypInput:
+			inpElem := elem.(*ElemInput)
+			str = str + inpElem.Channel.Name + "(" + inpElem.Input.Name + ")."
+			return ppcpAcc(inpElem.Next, str)
+		case ElemTypMatch:
+			matchElem := elem.(*ElemMatch)
+			str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameL.Name + "]"
+			return ppcpAcc(matchElem.Next, str)
+		case ElemTypRestriction:
+			resElem := elem.(*ElemRestriction)
+			return ppcpAcc(resElem.Next, str)
+		case ElemTypSum:
+			sumElem := elem.(*ElemSum)
+			left := ppcpAcc(sumElem.ProcessL, "")
+			right := ppcpAcc(sumElem.ProcessR, "")
+			str = str + "(" + left + " + " + right + ")"
+		case ElemTypParallel:
+			parElem := elem.(*ElemParallel)
+			left := ppcpAcc(parElem.ProcessL, "")
+			right := ppcpAcc(parElem.ProcessR, "")
+			str = str + "(" + left + " | " + right + ")"
+		case ElemTypProcess:
+			pcsElem := elem.(*ElemProcess)
+			if len(pcsElem.Parameters) == 0 {
+				str = str + pcsElem.Name
+			} else {
+				params := "("
+				for i, param := range pcsElem.Parameters {
+					if i == len(pcsElem.Parameters)-1 {
+						params = params + param.Name + ")"
+					} else {
+						params = params + param.Name + ", "
+					}
+				}
+				str = str + pcsElem.Name + params
+			}
+		case ElemTypRoot:
+			rootElem := elem.(*ElemRoot)
+			return ppcpAcc(rootElem.Next, str)
+		}
+		return str
+	}
+	return ppcpAcc(elem, "")
 }
