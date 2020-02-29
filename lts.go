@@ -29,7 +29,7 @@ type EdgeTemplate struct {
 	Label       string
 }
 
-func generateGraphVizFile(lts Lts) []byte {
+func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 	vertices := lts.Vertices
 	edges := lts.Edges
 
@@ -50,9 +50,15 @@ func generateGraphVizFile(lts Lts) []byte {
 
 	for _, id := range ids {
 		conf := vertices[id]
+		var config string
+		if outputStateNo {
+			config = "s" + strconv.Itoa(id)
+		} else {
+			config = prettyPrintRegister(conf.Register) + " ⊢\n" + PrettyPrintAst(conf.Process)
+		}
 		vertex := VertexTemplate{
 			State:  "s" + strconv.Itoa(id),
-			Config: prettyPrintRegister(conf.Register) + " ⊢\n" + PrettyPrintAst(conf.Process),
+			Config: config,
 		}
 		var tmpl *template.Template
 		if id == 0 {

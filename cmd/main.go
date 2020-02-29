@@ -8,9 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var maxStates int
 var interactiveMode bool
 var outputFile string
+var maxStates int
+var outputStateNo bool
 
 var usageTemplate = []byte(`Usage:{{if .Runnable}}
 {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
@@ -61,7 +62,7 @@ pi-calculus represented by fresh-register automata.`,
 				os.Exit(1)
 			}
 			inputFile := args[0]
-			if err := pifra.OutputMode(maxStates, inputFile, outputFile); err != nil {
+			if err := pifra.OutputMode(maxStates, inputFile, outputFile, outputStateNo); err != nil {
 				fmt.Println("error:", err)
 				os.Exit(1)
 			}
@@ -85,7 +86,8 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
-	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "s", 20, "maximum number of transition states explored")
+	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "n", 20, "maximum number of transition states explored")
+	rootCmd.PersistentFlags().BoolVarP(&outputStateNo, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }

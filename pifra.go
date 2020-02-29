@@ -30,7 +30,7 @@ func InteractiveMode() {
 
 // OutputMode generates an LTS from the pi-calculus program file and either writes
 // the output to a file, or prints the output if an output file is not specified.
-func OutputMode(maxStates int, inputFile string, outputFile string) error {
+func OutputMode(maxStates int, inputFile string, outputFile string, outputStateNo bool) error {
 	maxStatesExplored = maxStates
 
 	input, err := ioutil.ReadFile(inputFile)
@@ -48,7 +48,7 @@ func OutputMode(maxStates int, inputFile string, outputFile string) error {
 		fmt.Println(string(output))
 	} else {
 		// Output file specified. Write to file as GraphViz DOT file.
-		output := generateGraphVizFile(lts)
+		output := generateGraphVizFile(lts, outputStateNo)
 		return writeFile(output, outputFile)
 	}
 	return nil
