@@ -49,22 +49,6 @@ type Register struct {
 	Register map[int]string
 }
 
-// UpdateAfter adds a free name to the register at the next label.
-// reg+v = reg U {(|reg|+1, v)}.
-func (reg *Register) UpdateAfter(freeName string) int {
-	index := reg.Index
-	reg.Register[index] = freeName
-	reg.Index = reg.Index + 1
-	return index
-}
-
-// RemoveLastLabel removes the last label from the register.
-// Undos UpdateAfter, but retains the modified registers.
-func (reg *Register) RemoveLastLabel() {
-	reg.Index = reg.Index - 1
-	delete(reg.Register, reg.Index)
-}
-
 // UpdateMax adds a free name to the register at the register size + 1 and
 // increments the register size.
 // σ+v = σ U {(|σ|+1, v)}.
@@ -83,45 +67,6 @@ func (reg *Register) RemoveMax() {
 	delete(reg.Register, reg.Size)
 }
 
-// RemoveName removes the name from the register.
-// Undos UpdateAfter, but retains the modified registers.
-func (reg *Register) RemoveName(name string) {
-	for _, label := range reg.Labels() {
-		if reg.GetName(label) == name {
-			delete(reg.Register, label)
-		}
-	}
-}
-
-// AddNameBefore increments all labels by one while retaining
-// mapping to their name and leaves a name at label 1.
-// a+σ = {(1, a)} ∪ {(i+1, v) | (i, v) ∈ σ}.
-func (reg *Register) AddNameBefore(name string) int {
-	labels := reg.Labels()
-	for i := len(labels) - 1; i >= 0; i-- {
-		label := labels[i]
-		reg.Register[label+1] = reg.GetName(label)
-	}
-	reg.Register[1] = name
-	reg.Index = reg.Index + 1
-	return 1
-}
-
-// RemoveNameBefore decrements all labels by one while retaining
-// mapping to their name. The name at label 1 is overwritten, and
-// is therefore removed.
-// σ-1 = {(i-1, v) | (i, v) ∈ σ ∧ i > 1}.
-func (reg *Register) RemoveNameBefore() {
-	labels := reg.Labels()
-	for i := 1; i < len(labels); i++ {
-		label := labels[i]
-		reg.Register[label-1] = reg.GetName(label)
-	}
-	// Delete the last label and name because everything is shifted left.
-	delete(reg.Register, reg.Index-1)
-	reg.Index = reg.Index - 1
-}
-
 // AddEmptyName increments all labels by one while retaining mapping
 // to their name and leaves an empty name (#) at label 1.
 // #+o = {(1, #)} U {(i+1, v′) | (i, v′) E o}.
@@ -133,16 +78,6 @@ func (reg *Register) AddEmptyName() {
 	}
 	reg.Register[1] = "#"
 	reg.Index = reg.Index + 1
-}
-
-// Labels returns register labels in sorted order.
-func (reg *Register) Labels() []int {
-	var labels []int
-	for k := range reg.Register {
-		labels = append(labels, k)
-	}
-	sort.Ints(labels)
-	return labels
 }
 
 // UpdateMin updates the register with a name at the minimum label
@@ -162,6 +97,16 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	reg.Register[label] = name
 	reg.Index = reg.Index + 1
 	return label
+}
+
+// Labels returns register labels in sorted order.
+func (reg *Register) Labels() []int {
+	var labels []int
+	for k := range reg.Register {
+		labels = append(labels, k)
+	}
+	sort.Ints(labels)
+	return labels
 }
 
 // GetName returns register name corresponding to the label.
@@ -459,7 +404,7 @@ func trans(conf Configuration) []Configuration {
 		openElem := openConf.Process.(*ElemRestriction)
 		openName := openElem.Restrict.Name
 		openConf.Process = openElem.Next
-		openLabel := openConf.Register.UpdateAfter(openName)
+		openLabel := openConf.Register.UpdateMax(openName)
 		tconfs = trans(openConf)
 
 		for _, conf := range tconfs {
