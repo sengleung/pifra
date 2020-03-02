@@ -53,18 +53,17 @@ type Register struct {
 // increments the register size.
 // σ+v = σ U {(|σ|+1, v)}.
 func (reg *Register) UpdateMax(freeName string) int {
-	index := reg.Size
-	reg.Register[index] = freeName
 	reg.Size = reg.Size + 1
-	return index
+	reg.Register[reg.Size] = freeName
+	return reg.Size
 }
 
 // RemoveMax removes a free name from the register at the register size + 1
 // and decrements the register size.
 // Undos UpdateMax.
 func (reg *Register) RemoveMax() {
-	reg.Size = reg.Size - 1
 	delete(reg.Register, reg.Size)
+	reg.Size = reg.Size - 1
 }
 
 // AddEmptyName increments all labels by one while retaining mapping
