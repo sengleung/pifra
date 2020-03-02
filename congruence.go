@@ -5,9 +5,13 @@ import (
 	"strconv"
 )
 
+var bnPrefix = "&"
+var fnPrefix = "#"
+
 func applyStructrualCongruence(conf Configuration) {
 	rmNilRes(conf.Process)
 	rmNilPar(conf.Process)
+	normaliseFreeNames(conf)
 	//scopeRes(conf.Process)
 	//sortRes(conf.Process)
 	normaliseBoundNames(conf)
@@ -18,6 +22,42 @@ func getConfigurationKey(conf Configuration) string {
 	return prettyPrintRegister(conf.Register) + ppCongruentProc(conf.Process)
 }
 
+func normaliseFreeNames(conf Configuration) {
+	var fni int
+	genFn := func(usedNames map[string]bool) string {
+		fn := fnPrefix + strconv.Itoa(fni)
+		for usedNames[fn] {
+			fni = fni + 1
+			fn = fnPrefix + strconv.Itoa(fni)
+		}
+		fni = fni + 1
+		return fn
+	}
+
+	usedNames := make(map[string]bool)
+
+	labels := conf.Register.Labels()
+	for _, label := range labels {
+		name := conf.Register.GetName(label)
+		usedNames[name] = true
+	}
+
+	for _, label := range labels {
+		name := conf.Register.GetName(label)
+		if string(name[0]) == bnPrefix {
+			fn := genFn(usedNames)
+			subName(conf.Process, Name{
+				Name: name,
+				Type: Bound,
+			}, Name{
+				Name: fn,
+				Type: Fresh,
+			})
+			conf.Register.Register[label] = fn
+		}
+	}
+}
+
 func normaliseBoundNames(conf Configuration) {
 	var bni int
 	oldNames := make(map[string]string)
@@ -26,7 +66,7 @@ func normaliseBoundNames(conf Configuration) {
 		if newName, ok := oldNames[oldName]; ok {
 			return newName
 		}
-		newName := "&" + strconv.Itoa(bni)
+		newName := bnPrefix + strconv.Itoa(bni)
 		bni = bni + 1
 		oldNames[oldName] = newName
 		return newName
