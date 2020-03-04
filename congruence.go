@@ -9,15 +9,31 @@ var bnPrefix = "&"
 var fnPrefix = "#"
 
 func applyStructrualCongruence(conf Configuration) {
-	rmNilRes(conf.Process)
 	rmNilPar(conf.Process)
+	rmNilRes(conf.Process)
 	normaliseFreeNames(conf)
 	normaliseBoundNames(conf)
 	sortSumPar(conf.Process)
+
+	garbageCollection(conf)
 }
 
 func getConfigurationKey(conf Configuration) string {
 	return prettyPrintRegister(conf.Register) + ppCongruentProc(conf.Process)
+}
+
+func garbageCollection(conf Configuration) {
+	fns := GetAllFreshNames(conf.Process)
+	freshNames := make(map[string]bool)
+	for _, freshName := range fns {
+		freshNames[freshName] = true
+	}
+
+	for label, name := range conf.Register.Register {
+		if !freshNames[name] {
+			delete(conf.Register.Register, label)
+		}
+	}
 }
 
 func normaliseFreeNames(conf Configuration) {
@@ -46,10 +62,8 @@ func normaliseFreeNames(conf Configuration) {
 			fn := genFn(usedNames)
 			subName(conf.Process, Name{
 				Name: name,
-				Type: Bound,
 			}, Name{
 				Name: fn,
-				Type: Fresh,
 			})
 			conf.Register.Register[label] = fn
 		}
