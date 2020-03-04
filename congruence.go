@@ -9,12 +9,12 @@ var bnPrefix = "&"
 var fnPrefix = "#"
 
 func applyStructrualCongruence(conf Configuration) {
+	garbageCollection(conf)
+
 	normaliseNilProc(conf.Process)
 	normaliseFreshNames(conf)
 	normaliseBoundNames(conf)
 	sortSumPar(conf.Process)
-
-	garbageCollection(conf)
 }
 
 func getConfigurationKey(conf Configuration) string {
