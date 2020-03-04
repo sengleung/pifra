@@ -9,9 +9,8 @@ var bnPrefix = "&"
 var fnPrefix = "#"
 
 func applyStructrualCongruence(conf Configuration) {
-	rmNilPar(conf.Process)
-	rmNilRes(conf.Process)
-	normaliseFreeNames(conf)
+	normaliseNilProc(conf.Process)
+	normaliseFreshNames(conf)
 	normaliseBoundNames(conf)
 	sortSumPar(conf.Process)
 
@@ -36,7 +35,7 @@ func garbageCollection(conf Configuration) {
 	}
 }
 
-func normaliseFreeNames(conf Configuration) {
+func normaliseFreshNames(conf Configuration) {
 	var fni int
 	genFn := func(usedNames map[string]bool) string {
 		fn := fnPrefix + strconv.Itoa(fni)
@@ -188,64 +187,33 @@ func normaliseBoundNames(conf Configuration) {
 	}
 }
 
-func rmNilRes(elem Element) Element {
+func normaliseNilProc(elem Element) Element {
 	switch elem.Type() {
 	case ElemTypNil:
 	case ElemTypProcess:
 	case ElemTypOutput:
 		outElem := elem.(*ElemOutput)
-		outElem.Next = rmNilRes(outElem.Next)
+		outElem.Next = normaliseNilProc(outElem.Next)
 	case ElemTypInput:
 		inpElem := elem.(*ElemInput)
-		inpElem.Next = rmNilRes(inpElem.Next)
+		inpElem.Next = normaliseNilProc(inpElem.Next)
 	case ElemTypMatch:
 		matchElem := elem.(*ElemMatch)
-		matchElem.Next = rmNilRes(matchElem.Next)
+		matchElem.Next = normaliseNilProc(matchElem.Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
-		resElem.Next = rmNilRes(resElem.Next)
+		resElem.Next = normaliseNilProc(resElem.Next)
 		if resElem.Next.Type() == ElemTypNil {
 			return &ElemNil{}
 		}
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
-		sumElem.ProcessL = rmNilRes(sumElem.ProcessL)
-		sumElem.ProcessR = rmNilRes(sumElem.ProcessR)
+		sumElem.ProcessL = normaliseNilProc(sumElem.ProcessL)
+		sumElem.ProcessR = normaliseNilProc(sumElem.ProcessR)
 	case ElemTypParallel:
 		parElem := elem.(*ElemParallel)
-		parElem.ProcessL = rmNilRes(parElem.ProcessL)
-		parElem.ProcessR = rmNilRes(parElem.ProcessR)
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		rootElem.Next = rmNilRes(rootElem.Next)
-	}
-	return elem
-}
-
-func rmNilPar(elem Element) Element {
-	switch elem.Type() {
-	case ElemTypNil:
-	case ElemTypProcess:
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		outElem.Next = rmNilPar(outElem.Next)
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		inpElem.Next = rmNilPar(inpElem.Next)
-	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
-		matchElem.Next = rmNilPar(matchElem.Next)
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		resElem.Next = rmNilPar(resElem.Next)
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		sumElem.ProcessL = rmNilPar(sumElem.ProcessL)
-		sumElem.ProcessR = rmNilPar(sumElem.ProcessR)
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		parElem.ProcessL = rmNilPar(parElem.ProcessL)
-		parElem.ProcessR = rmNilPar(parElem.ProcessR)
+		parElem.ProcessL = normaliseNilProc(parElem.ProcessL)
+		parElem.ProcessR = normaliseNilProc(parElem.ProcessR)
 		if parElem.ProcessL.Type() == ElemTypNil {
 			return parElem.ProcessR
 		}
@@ -254,7 +222,7 @@ func rmNilPar(elem Element) Element {
 		}
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
-		rootElem.Next = rmNilPar(rootElem.Next)
+		rootElem.Next = normaliseNilProc(rootElem.Next)
 	}
 	return elem
 }
