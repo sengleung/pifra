@@ -8,11 +8,11 @@ import (
 )
 
 type Lts struct {
-	Vertices map[int]Configuration
-	Edges    []Edge
+	States      map[int]Configuration
+	Transitions []Transition
 }
 
-type Edge struct {
+type Transition struct {
 	Source      int
 	Destination int
 	Label       Label
@@ -30,8 +30,8 @@ type EdgeTemplate struct {
 }
 
 func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
-	vertices := lts.Vertices
-	edges := lts.Edges
+	vertices := lts.States
+	edges := lts.Transitions
 
 	var buffer bytes.Buffer
 	buffer.WriteString(`digraph {
@@ -115,8 +115,8 @@ func prettyPrintGraphSymbol(symbol Symbol) string {
 }
 
 func generatePrettyLts(lts Lts) []byte {
-	vertices := lts.Vertices
-	edges := lts.Edges
+	vertices := lts.States
+	edges := lts.Transitions
 
 	// When there is no root state.
 	if _, ok := vertices[0]; !ok {

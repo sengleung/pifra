@@ -180,10 +180,10 @@ var infProc bool
 
 func explore(root Configuration) Lts {
 	visited := make(map[string]int)
-	edgesSeen := make(map[Edge]bool)
+	edgesSeen := make(map[Transition]bool)
 
 	vertices := make(map[int]Configuration)
-	var edges []Edge
+	var edges []Transition
 	var vertexId int
 
 	applyStructrualCongruence(root)
@@ -218,7 +218,7 @@ func explore(root Configuration) Lts {
 				vertexId = vertexId + 1
 			}
 
-			edge := Edge{
+			edge := Transition{
 				Source:      visited[srcKey],
 				Destination: visited[dstKey],
 				Label:       conf.Label,
@@ -234,8 +234,8 @@ func explore(root Configuration) Lts {
 		}
 	}
 	return Lts{
-		Vertices: vertices,
-		Edges:    edges,
+		States:      vertices,
+		Transitions: edges,
 	}
 }
 
