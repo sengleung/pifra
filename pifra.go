@@ -19,8 +19,8 @@ func InteractiveMode() {
 			fmt.Println("error:", err)
 		} else {
 			fmt.Println(PrettyPrintAst(proc))
-			state := newTransitionStateRoot(proc)
-			confs := trans(state.Configuration)
+			root := newRootConf(proc)
+			confs := trans(root)
 			for _, conf := range confs {
 				fmt.Println(PrettyPrintConfiguration(conf))
 			}
@@ -76,7 +76,7 @@ func generateLts(input []byte) (Lts, error) {
 	if err != nil {
 		return Lts{}, err
 	}
-	root := newTransitionStateRoot(proc)
+	root := newRootConf(proc)
 	lts := exploreTransitions(root)
 	return lts, nil
 }

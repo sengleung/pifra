@@ -209,8 +209,8 @@ t    -> {(1,a)} ¦- (0 | $x_1.0)
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			proc, _ := InitProgram(tc.input)
-			root := newTransitionStateRoot(proc)
-			confs := trans(root.Configuration)
+			root := newRootConf(proc)
+			confs := trans(root)
 			var output bytes.Buffer
 			output.WriteString("\n")
 			for _, conf := range confs {

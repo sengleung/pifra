@@ -10,11 +10,6 @@ import (
 
 var maxStatesExplored = 1
 
-type State struct {
-	Configuration Configuration
-	NextStates    []*State
-}
-
 type Configuration struct {
 	Process  Element
 	Register Register
@@ -128,7 +123,7 @@ func (reg *Register) GetLabel(name string) int {
 	return -1
 }
 
-func newTransitionStateRoot(process Element) *State {
+func newRootConf(process Element) Configuration {
 	fns := GetAllFreshNames(process)
 
 	for _, dp := range DeclaredProcs {
@@ -171,22 +166,19 @@ func newTransitionStateRoot(process Element) *State {
 		register[index] = name
 		index = index + 1
 	}
-	return &State{
-		Configuration: Configuration{
-			Process: process,
-			Register: Register{
-				Size:     1000000,
-				Index:    len(register) + 1,
-				Register: register,
-			},
+	return Configuration{
+		Process: process,
+		Register: Register{
+			Size:     1000000,
+			Index:    len(register) + 1,
+			Register: register,
 		},
-		NextStates: []*State{},
 	}
 }
 
 var infProc bool
 
-func exploreTransitions(root *State) Lts {
+func exploreTransitions(root Configuration) Lts {
 	visited := make(map[string]int)
 	edgesSeen := make(map[Edge]bool)
 
@@ -194,18 +186,18 @@ func exploreTransitions(root *State) Lts {
 	var edges []Edge
 	var vertexId int
 
-	applyStructrualCongruence(root.Configuration)
-	rootKey := getConfigurationKey(root.Configuration)
+	applyStructrualCongruence(root)
+	rootKey := getConfigurationKey(root)
 	visited[rootKey] = vertexId
-	vertices[vertexId] = root.Configuration
+	vertices[vertexId] = root
 	vertexId = vertexId + 1
 
 	queue := list.New()
 	queue.PushBack(root)
-	dequeue := func() *State {
-		s := queue.Front()
-		queue.Remove(s)
-		return s.Value.(*State)
+	dequeue := func() Configuration {
+		c := queue.Front()
+		queue.Remove(c)
+		return c.Value.(Configuration)
 	}
 
 	// BFS traversal state exploration.
@@ -213,9 +205,9 @@ func exploreTransitions(root *State) Lts {
 	for queue.Len() > 0 && statesExplored < maxStatesExplored {
 		state := dequeue()
 
-		srcKey := getConfigurationKey(state.Configuration)
+		srcKey := getConfigurationKey(state)
 
-		confs := trans(state.Configuration)
+		confs := trans(state)
 		for _, conf := range confs {
 
 			applyStructrualCongruence(conf)
@@ -234,13 +226,7 @@ func exploreTransitions(root *State) Lts {
 			if !edgesSeen[edge] {
 				edgesSeen[edge] = true
 				edges = append(edges, edge)
-
-				nextState := &State{
-					Configuration: conf,
-					NextStates:    []*State{},
-				}
-				state.NextStates = append(state.NextStates, nextState)
-				queue.PushBack(nextState)
+				queue.PushBack(conf)
 			}
 		}
 		if len(confs) > 0 {
