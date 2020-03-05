@@ -178,7 +178,7 @@ func newRootConf(process Element) Configuration {
 
 var infProc bool
 
-func exploreTransitions(root Configuration) Lts {
+func explore(root Configuration) Lts {
 	visited := make(map[string]int)
 	edgesSeen := make(map[Edge]bool)
 

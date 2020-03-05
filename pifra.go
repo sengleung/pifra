@@ -77,6 +77,6 @@ func generateLts(input []byte) (Lts, error) {
 		return Lts{}, err
 	}
 	root := newRootConf(proc)
-	lts := exploreTransitions(root)
+	lts := explore(root)
 	return lts, nil
 }
