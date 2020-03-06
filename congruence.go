@@ -33,6 +33,14 @@ func garbageCollection(conf Configuration) {
 			delete(conf.Register.Register, label)
 		}
 	}
+
+	// Normalise labels from 1 to n.
+	// Example: {(1,a),(4,b),(7,c)} -> {(1,a),(2,b),(3,c)}
+	for i, label := range conf.Register.Labels() {
+		name := conf.Register.GetName(label)
+		delete(conf.Register.Register, label)
+		conf.Register.Register[i+1] = name
+	}
 }
 
 func normaliseFreshNames(conf Configuration) {
