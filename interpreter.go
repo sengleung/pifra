@@ -284,6 +284,11 @@ func trans(conf Configuration) []Configuration {
 		// INP2B
 		inp2bConf := deepcopy.Copy(inp1Conf).(Configuration)
 		inpInpElem := inp2bConf.Process.(*ElemInpInput)
+		// Change the input bound name to a fresh name.
+		substituteName(inpInpElem, inpInpElem.Input, Name{
+			Name: inpInpElem.Input.Name,
+			Type: Fresh,
+		})
 
 		name := inpInpElem.Input.Name
 		freshNamesP := GetAllFreshNames(inpInpElem.Next)
