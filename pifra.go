@@ -14,6 +14,7 @@ type Flags struct {
 
 	RegisterSize int
 	MaxStates    int
+	DisableGC    bool
 
 	InputFile  string
 	OutputFile string
@@ -30,6 +31,7 @@ type Flags struct {
 func initFlags(flags Flags) {
 	maxStatesExplored = flags.MaxStates
 	registerSize = flags.RegisterSize
+	disableGarbageCollection = flags.DisableGC
 }
 
 // InteractiveMode allows the user to inspect interactively the next transition(s)

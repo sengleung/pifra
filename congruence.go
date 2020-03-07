@@ -8,8 +8,12 @@ import (
 var bnPrefix = "&"
 var fnPrefix = "#"
 
+var disableGarbageCollection bool
+
 func applyStructrualCongruence(conf Configuration) {
-	garbageCollection(conf)
+	if !disableGarbageCollection {
+		garbageCollection(conf)
+	}
 
 	normaliseNilProc(conf.Process)
 	normaliseFreshNames(conf)
