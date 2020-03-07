@@ -10,6 +10,9 @@ import (
 type Lts struct {
 	States      map[int]Configuration
 	Transitions []Transition
+
+	StatesExplored  int
+	StatesGenerated int
 }
 
 type Transition struct {

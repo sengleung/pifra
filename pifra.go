@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 // Flags are the user-specified flags for the command line.
@@ -58,6 +59,8 @@ func InteractiveMode(flags Flags) {
 func OutputMode(flags Flags) error {
 	initFlags(flags)
 
+	start := time.Now()
+
 	input, err := ioutil.ReadFile(flags.InputFile)
 	if err != nil {
 		return err
@@ -82,6 +85,19 @@ func OutputMode(flags Flags) error {
 			}
 			return writeFile(output, flags.OutputFile)
 		}
+	}
+
+	elapsed := time.Since(start)
+	if flags.Statistics {
+		if !flags.Quiet && flags.OutputFile == "" {
+			// Print new line if LTS is printed to standard output.
+			fmt.Println()
+		}
+		fmt.Printf("states explored   %d\n", lts.StatesExplored)
+		fmt.Printf("states generated  %d\n", lts.StatesGenerated)
+		fmt.Printf("states unique     %d\n", len(lts.States))
+		fmt.Printf("transitions       %d\n", len(lts.Transitions))
+		fmt.Printf("time              %s\n", elapsed)
 	}
 
 	return nil

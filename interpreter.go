@@ -201,8 +201,10 @@ func explore(root Configuration) Lts {
 		return c.Value.(Configuration)
 	}
 
-	// BFS traversal state exploration.
 	var statesExplored int
+	var statesGenerated int
+
+	// BFS traversal state exploration.
 	for queue.Len() > 0 && statesExplored < maxStatesExplored {
 		state := dequeue()
 
@@ -210,7 +212,7 @@ func explore(root Configuration) Lts {
 
 		confs := trans(state)
 		for _, conf := range confs {
-
+			statesGenerated++
 			applyStructrualCongruence(conf)
 			dstKey := getConfigurationKey(conf)
 			if _, ok := visited[dstKey]; !ok {
@@ -230,13 +232,14 @@ func explore(root Configuration) Lts {
 				queue.PushBack(conf)
 			}
 		}
-		if len(confs) > 0 {
-			statesExplored = statesExplored + 1
-		}
+
+		statesExplored++
 	}
 	return Lts{
-		States:      vertices,
-		Transitions: edges,
+		States:          vertices,
+		Transitions:     edges,
+		StatesExplored:  statesExplored,
+		StatesGenerated: statesGenerated,
 	}
 }
 

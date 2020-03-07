@@ -95,7 +95,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.Quiet, "quiet", "q", false, "do not print or output the LTS")
-	rootCmd.PersistentFlags().BoolVarP(&flags.Statistics, "stats", "t", false, "print LTS generation statistics")
+	rootCmd.PersistentFlags().BoolVarP(&flags.Statistics, "stats", "v", false, "print LTS generation statistics")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }
