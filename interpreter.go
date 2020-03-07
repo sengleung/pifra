@@ -666,7 +666,7 @@ func trans(conf Configuration) []Configuration {
 						resName := lconf.Register.GetName(1)
 						oldName := Name{
 							Name: rconf.Register.GetName(1),
-							Type: Bound,
+							Type: Fresh,
 						}
 						newName := Name{
 							Name: resName,
@@ -711,7 +711,7 @@ func trans(conf Configuration) []Configuration {
 						resName := rconf.Register.GetName(1)
 						oldName := Name{
 							Name: lconf.Register.GetName(1),
-							Type: Bound,
+							Type: Fresh,
 						}
 						newName := Name{
 							Name: resName,
