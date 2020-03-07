@@ -70,7 +70,7 @@ func (reg *Register) AddEmptyName() {
 		label := labels[i]
 		reg.Register[label+1] = reg.GetName(label)
 	}
-	reg.Register[1] = "#"
+	delete(reg.Register, 1)
 	reg.Index = reg.Index + 1
 }
 
@@ -82,7 +82,7 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 		freshNamesSet[freshName] = true
 	}
 	for label := 1; label < len(reg.Register)+1; label++ {
-		if reg.Register[label] == "#" || !freshNamesSet[reg.GetName(label)] {
+		if !freshNamesSet[reg.GetName(label)] {
 			reg.Register[label] = name
 			return label
 		}
