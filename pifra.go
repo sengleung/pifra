@@ -24,9 +24,15 @@ type Flags struct {
 	OutputStatistics bool
 }
 
+func initFlags(flags Flags) {
+	maxStatesExplored = flags.MaxStates
+	registerSize = flags.RegisterSize
+}
+
 // InteractiveMode allows the user to inspect interactively the next transition(s)
 // after providing a pi-calculus syntax input.
-func InteractiveMode() {
+func InteractiveMode(flags Flags) {
+	initFlags(flags)
 	for {
 		fmt.Print("> ")
 		reader := bufio.NewReader(os.Stdin)
@@ -48,7 +54,7 @@ func InteractiveMode() {
 // OutputMode generates an LTS from the pi-calculus program file and either writes
 // the output to a file, or prints the output if an output file is not specified.
 func OutputMode(flags Flags) error {
-	maxStatesExplored = flags.MaxStates
+	initFlags(flags)
 
 	input, err := ioutil.ReadFile(flags.InputFile)
 	if err != nil {

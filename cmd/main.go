@@ -41,12 +41,16 @@ var rootCmd = &cobra.Command{
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if flags.RegisterSize < 1 {
+			fmt.Println("error: register size must be greater or equal to 1")
+			os.Exit(1)
+		}
 		if flags.MaxStates < 0 {
 			fmt.Println("error: maximum states explored must be positive")
 			os.Exit(1)
 		}
 		if flags.InteractiveMode {
-			pifra.InteractiveMode()
+			pifra.InteractiveMode(flags)
 		} else {
 			if len(args) < 1 {
 				fmt.Println("error: input file required for LTS generation")
@@ -84,6 +88,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
 	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
 	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of transition states explored")
+	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 1073741824, "register size")
 	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")

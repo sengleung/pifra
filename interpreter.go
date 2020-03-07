@@ -9,6 +9,7 @@ import (
 )
 
 var maxStatesExplored = 1
+var registerSize = 1073741824
 
 type Configuration struct {
 	Process  Element
@@ -169,7 +170,7 @@ func newRootConf(process Element) Configuration {
 	return Configuration{
 		Process: process,
 		Register: Register{
-			Size:     1000000,
+			Size:     registerSize,
 			Index:    len(register) + 1,
 			Register: register,
 		},
