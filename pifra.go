@@ -7,6 +7,23 @@ import (
 	"os"
 )
 
+// Flags are the user-specified flags for the command line.
+type Flags struct {
+	InteractiveMode bool
+
+	RegisterSize int
+	MaxStates    int
+
+	InputFile  string
+	OutputFile string
+
+	GVLayout       string
+	GVOutputStates bool
+
+	HumanReadable    bool
+	OutputStatistics bool
+}
+
 // InteractiveMode allows the user to inspect interactively the next transition(s)
 // after providing a pi-calculus syntax input.
 func InteractiveMode() {
@@ -30,10 +47,10 @@ func InteractiveMode() {
 
 // OutputMode generates an LTS from the pi-calculus program file and either writes
 // the output to a file, or prints the output if an output file is not specified.
-func OutputMode(maxStates int, inputFile string, outputFile string, outputStateNo bool) error {
-	maxStatesExplored = maxStates
+func OutputMode(flags Flags) error {
+	maxStatesExplored = flags.MaxStates
 
-	input, err := ioutil.ReadFile(inputFile)
+	input, err := ioutil.ReadFile(flags.InputFile)
 	if err != nil {
 		return err
 	}
@@ -42,14 +59,14 @@ func OutputMode(maxStates int, inputFile string, outputFile string, outputStateN
 		return err
 	}
 
-	if outputFile == "" {
+	if flags.OutputFile == "" {
 		// No output file specified. Print LTS.
 		output := generatePrettyLts(lts)
 		fmt.Println(string(output))
 	} else {
 		// Output file specified. Write to file as GraphViz DOT file.
-		output := generateGraphVizFile(lts, outputStateNo)
-		return writeFile(output, outputFile)
+		output := generateGraphVizFile(lts, flags.GVOutputStates)
+		return writeFile(output, flags.OutputFile)
 	}
 	return nil
 }

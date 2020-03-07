@@ -8,10 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var interactiveMode bool
-var outputFile string
-var maxStates int
-var outputStateNo bool
+var flags pifra.Flags
 
 var usageTemplate = []byte(`Usage:{{if .Runnable}}
 {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
@@ -44,11 +41,11 @@ var rootCmd = &cobra.Command{
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if maxStates < 0 {
-			fmt.Println("error: error: maximum states explored must be positive")
+		if flags.MaxStates < 0 {
+			fmt.Println("error: maximum states explored must be positive")
 			os.Exit(1)
 		}
-		if interactiveMode {
+		if flags.InteractiveMode {
 			pifra.InteractiveMode()
 		} else {
 			if len(args) < 1 {
@@ -61,8 +58,8 @@ pi-calculus represented by fresh-register automata.`,
 				fmt.Println(cmd.UsageString())
 				os.Exit(1)
 			}
-			inputFile := args[0]
-			if err := pifra.OutputMode(maxStates, inputFile, outputFile, outputStateNo); err != nil {
+			flags.InputFile = args[0]
+			if err := pifra.OutputMode(flags); err != nil {
 				fmt.Println("error:", err)
 				os.Exit(1)
 			}
@@ -84,10 +81,10 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 
-	rootCmd.PersistentFlags().BoolVarP(&interactiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
-	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
-	rootCmd.PersistentFlags().IntVarP(&maxStates, "max-states", "n", 20, "maximum number of transition states explored")
-	rootCmd.PersistentFlags().BoolVarP(&outputStateNo, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
+	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
+	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
+	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of transition states explored")
+	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }
