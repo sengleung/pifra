@@ -67,15 +67,23 @@ func OutputMode(flags Flags) error {
 		return err
 	}
 
-	if flags.OutputFile == "" {
-		// No output file specified. Print LTS.
-		output := generatePrettyLts(lts)
-		fmt.Println(string(output))
-	} else {
-		// Output file specified. Write to file as GraphViz DOT file.
-		output := generateGraphVizFile(lts, flags.GVOutputStates)
-		return writeFile(output, flags.OutputFile)
+	if !flags.Quiet {
+		if flags.OutputFile == "" {
+			// No output file specified. Print LTS.
+			output := generatePrettyLts(lts)
+			fmt.Println(string(output))
+		} else {
+			// Output file specified. Write to file.
+			var output []byte
+			if flags.Pretty {
+				output = generatePrettyLts(lts)
+			} else {
+				output = generateGraphVizFile(lts, flags.GVOutputStates)
+			}
+			return writeFile(output, flags.OutputFile)
+		}
 	}
+
 	return nil
 }
 
