@@ -60,6 +60,7 @@ func InteractiveMode(flags Flags) {
 // the output to a file, or prints the output if an output file is not specified.
 func OutputMode(flags Flags) error {
 	initFlags(flags)
+	gvLayout = flags.GVLayout
 
 	start := time.Now()
 

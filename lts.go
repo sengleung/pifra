@@ -32,18 +32,26 @@ type EdgeTemplate struct {
 	Label       string
 }
 
+var a4GVLayout = []byte(`
+    size="8.3,11.7!";
+    ratio="fill";
+    margin=0;
+    rankdir = TB;
+`)
+
+var gvLayout string
+
 func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 	vertices := lts.States
 	edges := lts.Transitions
 
 	var buffer bytes.Buffer
-	buffer.WriteString(`digraph {
-    size="8.3,11.7!";
-    ratio="fill";
-    margin=0;
-    rankdir = TB;
 
-`)
+	gvl := ""
+	if gvLayout != "" {
+		gvl = "\n    " + gvLayout + "\n"
+	}
+	buffer.WriteString("digraph {" + gvl + "\n")
 
 	var ids []int
 	for id := range vertices {
