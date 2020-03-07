@@ -395,8 +395,10 @@ func GetAllFreshNames(elem Element) []string {
 			}
 
 			// Prevent infinitely looping processes.
-			if !visitedProcs[processName] {
-				visitedProcs[processName] = true
+			// Key process definitions by name and parameter names.
+			processKey := PrettyPrintAst(procElem)
+			if !visitedProcs[processKey] {
+				visitedProcs[processKey] = true
 				// Find free names in declared process.
 				freshNames = getAllFreshNamesAcc(proc, freshNames)
 			}
