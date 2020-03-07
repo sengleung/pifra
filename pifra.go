@@ -20,8 +20,10 @@ type Flags struct {
 	GVLayout       string
 	GVOutputStates bool
 
-	HumanReadable    bool
-	OutputStatistics bool
+	Pretty     bool
+	Statistics bool
+
+	Quiet bool
 }
 
 func initFlags(flags Flags) {

@@ -85,11 +85,17 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 
-	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
-	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file in a Graphviz DOT format")
 	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of transition states explored")
 	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 1073741824, "register size")
+
+	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
+	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file (default format is the Graphviz DOT language)")
+	rootCmd.PersistentFlags().BoolVarP(&flags.Pretty, "pretty", "p", false, "output the LTS file in a pretty-printed format")
+
 	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
+
+	rootCmd.PersistentFlags().BoolVarP(&flags.Quiet, "quiet", "q", false, "do not print or output the LTS")
+	rootCmd.PersistentFlags().BoolVarP(&flags.Statistics, "stats", "t", false, "print LTS generation statistics")
 
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "show this help message and exit")
 }
