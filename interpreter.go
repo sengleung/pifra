@@ -392,7 +392,8 @@ func trans(conf Configuration) []Configuration {
 
 		matchElem := conf.Process.(*ElemEquality)
 		// o ¦- [a=a]P
-		if matchElem.NameL.Name == matchElem.NameR.Name {
+		if (!matchElem.Inequality && matchElem.NameL.Name == matchElem.NameR.Name) ||
+			(matchElem.Inequality && matchElem.NameL.Name != matchElem.NameR.Name) {
 			// o ¦- P
 			matchConf := deepcopy.Copy(conf).(Configuration)
 			matchElem = matchConf.Process.(*ElemEquality)

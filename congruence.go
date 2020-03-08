@@ -380,7 +380,11 @@ func ppCongruentProc(elem Element) string {
 			return ppcpAcc(inpElem.Next, str)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemEquality)
-			str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
+			if matchElem.Inequality {
+				str = str + "[" + matchElem.NameL.Name + "!=" + matchElem.NameR.Name + "]"
+			} else {
+				str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
+			}
 			return ppcpAcc(matchElem.Next, str)
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
