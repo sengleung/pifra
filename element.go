@@ -73,10 +73,11 @@ func (e *ElemInput) Type() ElementType {
 }
 
 type ElemEquality struct {
-	SetType ElemSetType
-	NameL   Name
-	NameR   Name
-	Next    Element
+	SetType    ElemSetType
+	Inequality bool
+	NameL      Name
+	NameR      Name
+	Next       Element
 }
 
 func (e *ElemEquality) Type() ElementType {

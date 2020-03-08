@@ -42,6 +42,7 @@ func (lex *lexer) Lex(out *yySymType) int {
             '<' => { tok = LANGLE; fbreak; };
             '>' => { tok = RANGLE; fbreak; };
             ',' => { tok = COMMA; fbreak; };
+            '!' => { tok = EXCLAMATION; fbreak; };
             '=' => { tok = EQUAL; fbreak; };
             '|' => { tok = VERTBAR; fbreak; };
             '.' => { tok = DOT; fbreak; };

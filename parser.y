@@ -56,6 +56,7 @@ func unused() {
     APOSTROPHE
     DOLLARSIGN
     PLUS
+    EXCLAMATION
 
 %nonassoc LOWPREC
 %nonassoc LOWER_THAN_LBRACKET
@@ -138,6 +139,8 @@ elem:
     input
     |
     equality
+    |
+    inequality
     |
     restriction
     |
@@ -224,6 +227,23 @@ equality:
         }
         curElem = equalityElem
         Log("equality:", $2, $4)
+    }
+
+inequality:
+    LSQBRACKET NAME EXCLAMATION EQUAL NAME RSQBRACKET elem
+    {
+        equalityElem := &ElemEquality{
+            Inequality: true,
+            NameL: Name{
+                Name: $2,
+            },
+            NameR: Name{
+                Name: $5,
+            },
+            Next: curElem,
+        }
+        curElem = equalityElem
+        Log("inequality:", $2, $5)
     }
 
 restriction:
