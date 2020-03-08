@@ -119,7 +119,7 @@ func normaliseBoundNames(conf Configuration) {
 			}
 			normaliseBn(inpElem.Next)
 		case ElemTypMatch:
-			matchElem := elem.(*ElemMatch)
+			matchElem := elem.(*ElemEquality)
 			if matchElem.NameL.Type == Bound {
 				matchElem.NameL.Name = genBn(matchElem.NameL.Name)
 			}
@@ -163,7 +163,7 @@ func normaliseBoundNames(conf Configuration) {
 			inpElem := elem.(*ElemInput)
 			normaliseBnRes(inpElem.Next)
 		case ElemTypMatch:
-			matchElem := elem.(*ElemMatch)
+			matchElem := elem.(*ElemEquality)
 			normaliseBnRes(matchElem.Next)
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
@@ -210,7 +210,7 @@ func normaliseNilProc(elem Element) Element {
 		inpElem := elem.(*ElemInput)
 		inpElem.Next = normaliseNilProc(inpElem.Next)
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		matchElem.Next = normaliseNilProc(matchElem.Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
@@ -250,7 +250,7 @@ func sortSumPar(elem Element) Element {
 		inpElem := elem.(*ElemInput)
 		inpElem.Next = sortSumPar(inpElem.Next)
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		matchElem.Next = sortSumPar(matchElem.Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
@@ -379,7 +379,7 @@ func ppCongruentProc(elem Element) string {
 			str = str + inpElem.Channel.Name + "(" + inpElem.Input.Name + ")."
 			return ppcpAcc(inpElem.Next, str)
 		case ElemTypMatch:
-			matchElem := elem.(*ElemMatch)
+			matchElem := elem.(*ElemEquality)
 			str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
 			return ppcpAcc(matchElem.Next, str)
 		case ElemTypRestriction:

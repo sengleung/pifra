@@ -81,7 +81,7 @@ func TestSubstituteName(t *testing.T) {
 						},
 						Next: &ElemNil{},
 					},
-					ProcessR: &ElemMatch{
+					ProcessR: &ElemEquality{
 						NameL: Name{
 							Name: "a",
 							Type: Bound,
@@ -110,7 +110,7 @@ func TestSubstituteName(t *testing.T) {
 						},
 						Next: &ElemNil{},
 					},
-					ProcessR: &ElemMatch{
+					ProcessR: &ElemEquality{
 						NameL: Name{
 							Name: "b",
 						},

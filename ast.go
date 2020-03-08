@@ -48,7 +48,7 @@ func subName(elem Element, oldName Name, newName Name) {
 		}
 		subName(inpElem.Next, oldName, newName)
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		if matchElem.NameL == oldName {
 			matchElem.NameL = newName
 		}
@@ -151,7 +151,7 @@ func doAlphaConversion(elem Element) {
 		subBoundNames(inpElem.Next, boundName, newName)
 		doAlphaConversion(inpElem.Next)
 	case ElemTypMatch:
-		doAlphaConversion(elem.(*ElemMatch).Next)
+		doAlphaConversion(elem.(*ElemEquality).Next)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
 		boundName := resElem.Restrict.Name
@@ -208,7 +208,7 @@ func subBoundNames(elem Element, boundName string, newName string) {
 			subBoundNames(inpElem.Next, boundName, newName)
 		}
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		if matchElem.NameL.Name == boundName {
 			matchElem.NameL = Name{
 				Name: newName,
@@ -270,7 +270,7 @@ func prettyPrintAcc(elem Element, str string) string {
 		str = str + inpElem.Channel.Name + "(" + inpElem.Input.Name + ")."
 		return prettyPrintAcc(inpElem.Next, str)
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		str = str + "[" + matchElem.NameL.Name + "=" + matchElem.NameR.Name + "]"
 		return prettyPrintAcc(matchElem.Next, str)
 	case ElemTypRestriction:
@@ -344,7 +344,7 @@ func GetAllFreshNames(elem Element) []string {
 			}
 			return getAllFreshNamesAcc(inpElem.Next, freshNames)
 		case ElemTypMatch:
-			matchElem := elem.(*ElemMatch)
+			matchElem := elem.(*ElemEquality)
 			if matchElem.NameL.Type == Fresh {
 				freshNames = append(freshNames, matchElem.NameL.Name)
 			}
@@ -436,7 +436,7 @@ func getElemSetType(elem Element) ElemSetType {
 		inpElem := elem.(*ElemInput)
 		return inpElem.SetType
 	case ElemTypMatch:
-		matchElem := elem.(*ElemMatch)
+		matchElem := elem.(*ElemEquality)
 		return matchElem.SetType
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)

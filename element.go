@@ -72,14 +72,14 @@ func (e *ElemInput) Type() ElementType {
 	return ElemTypInput
 }
 
-type ElemMatch struct {
+type ElemEquality struct {
 	SetType ElemSetType
 	NameL   Name
 	NameR   Name
 	Next    Element
 }
 
-func (e *ElemMatch) Type() ElementType {
+func (e *ElemEquality) Type() ElementType {
 	return ElemTypMatch
 }
 

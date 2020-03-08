@@ -390,12 +390,12 @@ func trans(conf Configuration) []Configuration {
 	case ElemTypMatch:
 		var confs []Configuration
 
-		matchElem := conf.Process.(*ElemMatch)
+		matchElem := conf.Process.(*ElemEquality)
 		// o ¦- [a=a]P
 		if matchElem.NameL.Name == matchElem.NameR.Name {
 			// o ¦- P
 			matchConf := deepcopy.Copy(conf).(Configuration)
-			matchElem = matchConf.Process.(*ElemMatch)
+			matchElem = matchConf.Process.(*ElemEquality)
 			matchConf.Process = matchElem.Next
 			// o ¦- P -t-> o ¦- P^'
 			tconfs := trans(matchConf)

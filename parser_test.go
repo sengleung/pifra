@@ -68,7 +68,7 @@ a(b).P
 			`),
 			declaredProcs: map[string]DeclaredProcess{},
 			undeclaredProcs: []Element{
-				&ElemMatch{
+				&ElemEquality{
 					NameL: Name{
 						Name: "a",
 					},
@@ -194,7 +194,7 @@ Q(x,y,z) = $x.[y=z]P
 						Restrict: Name{
 							Name: "x",
 						},
-						Next: &ElemMatch{
+						Next: &ElemEquality{
 							NameL: Name{
 								Name: "y",
 							},
@@ -243,7 +243,7 @@ i(j).k'<l>.0
 						Restrict: Name{
 							Name: "x",
 						},
-						Next: &ElemMatch{
+						Next: &ElemEquality{
 							NameL: Name{
 								Name: "y",
 							},

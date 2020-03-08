@@ -137,7 +137,7 @@ elem:
     |
     input
     |
-    match
+    equality
     |
     restriction
     |
@@ -210,10 +210,10 @@ input:
         Log("inp:", channel, input)
     }
 
-match:
+equality:
     LSQBRACKET NAME EQUAL NAME RSQBRACKET elem
     {
-        matchElem := &ElemMatch{
+        equalityElem := &ElemEquality{
             NameL: Name{
                 Name: $2,
             },
@@ -222,8 +222,8 @@ match:
             },
             Next: curElem,
         }
-        curElem = matchElem
-        Log("match:", $2, $4)
+        curElem = equalityElem
+        Log("equality:", $2, $4)
     }
 
 restriction:
