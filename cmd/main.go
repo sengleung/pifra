@@ -41,10 +41,14 @@ var rootCmd = &cobra.Command{
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if flags.RegisterSize < 1 {
-			fmt.Println("error: register size must be greater or equal to 1")
+		if flags.RegisterSize < 0 {
+			fmt.Println("error: register size must be positive integer. 0 defaults to unlimited.")
 			os.Exit(1)
 		}
+		if flags.RegisterSize == 0 {
+			flags.RegisterSize = 1073741824
+		}
+
 		if flags.MaxStates < 0 {
 			fmt.Println("error: maximum states explored must be positive")
 			os.Exit(1)
@@ -85,11 +89,11 @@ func init() {
 	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 
-	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of transition states explored")
-	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 1073741824, "register size")
+	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of states explored")
+	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 0, "register size (default is unlimited)")
 	rootCmd.PersistentFlags().BoolVarP(&flags.DisableGC, "disable-gc", "d", false, "disable register garbage collection")
 
-	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next transitions after providing input")
+	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next states in a prompt")
 	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file (default format is the Graphviz DOT language)")
 	rootCmd.PersistentFlags().BoolVarP(&flags.Pretty, "pretty", "p", false, "output the LTS file in a pretty-printed format")
 
