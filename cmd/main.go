@@ -36,7 +36,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 `)
 
 var rootCmd = &cobra.Command{
-	Use:   "pifra [OPTION...] [FILE]",
+	Use:   "pifra [OPTION...] FILE",
 	Short: "LTS generator for the pi-calculus represented by FRA.",
 	Long: `Labelled transition system (LTS) generation for the
 pi-calculus represented by fresh-register automata.`,
