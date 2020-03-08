@@ -161,11 +161,58 @@ func newRootConf(process Element) Configuration {
 	}
 	sort.Strings(freshNames)
 
+	// Initialise the registers with free names.
+	// register := make(map[int]string)
+	// index := 1
+	// for _, name := range freshNames {
+	// 	register[index] = name
+	// 	index = index + 1
+	// }
+
+	// Initialise the registers with generated free names.
 	register := make(map[int]string)
-	index := 1
-	for _, name := range freshNames {
-		register[index] = name
-		index = index + 1
+	for i, name := range freshNames {
+		fn := fnPrefix + strconv.Itoa(i)
+		register[i+1] = fn
+
+		// Substitute the actual name with a generated free name.
+		subName(process, Name{
+			Name: name,
+		}, Name{
+			Name: fn,
+		})
+
+		for _, dp := range DeclaredProcs {
+			// Change the parameter names to bound so they are not
+			// substituted with the generated free name.
+			for _, oldName := range dp.Parameters {
+				subName(dp.Process, Name{
+					Name: oldName,
+				}, Name{
+					Name: oldName,
+					Type: Bound,
+				})
+			}
+
+			// Substitute the actual name with a generated free name
+			// in the process definition.
+			subName(dp.Process, Name{
+				Name: name,
+			}, Name{
+				Name: fn,
+			})
+
+			// Undo change of parameter names to bound so
+			// unfolded processes are properly alpha-converted.
+			for _, oldName := range dp.Parameters {
+				subName(dp.Process, Name{
+					Name: oldName,
+					Type: Bound,
+				}, Name{
+					Name: oldName,
+				})
+			}
+		}
 	}
 	return Configuration{
 		Process: process,
