@@ -95,10 +95,10 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the next states in a prompt")
 	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file (default format is the Graphviz DOT language)")
-	rootCmd.PersistentFlags().BoolVarP(&flags.Pretty, "pretty", "p", false, "output the LTS file in a pretty-printed format")
+	rootCmd.PersistentFlags().BoolVarP(&flags.Pretty, "output-pretty", "p", false, "output the LTS file in a pretty-printed format")
 
-	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
-	rootCmd.PersistentFlags().StringVarP(&flags.GVLayout, "layout", "l", "", "layout of the GraphViz DOT file, e.g., \"rankdir=TB; margin=0;\"")
+	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")
+	rootCmd.PersistentFlags().StringVarP(&flags.GVLayout, "output-layout", "l", "", "layout of the GraphViz DOT file, e.g., \"rankdir=TB; margin=0;\"")
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.Quiet, "quiet", "q", false, "do not print or output the LTS")
 	rootCmd.PersistentFlags().BoolVarP(&flags.Statistics, "stats", "v", false, "print LTS generation statistics")
