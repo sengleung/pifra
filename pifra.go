@@ -62,22 +62,30 @@ func OutputMode(flags Flags) error {
 	initFlags(flags)
 	gvLayout = flags.GVLayout
 
-	start := time.Now()
-
+	inputTimeStart := time.Now()
 	input, err := ioutil.ReadFile(flags.InputFile)
 	if err != nil {
 		return err
 	}
+	inputTime := time.Since(inputTimeStart)
+
+	programTimeStart := time.Now()
 	lts, err := generateLts(input)
 	if err != nil {
 		return err
 	}
+	programElapsed := time.Since(programTimeStart)
+
+	var outputTime time.Duration
 
 	if !flags.Quiet {
 		if flags.OutputFile == "" {
 			// No output file specified. Print LTS.
 			output := generatePrettyLts(lts)
+
+			outputTimeStart := time.Now()
 			fmt.Println(string(output))
+			outputTime = time.Since(outputTimeStart)
 		} else {
 			// Output file specified. Write to file.
 			var output []byte
@@ -86,21 +94,26 @@ func OutputMode(flags Flags) error {
 			} else {
 				output = generateGraphVizFile(lts, flags.GVOutputStates)
 			}
-			return writeFile(output, flags.OutputFile)
+			outputTimeStart := time.Now()
+			if err := writeFile(output, flags.OutputFile); err != nil {
+				return err
+			}
+			outputTime = time.Since(outputTimeStart)
 		}
 	}
 
-	elapsed := time.Since(start)
 	if flags.Statistics {
 		if !flags.Quiet && flags.OutputFile == "" {
 			// Print new line if LTS is printed to standard output.
 			fmt.Println()
 		}
-		fmt.Printf("states explored   %d\n", lts.StatesExplored)
-		fmt.Printf("states generated  %d\n", lts.StatesGenerated)
-		fmt.Printf("states unique     %d\n", len(lts.States))
-		fmt.Printf("transitions       %d\n", len(lts.Transitions))
-		fmt.Printf("time              %s\n", elapsed)
+		ioElapsed := inputTime + outputTime
+		fmt.Printf("states explored      %d\n", lts.StatesExplored)
+		fmt.Printf("states generated     %d\n", lts.StatesGenerated)
+		fmt.Printf("states unique        %d\n", len(lts.States))
+		fmt.Printf("transitions          %d\n", len(lts.Transitions))
+		fmt.Printf("time I/O             %s\n", ioElapsed)
+		fmt.Printf("time LTS generation  %s\n", programElapsed)
 	}
 
 	return nil
