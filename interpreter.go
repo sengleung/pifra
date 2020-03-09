@@ -82,16 +82,14 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 	for _, freshName := range freshNames {
 		freshNamesSet[freshName] = true
 	}
-	for label := 1; label < len(reg.Register)+1; label++ {
+
+	for label := 1; label <= reg.Size+1; label++ {
 		if !freshNamesSet[reg.GetName(label)] {
 			reg.Register[label] = name
 			return label
 		}
 	}
-	label := reg.Index
-	reg.Register[label] = name
-	reg.Index = reg.Index + 1
-	return label
+	return -1
 }
 
 // Labels returns register labels in sorted order.
