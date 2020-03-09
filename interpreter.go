@@ -41,7 +41,6 @@ type Label struct {
 
 type Register struct {
 	Size     int
-	Index    int
 	Register map[int]string
 }
 
@@ -72,7 +71,6 @@ func (reg *Register) AddEmptyName() {
 		reg.Register[label+1] = reg.GetName(label)
 	}
 	delete(reg.Register, 1)
-	reg.Index = reg.Index + 1
 }
 
 // UpdateMin updates the register with a name at the minimum label
@@ -216,7 +214,6 @@ func newRootConf(process Element) Configuration {
 		Process: process,
 		Register: Register{
 			Size:     registerSize,
-			Index:    len(register) + 1,
 			Register: register,
 		},
 	}
