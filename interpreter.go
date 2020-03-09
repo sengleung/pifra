@@ -230,6 +230,8 @@ func explore(root Configuration) Lts {
 	visited := make(map[string]int)
 	edgesSeen := make(map[Transition]bool)
 
+	regSizeReached := make(map[int]bool)
+
 	vertices := make(map[int]Configuration)
 	var edges []Transition
 	var vertexId int
@@ -255,28 +257,31 @@ func explore(root Configuration) Lts {
 	for queue.Len() > 0 && statesExplored < maxStatesExplored {
 		state := dequeue()
 
-		srcKey := getConfigurationKey(state)
+		srcId := visited[getConfigurationKey(state)]
 
-		confs := trans(state)
-		for _, conf := range confs {
-			statesGenerated++
-			applyStructrualCongruence(conf)
-			dstKey := getConfigurationKey(conf)
-			if _, ok := visited[dstKey]; !ok {
-				visited[dstKey] = vertexId
-				vertices[vertexId] = conf
-				vertexId = vertexId + 1
-			}
-
-			edge := Transition{
-				Source:      visited[srcKey],
-				Destination: visited[dstKey],
-				Label:       conf.Label,
-			}
-			if !edgesSeen[edge] {
-				edgesSeen[edge] = true
-				edges = append(edges, edge)
-				queue.PushBack(conf)
+		if len(state.Register.Register) > registerSize {
+			regSizeReached[srcId] = true
+		} else {
+			confs := trans(state)
+			for _, conf := range confs {
+				statesGenerated++
+				applyStructrualCongruence(conf)
+				dstKey := getConfigurationKey(conf)
+				if _, ok := visited[dstKey]; !ok {
+					visited[dstKey] = vertexId
+					vertices[vertexId] = conf
+					vertexId = vertexId + 1
+				}
+				edge := Transition{
+					Source:      srcId,
+					Destination: visited[dstKey],
+					Label:       conf.Label,
+				}
+				if !edgesSeen[edge] {
+					edgesSeen[edge] = true
+					edges = append(edges, edge)
+					queue.PushBack(conf)
+				}
 			}
 		}
 
@@ -285,6 +290,7 @@ func explore(root Configuration) Lts {
 	return Lts{
 		States:          vertices,
 		Transitions:     edges,
+		RegSizeReached:  regSizeReached,
 		StatesExplored:  statesExplored,
 		StatesGenerated: statesGenerated,
 	}

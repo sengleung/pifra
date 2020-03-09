@@ -11,6 +11,8 @@ type Lts struct {
 	States      map[int]Configuration
 	Transitions []Transition
 
+	RegSizeReached map[int]bool
+
 	StatesExplored  int
 	StatesGenerated int
 }
@@ -136,7 +138,13 @@ func generatePrettyLts(lts Lts) []byte {
 	var buffer bytes.Buffer
 
 	root := vertices[0]
-	rootString := "s0 = " +
+
+	rootR := ""
+	if lts.RegSizeReached[0] {
+		rootR = "+"
+	}
+
+	rootString := "s0" + rootR + " = " +
 		prettyPrintRegister(root.Register) + " ¦- " + PrettyPrintAst(root.Process)
 	buffer.WriteString(rootString)
 
@@ -147,8 +155,16 @@ func generatePrettyLts(lts Lts) []byte {
 
 	for i, edge := range edges {
 		vertex := vertices[edge.Destination]
-		transString := "s" + strconv.Itoa(edge.Source) + "  " +
-			prettyPrintLabel(edge.Label) + "  s" + strconv.Itoa(edge.Destination) + " = " +
+		srcR := ""
+		if lts.RegSizeReached[edge.Source] {
+			srcR = "+"
+		}
+		dstR := ""
+		if lts.RegSizeReached[edge.Destination] {
+			dstR = "+"
+		}
+		transString := "s" + strconv.Itoa(edge.Source) + srcR + "  " +
+			prettyPrintLabel(edge.Label) + "  s" + strconv.Itoa(edge.Destination) + dstR + " = " +
 			prettyPrintRegister(vertex.Register) + " ¦- " + PrettyPrintAst(vertex.Process)
 		buffer.WriteString(transString)
 
