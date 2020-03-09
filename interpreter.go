@@ -227,20 +227,24 @@ func newRootConf(process Element) Configuration {
 var infProc bool
 
 func explore(root Configuration) Lts {
+	// Visited states.
 	visited := make(map[string]int)
-	edgesSeen := make(map[Transition]bool)
-
+	// Encountered transitions.
+	trnsSeen := make(map[Transition]bool)
+	// Track which states have reached the register size.
 	regSizeReached := make(map[int]bool)
-
-	vertices := make(map[int]Configuration)
-	var edges []Transition
-	var vertexId int
+	// LTS states.
+	states := make(map[int]Configuration)
+	// LTS transitions.
+	var trns []Transition
+	// State ID.
+	var stateId int
 
 	applyStructrualCongruence(root)
 	rootKey := getConfigurationKey(root)
-	visited[rootKey] = vertexId
-	vertices[vertexId] = root
-	vertexId = vertexId + 1
+	visited[rootKey] = stateId
+	states[stateId] = root
+	stateId++
 
 	queue := list.New()
 	queue.PushBack(root)
@@ -268,18 +272,18 @@ func explore(root Configuration) Lts {
 				applyStructrualCongruence(conf)
 				dstKey := getConfigurationKey(conf)
 				if _, ok := visited[dstKey]; !ok {
-					visited[dstKey] = vertexId
-					vertices[vertexId] = conf
-					vertexId = vertexId + 1
+					visited[dstKey] = stateId
+					states[stateId] = conf
+					stateId++
 				}
-				edge := Transition{
+				trn := Transition{
 					Source:      srcId,
 					Destination: visited[dstKey],
 					Label:       conf.Label,
 				}
-				if !edgesSeen[edge] {
-					edgesSeen[edge] = true
-					edges = append(edges, edge)
+				if !trnsSeen[trn] {
+					trnsSeen[trn] = true
+					trns = append(trns, trn)
 					queue.PushBack(conf)
 				}
 			}
@@ -287,9 +291,10 @@ func explore(root Configuration) Lts {
 
 		statesExplored++
 	}
+
 	return Lts{
-		States:          vertices,
-		Transitions:     edges,
+		States:          states,
+		Transitions:     trns,
 		RegSizeReached:  regSizeReached,
 		StatesExplored:  statesExplored,
 		StatesGenerated: statesGenerated,
