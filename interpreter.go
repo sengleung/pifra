@@ -275,6 +275,7 @@ func explore(root Configuration) Lts {
 					visited[dstKey] = stateId
 					states[stateId] = conf
 					stateId++
+					queue.PushBack(conf)
 				}
 				trn := Transition{
 					Source:      srcId,
@@ -284,7 +285,6 @@ func explore(root Configuration) Lts {
 				if !trnsSeen[trn] {
 					trnsSeen[trn] = true
 					trns = append(trns, trn)
-					queue.PushBack(conf)
 				}
 			}
 		}
