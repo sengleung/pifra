@@ -26,6 +26,7 @@ type Transition struct {
 type VertexTemplate struct {
 	State  string
 	Config string
+	Layout string
 }
 
 type EdgeTemplate struct {
@@ -63,22 +64,29 @@ func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 
 	for _, id := range ids {
 		conf := vertices[id]
+
 		var config string
 		if outputStateNo {
 			config = "s" + strconv.Itoa(id)
 		} else {
 			config = prettyPrintRegister(conf.Register) + " ⊢\n" + PrettyPrintAst(conf.Process)
 		}
+
+		var layout string
+		if id == 0 {
+			layout = layout + "peripheries=2,"
+		}
+		if lts.RegSizeReached[id] {
+			layout = layout + "peripheries=3,"
+		}
+
 		vertex := VertexTemplate{
 			State:  "s" + strconv.Itoa(id),
 			Config: config,
+			Layout: layout,
 		}
 		var tmpl *template.Template
-		if id == 0 {
-			tmpl, _ = template.New("todos").Parse("    {{.State}} [peripheries=2,label=\"{{.Config}}\"]\n")
-		} else {
-			tmpl, _ = template.New("todos").Parse("    {{.State}} [label=\"{{.Config}}\"]\n")
-		}
+		tmpl, _ = template.New("todos").Parse("    {{.State}} [{{.Layout}}label=\"{{.Config}}\"]\n")
 		tmpl.Execute(&buffer, vertex)
 	}
 
