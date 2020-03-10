@@ -168,7 +168,7 @@ func newRootConf(process Element) Configuration {
 	// Initialise the registers with generated free names.
 	register := make(map[int]string)
 	for i, name := range freshNames {
-		fn := fnPrefix + strconv.Itoa(i)
+		fn := fnPrefix + strconv.Itoa(i+1)
 		register[i+1] = fn
 
 		// Substitute the actual name with a generated free name.

@@ -40,7 +40,7 @@ func garbageCollection(conf Configuration) {
 }
 
 func normaliseFreshNames(conf Configuration) {
-	var fni int
+	fni := 1
 	genFn := func(usedNames map[string]bool) string {
 		fn := fnPrefix + strconv.Itoa(fni)
 		for usedNames[fn] {
@@ -74,7 +74,7 @@ func normaliseFreshNames(conf Configuration) {
 }
 
 func normaliseBoundNames(conf Configuration) {
-	var bni int
+	bni := 1
 	oldNames := make(map[string]string)
 
 	genBn := func(oldName string) string {
