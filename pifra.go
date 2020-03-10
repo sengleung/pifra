@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"time"
 )
 
@@ -120,20 +121,9 @@ func OutputMode(flags Flags) error {
 }
 
 func writeFile(output []byte, outputFile string) error {
-	file, err := os.Create(outputFile)
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(output)
-	if err != nil {
-		file.Close()
-		return err
-	}
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	dir := path.Dir(outputFile)
+	os.MkdirAll(dir, os.ModePerm)
+	return ioutil.WriteFile(outputFile, output, 0644)
 }
 
 func generateLts(input []byte) (Lts, error) {
