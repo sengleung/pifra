@@ -35,24 +35,19 @@ func initFlags(flags Flags) {
 	disableGarbageCollection = flags.DisableGC
 }
 
-// InteractiveMode allows the user to inspect interactively the next transition(s)
-// after providing a pi-calculus syntax input.
+// InteractiveMode allows the user to inspect interactively the LTS in a prompt.
 func InteractiveMode(flags Flags) {
 	initFlags(flags)
 	for {
 		fmt.Print("> ")
 		reader := bufio.NewReader(os.Stdin)
-		text, _ := reader.ReadString('\n')
-		proc, err := InitProgram([]byte(text))
+		input, _ := reader.ReadString('\n')
+		lts, err := generateLts([]byte(input))
 		if err != nil {
-			fmt.Println("error:", err)
+			fmt.Printf("error: %s\n", err)
 		} else {
-			fmt.Println(PrettyPrintAst(proc))
-			root := newRootConf(proc)
-			confs := trans(root)
-			for _, conf := range confs {
-				fmt.Println(PrettyPrintConfiguration(conf))
-			}
+			output := generatePrettyLts(lts)
+			fmt.Println(string(output))
 		}
 	}
 }
