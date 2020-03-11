@@ -42,7 +42,7 @@ var rootCmd = &cobra.Command{
 pi-calculus represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.RegisterSize < 0 {
-			fmt.Println("error: register size must be positive integer. 0 defaults to unlimited.")
+			fmt.Println("error: register size must be positive. 0 defaults to unlimited.")
 			os.Exit(1)
 		}
 		if flags.RegisterSize == 0 {
