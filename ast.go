@@ -361,36 +361,3 @@ func GetAllFreshNames(elem Element) []string {
 
 	return getAllFreshNamesAcc(elem, []string{})
 }
-
-func getElemSetType(elem Element) ElemSetType {
-	switch elem.Type() {
-	case ElemTypNil:
-		nilElem := elem.(*ElemNil)
-		return nilElem.SetType
-	case ElemTypOutput:
-		outElem := elem.(*ElemOutput)
-		return outElem.SetType
-	case ElemTypInput:
-		inpElem := elem.(*ElemInput)
-		return inpElem.SetType
-	case ElemTypMatch:
-		matchElem := elem.(*ElemEquality)
-		return matchElem.SetType
-	case ElemTypRestriction:
-		resElem := elem.(*ElemRestriction)
-		return resElem.SetType
-	case ElemTypSum:
-		sumElem := elem.(*ElemSum)
-		return sumElem.SetType
-	case ElemTypParallel:
-		parElem := elem.(*ElemParallel)
-		return parElem.SetType
-	case ElemTypProcess:
-		pcsElem := elem.(*ElemProcess)
-		return pcsElem.SetType
-	case ElemTypRoot:
-		rootElem := elem.(*ElemRoot)
-		return rootElem.SetType
-	}
-	return ElemSetReg
-}

@@ -27,28 +27,17 @@ type Name struct {
 	Type NameType
 }
 
-type ElemSetType int
-
-const (
-	ElemSetReg ElemSetType = iota
-	ElemSetOut
-	ElemSetInp
-)
-
 type Element interface {
 	Type() ElementType
 }
 
-type ElemNil struct {
-	SetType ElemSetType
-}
+type ElemNil struct{}
 
 func (e *ElemNil) Type() ElementType {
 	return ElemTypNil
 }
 
 type ElemOutput struct {
-	SetType ElemSetType
 	Channel Name
 	Output  Name
 	Next    Element
@@ -59,7 +48,6 @@ func (e *ElemOutput) Type() ElementType {
 }
 
 type ElemInput struct {
-	SetType ElemSetType
 	Channel Name
 	Input   Name
 	Next    Element
@@ -70,7 +58,6 @@ func (e *ElemInput) Type() ElementType {
 }
 
 type ElemEquality struct {
-	SetType    ElemSetType
 	Inequality bool
 	NameL      Name
 	NameR      Name
@@ -82,7 +69,6 @@ func (e *ElemEquality) Type() ElementType {
 }
 
 type ElemRestriction struct {
-	SetType  ElemSetType
 	Restrict Name
 	Next     Element
 }
@@ -92,7 +78,6 @@ func (e *ElemRestriction) Type() ElementType {
 }
 
 type ElemSum struct {
-	SetType  ElemSetType
 	ProcessL Element
 	ProcessR Element
 }
@@ -102,7 +87,6 @@ func (e *ElemSum) Type() ElementType {
 }
 
 type ElemParallel struct {
-	SetType  ElemSetType
 	ProcessL Element
 	ProcessR Element
 }
@@ -112,7 +96,6 @@ func (e *ElemParallel) Type() ElementType {
 }
 
 type ElemProcess struct {
-	SetType    ElemSetType
 	Name       string
 	Parameters []Name
 }
@@ -122,8 +105,7 @@ func (e *ElemProcess) Type() ElementType {
 }
 
 type ElemRoot struct {
-	SetType ElemSetType
-	Next    Element
+	Next Element
 }
 
 func (e *ElemRoot) Type() ElementType {
