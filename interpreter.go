@@ -156,14 +156,6 @@ func newRootConf(process Element) Configuration {
 	}
 	sort.Strings(freshNames)
 
-	// Initialise the registers with free names.
-	// register := make(map[int]string)
-	// index := 1
-	// for _, name := range freshNames {
-	// 	register[index] = name
-	// 	index = index + 1
-	// }
-
 	// Initialise the registers with generated free names.
 	register := make(map[int]string)
 	for i, name := range freshNames {
