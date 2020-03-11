@@ -111,7 +111,7 @@ func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 
 func prettyPrintGraphLabel(label Label) string {
 	if label.Symbol.Type == SymbolTypTau {
-		return "τ "
+		return "τ"
 	}
 	return prettyPrintGraphSymbol(label.Symbol) + prettyPrintGraphSymbol(label.Symbol2)
 }
@@ -124,13 +124,13 @@ func prettyPrintGraphSymbol(symbol Symbol) string {
 	case SymbolTypOutput:
 		return strconv.Itoa(s) + "' "
 	case SymbolTypFreshInput:
-		return strconv.Itoa(s) + "● "
+		return strconv.Itoa(s) + "●"
 	case SymbolTypFreshOutput:
-		return strconv.Itoa(s) + "⊛ "
+		return strconv.Itoa(s) + "⊛"
 	case SymbolTypTau:
-		return "τ "
+		return "τ"
 	case SymbolTypKnown:
-		return strconv.Itoa(s) + " "
+		return strconv.Itoa(s)
 	}
 	return ""
 }
