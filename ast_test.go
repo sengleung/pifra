@@ -1,10 +1,8 @@
 package pifra
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/davecgh/go-spew/spew"
-	"github.com/go-test/deep"
 )
 
 func TestSubstituteName(t *testing.T) {
@@ -133,9 +131,8 @@ func TestSubstituteName(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			substituteName(tc.input, tc.oldName, tc.newName)
-			if err := deep.Equal(tc.input, tc.output); err != nil {
-				spew.Dump(tc.input)
-				t.Error(err)
+			if !reflect.DeepEqual(tc.input, tc.output) {
+				t.Error(name)
 			}
 		})
 	}
@@ -242,13 +239,11 @@ a(b).$a.b(a).$a.(b'<a>.0 | $b.(a(b).0 | c(d).0))
 			for _, elem := range undeclaredProcs {
 				DoAlphaConversion(elem)
 			}
-			if err := deep.Equal(tc.declaredProcs, DeclaredProcs); err != nil {
-				spew.Dump(DeclaredProcs, undeclaredProcs)
-				t.Error(err)
+			if !reflect.DeepEqual(tc.declaredProcs, DeclaredProcs) {
+				t.Error(name)
 			}
-			if err := deep.Equal(tc.undeclaredProcs, undeclaredProcs); err != nil {
-				spew.Dump(DeclaredProcs, undeclaredProcs)
-				t.Error(err)
+			if !reflect.DeepEqual(tc.undeclaredProcs, undeclaredProcs) {
+				t.Error(name)
 			}
 		})
 	}

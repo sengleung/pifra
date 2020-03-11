@@ -2,10 +2,8 @@ package pifra
 
 import (
 	"bytes"
-	"fmt"
+	"reflect"
 	"testing"
-
-	"github.com/go-test/deep"
 )
 
 func TestTrans(t *testing.T) {
@@ -216,9 +214,8 @@ t    -> {(1,#1)} ¦- (0 | $x_1.0)
 			for _, conf := range confs {
 				output.WriteString(PrettyPrintConfiguration(conf) + "\n")
 			}
-			if err := deep.Equal(tc.output, output.Bytes()); err != nil {
-				t.Error(err)
-				fmt.Println(output.String())
+			if !reflect.DeepEqual(tc.output, output.Bytes()) {
+				t.Error(name)
 			}
 		})
 	}
