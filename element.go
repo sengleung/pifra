@@ -12,8 +12,6 @@ const (
 	ElemTypParallel
 	ElemTypProcess
 
-	ElemTypInpInput
-
 	ElemTypRoot
 )
 
@@ -121,16 +119,6 @@ type ElemProcess struct {
 
 func (e *ElemProcess) Type() ElementType {
 	return ElemTypProcess
-}
-
-type ElemInpInput struct {
-	SetType ElemSetType
-	Input   Name
-	Next    Element
-}
-
-func (e *ElemInpInput) Type() ElementType {
-	return ElemTypInpInput
 }
 
 type ElemRoot struct {

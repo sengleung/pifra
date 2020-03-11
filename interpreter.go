@@ -313,19 +313,12 @@ func trans(conf Configuration) []Configuration {
 			},
 		}
 
-		// Replace the input element with the inp element.
-		inp1Conf.Process = &ElemInpInput{
-			Input:   inpElem.Input,
-			Next:    inpElem.Next,
-			SetType: ElemSetInp,
-		}
-
 		// INP2A
 		var confs []Configuration
 		for _, label := range inp1Conf.Register.Labels() {
 			inp2aConf := deepcopy.Copy(inp1Conf).(Configuration)
-			inpInputElem := inp2aConf.Process.(*ElemInpInput)
-			substituteName(inpInputElem, inpInputElem.Input, Name{
+			inp2aElem := inp2aConf.Process.(*ElemInput)
+			substituteName(inp2aElem, inp2aElem.Input, Name{
 				Name: inp2aConf.Register.GetName(label),
 				Type: Fresh,
 			})
@@ -334,27 +327,27 @@ func trans(conf Configuration) []Configuration {
 				Type:  SymbolTypKnown,
 				Value: label,
 			}
-			inp2aConf.Process = inpInputElem.Next
+			inp2aConf.Process = inp2aElem.Next
 			confs = append(confs, inp2aConf)
 		}
 
 		// INP2B
 		inp2bConf := deepcopy.Copy(inp1Conf).(Configuration)
-		inpInpElem := inp2bConf.Process.(*ElemInpInput)
+		inp2bElem := inp2bConf.Process.(*ElemInput)
 		// Change the input bound name to a fresh name.
-		substituteName(inpInpElem, inpInpElem.Input, Name{
-			Name: inpInpElem.Input.Name,
+		substituteName(inp2bElem, inp2bElem.Input, Name{
+			Name: inp2bElem.Input.Name,
 			Type: Fresh,
 		})
 
-		name := inpInpElem.Input.Name
-		freshNamesP := GetAllFreshNames(inpInpElem.Next)
+		name := inp2bElem.Input.Name
+		freshNamesP := GetAllFreshNames(inp2bElem.Next)
 		inp2bConf.Label.Double = true
 		inp2bConf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypFreshInput,
 			Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
 		}
-		inp2bConf.Process = inpInpElem.Next
+		inp2bConf.Process = inp2bElem.Next
 
 		return append(confs, inp2bConf)
 

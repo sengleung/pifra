@@ -68,12 +68,6 @@ func subName(elem Element, oldName Name, newName Name) {
 				procElem.Parameters[i] = newName
 			}
 		}
-	case ElemTypInpInput:
-		inpInput := elem.(*ElemInpInput)
-		if inpInput.Input == oldName {
-			inpInput.Input = newName
-		}
-		subName(inpInput.Next, oldName, newName)
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
 		subName(rootElem.Next, oldName, newName)
@@ -266,10 +260,6 @@ func prettyPrintAcc(elem Element, str string) string {
 			}
 			str = str + pcsElem.Name + params
 		}
-	case ElemTypInpInput:
-		inpInput := elem.(*ElemInpInput)
-		str = str + "(" + inpInput.Input.Name + ")."
-		return prettyPrintAcc(inpInput.Next, str)
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
 		return prettyPrintAcc(rootElem.Next, str)
@@ -362,12 +352,6 @@ func GetAllFreshNames(elem Element) []string {
 				// Find free names in declared process.
 				freshNames = getAllFreshNamesAcc(proc, freshNames)
 			}
-		case ElemTypInpInput:
-			inpInput := elem.(*ElemInpInput)
-			if inpInput.Input.Type == Fresh {
-				freshNames = append(freshNames, inpInput.Input.Name)
-			}
-			return getAllFreshNamesAcc(inpInput.Next, freshNames)
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
 			return getAllFreshNamesAcc(rootElem.Next, freshNames)
@@ -404,9 +388,6 @@ func getElemSetType(elem Element) ElemSetType {
 	case ElemTypProcess:
 		pcsElem := elem.(*ElemProcess)
 		return pcsElem.SetType
-	case ElemTypInpInput:
-		elemInpInp := elem.(*ElemInpInput)
-		return elemInpInp.SetType
 	case ElemTypRoot:
 		rootElem := elem.(*ElemRoot)
 		return rootElem.SetType
