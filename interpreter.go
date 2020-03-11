@@ -34,7 +34,6 @@ type Symbol struct {
 }
 
 type Label struct {
-	Double  bool
 	Symbol  Symbol
 	Symbol2 Symbol
 }
@@ -322,7 +321,6 @@ func trans(conf Configuration) []Configuration {
 				Name: inp2aConf.Register.GetName(label),
 				Type: Fresh,
 			})
-			inp2aConf.Label.Double = true
 			inp2aConf.Label.Symbol2 = Symbol{
 				Type:  SymbolTypKnown,
 				Value: label,
@@ -342,7 +340,6 @@ func trans(conf Configuration) []Configuration {
 
 		name := inp2bElem.Input.Name
 		freshNamesP := GetAllFreshNames(inp2bElem.Next)
-		inp2bConf.Label.Double = true
 		inp2bConf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypFreshInput,
 			Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
@@ -371,7 +368,6 @@ func trans(conf Configuration) []Configuration {
 
 		label := out2Conf.Register.GetLabel(out2Elem.Output.Name)
 
-		out2Conf.Label.Double = true
 		out2Conf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypKnown,
 			Value: label,
@@ -444,7 +440,7 @@ func trans(conf Configuration) []Configuration {
 		tconfs = trans(openConf)
 
 		for _, conf := range tconfs {
-			if conf.Label.Double && conf.Label.Symbol.Type == SymbolTypOutput &&
+			if conf.Label.Symbol.Type == SymbolTypOutput &&
 				conf.Label.Symbol2.Type == SymbolTypKnown &&
 				conf.Label.Symbol.Value != openLabel &&
 				conf.Label.Symbol2.Value == openLabel {
@@ -550,9 +546,8 @@ func trans(conf Configuration) []Configuration {
 			parConf = deepcopy.Copy(basePar).(Configuration)
 
 			// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
-			if conf.Label.Double &&
-				(conf.Label.Symbol2.Type == SymbolTypFreshInput ||
-					conf.Label.Symbol2.Type == SymbolTypFreshOutput) {
+			if conf.Label.Symbol2.Type == SymbolTypFreshInput ||
+				conf.Label.Symbol2.Type == SymbolTypFreshOutput {
 				// Find fn(P', Q).
 				freeNamesP := GetAllFreshNames(conf.Process)
 				freeNamesQ := GetAllFreshNames(parElem.ProcessR)
@@ -584,9 +579,8 @@ func trans(conf Configuration) []Configuration {
 		for _, conf := range tconfs {
 			parConf = deepcopy.Copy(basePar).(Configuration)
 			// When DBPINP/DBLOUT and the 2nd label is fresh input/fresh output.
-			if conf.Label.Double &&
-				(conf.Label.Symbol2.Type == SymbolTypFreshInput ||
-					conf.Label.Symbol2.Type == SymbolTypFreshOutput) {
+			if conf.Label.Symbol2.Type == SymbolTypFreshInput ||
+				conf.Label.Symbol2.Type == SymbolTypFreshOutput {
 				// Find fn(P, Q').
 				freeNamesQ := GetAllFreshNames(conf.Process)
 				freeNamesP := GetAllFreshNames(parElem.ProcessL)
@@ -613,10 +607,8 @@ func trans(conf Configuration) []Configuration {
 		// COMM_L
 		for _, lconf := range lconfs {
 			for _, rconf := range rconfs {
-				if lconf.Label.Double &&
-					lconf.Label.Symbol.Type == SymbolTypOutput &&
+				if lconf.Label.Symbol.Type == SymbolTypOutput &&
 					lconf.Label.Symbol2.Type == SymbolTypKnown &&
-					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypInput &&
 					rconf.Label.Symbol2.Type == SymbolTypKnown &&
 					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value &&
@@ -641,10 +633,8 @@ func trans(conf Configuration) []Configuration {
 		// COMM_R
 		for _, lconf := range lconfs {
 			for _, rconf := range rconfs {
-				if lconf.Label.Double &&
-					lconf.Label.Symbol.Type == SymbolTypInput &&
+				if lconf.Label.Symbol.Type == SymbolTypInput &&
 					lconf.Label.Symbol2.Type == SymbolTypKnown &&
-					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypOutput &&
 					rconf.Label.Symbol2.Type == SymbolTypKnown &&
 					lconf.Label.Symbol.Value == rconf.Label.Symbol.Value &&
@@ -688,11 +678,9 @@ func trans(conf Configuration) []Configuration {
 		for _, lconf := range clconfs {
 			for _, rconf := range crconfs {
 				// CLOSE_L
-				if lconf.Label.Double &&
-					lconf.Label.Symbol.Type == SymbolTypOutput &&
+				if lconf.Label.Symbol.Type == SymbolTypOutput &&
 					lconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
 					lconf.Label.Symbol2.Value == 1 &&
-					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypInput &&
 					rconf.Label.Symbol2.Type == SymbolTypFreshInput &&
 					rconf.Label.Symbol2.Value == 1 &&
@@ -733,11 +721,9 @@ func trans(conf Configuration) []Configuration {
 					}
 				}
 				// CLOSE_R
-				if lconf.Label.Double &&
-					lconf.Label.Symbol.Type == SymbolTypInput &&
+				if lconf.Label.Symbol.Type == SymbolTypInput &&
 					lconf.Label.Symbol2.Type == SymbolTypFreshInput &&
 					lconf.Label.Symbol2.Value == 1 &&
-					rconf.Label.Double &&
 					rconf.Label.Symbol.Type == SymbolTypOutput &&
 					rconf.Label.Symbol2.Type == SymbolTypFreshOutput &&
 					rconf.Label.Symbol2.Value == 1 &&
@@ -820,8 +806,8 @@ func prettyPrintRegister(register Register) string {
 }
 
 func prettyPrintLabel(label Label) string {
-	if !label.Double {
-		return prettyPrintSymbol(label.Symbol)
+	if label.Symbol.Type == SymbolTypTau {
+		return "t   "
 	}
 	return prettyPrintSymbol(label.Symbol) + prettyPrintSymbol(label.Symbol2)
 }

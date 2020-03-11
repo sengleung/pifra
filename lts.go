@@ -110,8 +110,8 @@ func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 }
 
 func prettyPrintGraphLabel(label Label) string {
-	if !label.Double {
-		return prettyPrintGraphSymbol(label.Symbol)
+	if label.Symbol.Type == SymbolTypTau {
+		return "τ "
 	}
 	return prettyPrintGraphSymbol(label.Symbol) + prettyPrintGraphSymbol(label.Symbol2)
 }
