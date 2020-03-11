@@ -26,7 +26,7 @@ func getConfigurationKey(conf Configuration) string {
 }
 
 func garbageCollection(conf Configuration) {
-	fns := GetAllFreshNames(conf.Process)
+	fns := GetAllFreeNames(conf.Process)
 	freshNames := make(map[string]bool)
 	for _, freshName := range fns {
 		freshNames[freshName] = true

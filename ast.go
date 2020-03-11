@@ -267,12 +267,12 @@ func prettyPrintAcc(elem Element, str string) string {
 	return str
 }
 
-// GetAllFreshNames returns all fresh names in the AST.
-func GetAllFreshNames(elem Element) []string {
+// GetAllFreeNames returns all fresh names in the AST.
+func GetAllFreeNames(elem Element) []string {
 	visitedProcs := make(map[string]bool)
 
-	var getAllFreshNamesAcc func(Element, []string) []string
-	getAllFreshNamesAcc = func(elem Element, freshNames []string) []string {
+	var getAllFreeNamesAcc func(Element, []string) []string
+	getAllFreeNamesAcc = func(elem Element, freshNames []string) []string {
 		switch elem.Type() {
 		case ElemTypNil:
 		case ElemTypOutput:
@@ -283,7 +283,7 @@ func GetAllFreshNames(elem Element) []string {
 			if outElem.Output.Type == Free {
 				freshNames = append(freshNames, outElem.Output.Name)
 			}
-			return getAllFreshNamesAcc(outElem.Next, freshNames)
+			return getAllFreeNamesAcc(outElem.Next, freshNames)
 		case ElemTypInput:
 			inpElem := elem.(*ElemInput)
 			if inpElem.Channel.Type == Free {
@@ -292,7 +292,7 @@ func GetAllFreshNames(elem Element) []string {
 			if inpElem.Input.Type == Free {
 				freshNames = append(freshNames, inpElem.Input.Name)
 			}
-			return getAllFreshNamesAcc(inpElem.Next, freshNames)
+			return getAllFreeNamesAcc(inpElem.Next, freshNames)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemEquality)
 			if matchElem.NameL.Type == Free {
@@ -301,21 +301,21 @@ func GetAllFreshNames(elem Element) []string {
 			if matchElem.NameR.Type == Free {
 				freshNames = append(freshNames, matchElem.NameR.Name)
 			}
-			return getAllFreshNamesAcc(matchElem.Next, freshNames)
+			return getAllFreeNamesAcc(matchElem.Next, freshNames)
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
 			if resElem.Restrict.Type == Free {
 				freshNames = append(freshNames, resElem.Restrict.Name)
 			}
-			return getAllFreshNamesAcc(resElem.Next, freshNames)
+			return getAllFreeNamesAcc(resElem.Next, freshNames)
 		case ElemTypSum:
 			sumElem := elem.(*ElemSum)
-			freshNames = getAllFreshNamesAcc(sumElem.ProcessL, freshNames)
-			freshNames = getAllFreshNamesAcc(sumElem.ProcessR, freshNames)
+			freshNames = getAllFreeNamesAcc(sumElem.ProcessL, freshNames)
+			freshNames = getAllFreeNamesAcc(sumElem.ProcessR, freshNames)
 		case ElemTypParallel:
 			parElem := elem.(*ElemParallel)
-			freshNames = getAllFreshNamesAcc(parElem.ProcessL, freshNames)
-			freshNames = getAllFreshNamesAcc(parElem.ProcessR, freshNames)
+			freshNames = getAllFreeNamesAcc(parElem.ProcessL, freshNames)
+			freshNames = getAllFreeNamesAcc(parElem.ProcessR, freshNames)
 		case ElemTypProcess:
 			procElem := elem.(*ElemProcess)
 
@@ -350,14 +350,14 @@ func GetAllFreshNames(elem Element) []string {
 			if !visitedProcs[processKey] {
 				visitedProcs[processKey] = true
 				// Find free names in declared process.
-				freshNames = getAllFreshNamesAcc(proc, freshNames)
+				freshNames = getAllFreeNamesAcc(proc, freshNames)
 			}
 		case ElemTypRoot:
 			rootElem := elem.(*ElemRoot)
-			return getAllFreshNamesAcc(rootElem.Next, freshNames)
+			return getAllFreeNamesAcc(rootElem.Next, freshNames)
 		}
 		return freshNames
 	}
 
-	return getAllFreshNamesAcc(elem, []string{})
+	return getAllFreeNamesAcc(elem, []string{})
 }

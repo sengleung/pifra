@@ -120,7 +120,7 @@ func (reg *Register) GetLabel(name string) int {
 }
 
 func newRootConf(process Element) Configuration {
-	fns := GetAllFreshNames(process)
+	fns := GetAllFreeNames(process)
 
 	for _, dp := range DeclaredProcs {
 		// Perform alpha conversion on the declared process
@@ -142,7 +142,7 @@ func newRootConf(process Element) Configuration {
 		}
 
 		// Gather free names in declared process.
-		fns = append(fns, GetAllFreshNames(proc)...)
+		fns = append(fns, GetAllFreeNames(proc)...)
 	}
 
 	freshNamesSet := make(map[string]bool)
@@ -339,7 +339,7 @@ func trans(conf Configuration) []Configuration {
 		})
 
 		name := inp2bElem.Input.Name
-		freshNamesP := GetAllFreshNames(inp2bElem.Next)
+		freshNamesP := GetAllFreeNames(inp2bElem.Next)
 		inp2bConf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypFreshInput,
 			Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
@@ -447,7 +447,7 @@ func trans(conf Configuration) []Configuration {
 				// o
 				conf.Register = deepcopy.Copy(baseResConf.Register).(Register)
 				// fn(P')
-				freeNamesP := GetAllFreshNames(conf.Process)
+				freeNamesP := GetAllFreeNames(conf.Process)
 				// o[j -> a], j = min{j | reg(j) !E fn(P')}
 				label := conf.Register.UpdateMin(openName, freeNamesP)
 				// ij
@@ -549,8 +549,8 @@ func trans(conf Configuration) []Configuration {
 			if conf.Label.Symbol2.Type == SymbolTypFreshInput ||
 				conf.Label.Symbol2.Type == SymbolTypFreshOutput {
 				// Find fn(P', Q).
-				freeNamesP := GetAllFreshNames(conf.Process)
-				freeNamesQ := GetAllFreshNames(parElem.ProcessR)
+				freeNamesP := GetAllFreeNames(conf.Process)
+				freeNamesQ := GetAllFreeNames(parElem.ProcessR)
 				// Get the name reg(i).
 				name := conf.Register.GetName(conf.Label.Symbol2.Value)
 				// Update register to be j = min{j | reg(j) \notin fn(P′,Q)}.
@@ -582,8 +582,8 @@ func trans(conf Configuration) []Configuration {
 			if conf.Label.Symbol2.Type == SymbolTypFreshInput ||
 				conf.Label.Symbol2.Type == SymbolTypFreshOutput {
 				// Find fn(P, Q').
-				freeNamesQ := GetAllFreshNames(conf.Process)
-				freeNamesP := GetAllFreshNames(parElem.ProcessL)
+				freeNamesQ := GetAllFreeNames(conf.Process)
+				freeNamesP := GetAllFreeNames(parElem.ProcessL)
 				// Get the name reg(i).
 				name := conf.Register.GetName(conf.Label.Symbol2.Value)
 				// Update register to be j = min{j | reg(j) \notin fn(P,Q')}.
