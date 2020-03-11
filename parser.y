@@ -1,11 +1,6 @@
 %{
 package pifra
 
-import (
-    "fmt"
-    "github.com/davecgh/go-spew/spew"
-)
-
 var undeclaredProcs []Element
 
 var curProcParams []string
@@ -31,11 +26,6 @@ var curParLevel int           // Current parallel element level.
 var curParLevelStack []int    // Saves curParLevel at different bracket levels.
 var numParStack []int         // Saves the maximum curParLevel at different bracket levels.
                               // Used for knowing how many elements to pop from parStack.
-
-func unused() {
-    spew.Dump()
-    fmt.Println()
-}
 %}
 
 %union {
