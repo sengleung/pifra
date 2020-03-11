@@ -1,0 +1,6 @@
+digraph {
+    s0 [peripheries=2,label="{(1,#1)} ⊢
+$&1.P(#1, &1)"]
+
+    s0 -> s0 [label="1' 1⊛ "]
+}

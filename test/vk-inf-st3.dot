@@ -1,0 +1,45 @@
+digraph {
+    s0 [peripheries=2,label="{(1,#1)} ⊢
+P"]
+    s1 [label="{(1,#1)} ⊢
+(P | P)"]
+    s2 [label="{(1,#1)} ⊢
+(P | (P | P))"]
+    s3 [label="{(1,#1)} ⊢
+(P | (P | (P | P)))"]
+    s4 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | P))))"]
+    s5 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | P)))))"]
+    s6 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | (P | P))))))"]
+    s7 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | (P | (P | P)))))))"]
+    s8 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | (P | (P | (P | P))))))))"]
+    s9 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | (P | (P | (P | (P | P)))))))))"]
+    s10 [label="{(1,#1)} ⊢
+(P | (P | (P | (P | (P | (P | (P | (P | (P | (P | P))))))))))"]
+
+    s0 -> s1 [label="1 1 "]
+    s0 -> s1 [label="1 2● "]
+    s1 -> s2 [label="1 1 "]
+    s1 -> s2 [label="1 2● "]
+    s2 -> s3 [label="1 1 "]
+    s2 -> s3 [label="1 2● "]
+    s3 -> s4 [label="1 1 "]
+    s3 -> s4 [label="1 2● "]
+    s4 -> s5 [label="1 1 "]
+    s4 -> s5 [label="1 2● "]
+    s5 -> s6 [label="1 1 "]
+    s5 -> s6 [label="1 2● "]
+    s6 -> s7 [label="1 1 "]
+    s6 -> s7 [label="1 2● "]
+    s7 -> s8 [label="1 1 "]
+    s7 -> s8 [label="1 2● "]
+    s8 -> s9 [label="1 1 "]
+    s8 -> s9 [label="1 2● "]
+    s9 -> s10 [label="1 1 "]
+    s9 -> s10 [label="1 2● "]
+}
