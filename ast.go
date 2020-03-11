@@ -9,12 +9,6 @@ import (
 var boundNameIndex int
 var freshNameIndex int
 
-func generateFreshName(namePrefix string) string {
-	name := namePrefix + "_" + strconv.Itoa(freshNameIndex)
-	freshNameIndex = freshNameIndex + 1
-	return name
-}
-
 func generateBoundName(namePrefix string) string {
 	name := namePrefix + "_" + strconv.Itoa(boundNameIndex)
 	boundNameIndex = boundNameIndex + 1
@@ -74,12 +68,6 @@ func subName(elem Element, oldName Name, newName Name) {
 				procElem.Parameters[i] = newName
 			}
 		}
-	case ElemTypOutOutput:
-		outOutput := elem.(*ElemOutOutput)
-		if outOutput.Output == oldName {
-			outOutput.Output = newName
-		}
-		subName(outOutput.Next, oldName, newName)
 	case ElemTypInpInput:
 		inpInput := elem.(*ElemInpInput)
 		if inpInput.Input == oldName {
@@ -90,34 +78,6 @@ func subName(elem Element, oldName Name, newName Name) {
 		rootElem := elem.(*ElemRoot)
 		subName(rootElem.Next, oldName, newName)
 	}
-}
-
-func open(elem Element, boundName Name) Element {
-	if boundName.Type != Bound {
-		return nil
-	}
-	elemCopy := deepcopy.Copy(elem)
-	elem = elemCopy.(Element)
-	freshName := Name{
-		Name: generateFreshName("fn"),
-		Type: Fresh,
-	}
-	subName(elem, boundName, freshName)
-	return elem
-}
-
-func close(elem Element, freshName Name) Element {
-	if freshName.Type != Fresh {
-		return nil
-	}
-	elemCopy := deepcopy.Copy(elem)
-	elem = elemCopy.(Element)
-	boundName := Name{
-		Name: generateBoundName(freshName.Name),
-		Type: Bound,
-	}
-	subName(elem, freshName, boundName)
-	return elem
 }
 
 // InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
@@ -306,10 +266,6 @@ func prettyPrintAcc(elem Element, str string) string {
 			}
 			str = str + pcsElem.Name + params
 		}
-	case ElemTypOutOutput:
-		outOutput := elem.(*ElemOutOutput)
-		str = str + "'<" + outOutput.Output.Name + ">."
-		return prettyPrintAcc(outOutput.Next, str)
 	case ElemTypInpInput:
 		inpInput := elem.(*ElemInpInput)
 		str = str + "(" + inpInput.Input.Name + ")."
@@ -406,12 +362,6 @@ func GetAllFreshNames(elem Element) []string {
 				// Find free names in declared process.
 				freshNames = getAllFreshNamesAcc(proc, freshNames)
 			}
-		case ElemTypOutOutput:
-			outOutput := elem.(*ElemOutOutput)
-			if outOutput.Output.Type == Fresh {
-				freshNames = append(freshNames, outOutput.Output.Name)
-			}
-			return getAllFreshNamesAcc(outOutput.Next, freshNames)
 		case ElemTypInpInput:
 			inpInput := elem.(*ElemInpInput)
 			if inpInput.Input.Type == Fresh {
@@ -454,9 +404,6 @@ func getElemSetType(elem Element) ElemSetType {
 	case ElemTypProcess:
 		pcsElem := elem.(*ElemProcess)
 		return pcsElem.SetType
-	case ElemTypOutOutput:
-		elemOutOut := elem.(*ElemOutOutput)
-		return elemOutOut.SetType
 	case ElemTypInpInput:
 		elemInpInp := elem.(*ElemInpInput)
 		return elemInpInp.SetType
