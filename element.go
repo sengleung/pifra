@@ -18,7 +18,7 @@ const (
 type NameType int
 
 const (
-	Fresh NameType = iota
+	Free NameType = iota
 	Bound
 )
 

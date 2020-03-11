@@ -277,34 +277,34 @@ func GetAllFreshNames(elem Element) []string {
 		case ElemTypNil:
 		case ElemTypOutput:
 			outElem := elem.(*ElemOutput)
-			if outElem.Channel.Type == Fresh {
+			if outElem.Channel.Type == Free {
 				freshNames = append(freshNames, outElem.Channel.Name)
 			}
-			if outElem.Output.Type == Fresh {
+			if outElem.Output.Type == Free {
 				freshNames = append(freshNames, outElem.Output.Name)
 			}
 			return getAllFreshNamesAcc(outElem.Next, freshNames)
 		case ElemTypInput:
 			inpElem := elem.(*ElemInput)
-			if inpElem.Channel.Type == Fresh {
+			if inpElem.Channel.Type == Free {
 				freshNames = append(freshNames, inpElem.Channel.Name)
 			}
-			if inpElem.Input.Type == Fresh {
+			if inpElem.Input.Type == Free {
 				freshNames = append(freshNames, inpElem.Input.Name)
 			}
 			return getAllFreshNamesAcc(inpElem.Next, freshNames)
 		case ElemTypMatch:
 			matchElem := elem.(*ElemEquality)
-			if matchElem.NameL.Type == Fresh {
+			if matchElem.NameL.Type == Free {
 				freshNames = append(freshNames, matchElem.NameL.Name)
 			}
-			if matchElem.NameR.Type == Fresh {
+			if matchElem.NameR.Type == Free {
 				freshNames = append(freshNames, matchElem.NameR.Name)
 			}
 			return getAllFreshNamesAcc(matchElem.Next, freshNames)
 		case ElemTypRestriction:
 			resElem := elem.(*ElemRestriction)
-			if resElem.Restrict.Type == Fresh {
+			if resElem.Restrict.Type == Free {
 				freshNames = append(freshNames, resElem.Restrict.Name)
 			}
 			return getAllFreshNamesAcc(resElem.Next, freshNames)

@@ -319,7 +319,7 @@ func trans(conf Configuration) []Configuration {
 			inp2aElem := inp2aConf.Process.(*ElemInput)
 			substituteName(inp2aElem, inp2aElem.Input, Name{
 				Name: inp2aConf.Register.GetName(label),
-				Type: Fresh,
+				Type: Free,
 			})
 			inp2aConf.Label.Symbol2 = Symbol{
 				Type:  SymbolTypKnown,
@@ -335,7 +335,7 @@ func trans(conf Configuration) []Configuration {
 		// Change the input bound name to a fresh name.
 		substituteName(inp2bElem, inp2bElem.Input, Name{
 			Name: inp2bElem.Input.Name,
-			Type: Fresh,
+			Type: Free,
 		})
 
 		name := inp2bElem.Input.Name
@@ -461,7 +461,7 @@ func trans(conf Configuration) []Configuration {
 					Type: Bound,
 				}, Name{
 					Name: resName,
-					Type: Fresh,
+					Type: Free,
 				})
 
 				// o |- P'
@@ -694,7 +694,7 @@ func trans(conf Configuration) []Configuration {
 						resName := lconf.Register.GetName(1)
 						oldName := Name{
 							Name: rconf.Register.GetName(1),
-							Type: Fresh,
+							Type: Free,
 						}
 						newName := Name{
 							Name: resName,
@@ -737,7 +737,7 @@ func trans(conf Configuration) []Configuration {
 						resName := rconf.Register.GetName(1)
 						oldName := Name{
 							Name: lconf.Register.GetName(1),
-							Type: Fresh,
+							Type: Free,
 						}
 						newName := Name{
 							Name: resName,
