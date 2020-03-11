@@ -87,7 +87,7 @@ func compareLts(t *testing.T, flags Flags, testFiles []string, testFolder string
 		}
 
 		if !reflect.DeepEqual(outputFile, testOutputFile) {
-			t.Errorf("not equal: %s", testOutputFile)
+			t.Errorf("not equal: %s, generated:\n%s", testFile+ext, outputFile)
 		}
 	}
 }
