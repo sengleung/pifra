@@ -19,7 +19,6 @@ var log = false
 func InitProgram(program []byte) (Element, error) {
 	initParser()
 	boundNameIndex = 0
-	freshNameIndex = 0
 	lex := newLexer(program)
 	if code := yyParse(lex); code != 0 {
 		return nil, fmt.Errorf(parseError)

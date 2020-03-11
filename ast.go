@@ -7,7 +7,6 @@ import (
 )
 
 var boundNameIndex int
-var freshNameIndex int
 
 func generateBoundName(namePrefix string) string {
 	name := namePrefix + "_" + strconv.Itoa(boundNameIndex)
