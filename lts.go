@@ -153,13 +153,8 @@ func generatePrettyLts(lts Lts) []byte {
 	}
 
 	rootString := "s0" + rootR + " = " +
-		prettyPrintRegister(root.Register) + " ¦- " + PrettyPrintAst(root.Process)
+		prettyPrintRegister(root.Register) + " |- " + PrettyPrintAst(root.Process)
 	buffer.WriteString(rootString)
-
-	// Prevent extraneous new line if there are no edges.
-	if len(edges) != 0 {
-		buffer.WriteString("\n\n")
-	}
 
 	for i, edge := range edges {
 		vertex := vertices[edge.Destination]
@@ -173,7 +168,7 @@ func generatePrettyLts(lts Lts) []byte {
 		}
 		transString := "s" + strconv.Itoa(edge.Source) + srcR + "  " +
 			prettyPrintLabel(edge.Label) + "  s" + strconv.Itoa(edge.Destination) + dstR + " = " +
-			prettyPrintRegister(vertex.Register) + " ¦- " + PrettyPrintAst(vertex.Process)
+			prettyPrintRegister(vertex.Register) + " |- " + PrettyPrintAst(vertex.Process)
 		buffer.WriteString(transString)
 
 		// Prevent extraneous new line at last edge.
