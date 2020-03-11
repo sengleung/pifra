@@ -370,25 +370,20 @@ func trans(conf Configuration) []Configuration {
 				Value: outLabel,
 			},
 		}
-		out1Conf.Process = &ElemOutOutput{
-			Output:  outElem.Output,
-			Next:    outElem.Next,
-			SetType: ElemSetOut,
-		}
 
 		// OUT2
 		var confs []Configuration
 		out2Conf := deepcopy.Copy(out1Conf).(Configuration)
-		outOutputElem := out2Conf.Process.(*ElemOutOutput)
+		out2Elem := out2Conf.Process.(*ElemOutput)
 
-		label := out2Conf.Register.GetLabel(outOutputElem.Output.Name)
+		label := out2Conf.Register.GetLabel(out2Elem.Output.Name)
 
 		out2Conf.Label.Double = true
 		out2Conf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypKnown,
 			Value: label,
 		}
-		out2Conf.Process = outOutputElem.Next
+		out2Conf.Process = out2Elem.Next
 		confs = append(confs, out2Conf)
 		return confs
 

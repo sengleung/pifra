@@ -12,7 +12,6 @@ const (
 	ElemTypParallel
 	ElemTypProcess
 
-	ElemTypOutOutput
 	ElemTypInpInput
 
 	ElemTypRoot
@@ -122,16 +121,6 @@ type ElemProcess struct {
 
 func (e *ElemProcess) Type() ElementType {
 	return ElemTypProcess
-}
-
-type ElemOutOutput struct {
-	SetType ElemSetType
-	Output  Name
-	Next    Element
-}
-
-func (e *ElemOutOutput) Type() ElementType {
-	return ElemTypOutOutput
 }
 
 type ElemInpInput struct {
