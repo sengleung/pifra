@@ -407,41 +407,30 @@ func trans(conf Configuration) []Configuration {
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
 		for _, conf := range tconfs {
-			// t != (|o|+1)
-			if conf.Label.Symbol.Value == resLabel || conf.Label.Symbol2.Value == resLabel {
-				continue
+			// OPEN
+			if conf.Label.Symbol.Value != resLabel && conf.Label.Symbol2.Value != resLabel {
+				// $a.P^'
+				conf.Process = &ElemRestriction{
+					Restrict: resElem.Restrict,
+					Next:     conf.Process,
+				}
+				// o' ¦- $a.P^'
+				conf.Register.RemoveMax()
+
+				confs = append(confs, conf)
 			}
 
-			// $a.P^'
-			conf.Process = &ElemRestriction{
-				Restrict: resElem.Restrict,
-				Next:     conf.Process,
-			}
-			// o' ¦- $a.P^'
-			conf.Register.RemoveMax()
-
-			confs = append(confs, conf)
-		}
-
-		// OPEN
-		openConf := deepcopy.Copy(baseResConf).(Configuration)
-		openElem := openConf.Process.(*ElemRestriction)
-		openName := openElem.Restrict.Name
-		openConf.Process = openElem.Next
-		openLabel := openConf.Register.UpdateMax(openName)
-		tconfs = trans(openConf)
-
-		for _, conf := range tconfs {
+			// RES
 			if conf.Label.Symbol.Type == SymbolTypOutput &&
 				conf.Label.Symbol2.Type == SymbolTypKnown &&
-				conf.Label.Symbol.Value != openLabel &&
-				conf.Label.Symbol2.Value == openLabel {
+				conf.Label.Symbol.Value != resLabel &&
+				conf.Label.Symbol2.Value == resLabel {
 				// o
 				conf.Register = deepcopy.Copy(baseResConf.Register).(Register)
 				// fn(P')
 				freeNamesP := GetAllFreeNames(conf.Process)
 				// o[j -> a], j = min{j | reg(j) !E fn(P')}
-				label := conf.Register.UpdateMin(openName, freeNamesP)
+				label := conf.Register.UpdateMin(resName, freeNamesP)
 				// ij
 				conf.Label.Symbol2.Value = label
 				// ij^
