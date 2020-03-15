@@ -291,7 +291,7 @@ func trans(conf Configuration) []Configuration {
 	switch conf.Process.Type() {
 	// DBLINP = INP1 + INP2A/INP2B
 	case ElemTypInput:
-		inp1Conf := deepcopy.Copy(conf).(Configuration)
+		inp1Conf := conf
 		inpElem := inp1Conf.Process.(*ElemInput)
 
 		// Find the input channel label in the register.
@@ -321,7 +321,7 @@ func trans(conf Configuration) []Configuration {
 		}
 
 		// INP2B
-		inp2bConf := deepcopy.Copy(inp1Conf).(Configuration)
+		inp2bConf := inp1Conf
 		inp2bElem := inp2bConf.Process.(*ElemInput)
 		// Change the input bound name to a fresh name.
 		substituteName(inp2bElem, inp2bElem.Input, Name{
@@ -341,7 +341,7 @@ func trans(conf Configuration) []Configuration {
 
 	// DBLOUT = OUT1 + OUT2
 	case ElemTypOutput:
-		out1Conf := deepcopy.Copy(conf).(Configuration)
+		out1Conf := conf
 		outElem := out1Conf.Process.(*ElemOutput)
 
 		outLabel := out1Conf.Register.GetLabel(outElem.Channel.Name)
@@ -354,7 +354,7 @@ func trans(conf Configuration) []Configuration {
 
 		// OUT2
 		var confs []Configuration
-		out2Conf := deepcopy.Copy(out1Conf).(Configuration)
+		out2Conf := out1Conf
 		out2Elem := out2Conf.Process.(*ElemOutput)
 
 		label := out2Conf.Register.GetLabel(out2Elem.Output.Name)
@@ -376,7 +376,7 @@ func trans(conf Configuration) []Configuration {
 		if (!matchElem.Inequality && matchElem.NameL.Name == matchElem.NameR.Name) ||
 			(matchElem.Inequality && matchElem.NameL.Name != matchElem.NameR.Name) {
 			// o ¦- P
-			matchConf := deepcopy.Copy(conf).(Configuration)
+			matchConf := conf
 			matchElem = matchConf.Process.(*ElemEquality)
 			matchConf.Process = matchElem.Next
 			// o ¦- P -t-> o ¦- P^'
@@ -392,7 +392,7 @@ func trans(conf Configuration) []Configuration {
 		var confs []Configuration
 
 		// o |- $a.P^
-		baseResConf := deepcopy.Copy(conf).(Configuration)
+		baseResConf := conf
 
 		// RES
 		// P^
@@ -453,7 +453,7 @@ func trans(conf Configuration) []Configuration {
 
 	// REC
 	case ElemTypProcess:
-		procConf := deepcopy.Copy(conf).(Configuration)
+		procConf := conf
 		procElem := procConf.Process.(*ElemProcess)
 
 		processName := procElem.Name
@@ -513,7 +513,7 @@ func trans(conf Configuration) []Configuration {
 		var confs []Configuration
 		var lconfs []Configuration
 		var rconfs []Configuration
-		basePar := deepcopy.Copy(conf).(Configuration)
+		basePar := conf
 
 		// PAR1_L
 		parConf := deepcopy.Copy(conf).(Configuration)
