@@ -34,7 +34,11 @@ func TestLtsGeneration(t *testing.T) {
 		})
 
 		// Remove output directory when finished.
-		defer os.RemoveAll(outFolder)
+		defer func(t *testing.T) {
+			if !t.Failed() {
+				os.RemoveAll(outFolder)
+			}
+		}(t)
 
 		// Test LTS pretty print output.
 		flags := Flags{
@@ -87,7 +91,8 @@ func compareLts(t *testing.T, flags Flags, testFiles []string, testFolder string
 		}
 
 		if !reflect.DeepEqual(outputFile, testOutputFile) {
-			t.Errorf("not equal: %s, generated:\n%s", testFile+ext, outputFile)
+			t.Errorf("not equal: %s, generated: %s\n%s",
+				"test/"+testFile+ext, "test/out/"+testFile+ext, outputFile)
 		}
 	}
 }
