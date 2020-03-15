@@ -288,8 +288,7 @@ func explore(root Configuration) Lts {
 }
 
 func trans(conf Configuration) []Configuration {
-	process := conf.Process
-	switch process.Type() {
+	switch conf.Process.Type() {
 	// DBLINP = INP1 + INP2A/INP2B
 	case ElemTypInput:
 		inp1Conf := deepcopy.Copy(conf).(Configuration)
