@@ -46,7 +46,7 @@ func (lex *lexer) Lex(out *yySymType) int {
             '=' => { tok = EQUAL; fbreak; };
             '|' => { tok = VERTBAR; fbreak; };
             '.' => { tok = DOT; fbreak; };
-            alnum+ => { out.name = string(lex.data[lex.ts:lex.te]); tok = NAME; fbreak; };
+            [_]?[a-zA-Z0-9]+ => { out.name = string(lex.data[lex.ts:lex.te]); tok = NAME; fbreak; };
             space;
         *|;
          write exec;

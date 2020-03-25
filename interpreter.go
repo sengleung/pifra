@@ -150,17 +150,30 @@ func newRootConf(process Element) Configuration {
 		freshNamesSet[freshName] = true
 	}
 
+	var markedNames []string
 	var freshNames []string
 	for name := range freshNamesSet {
-		freshNames = append(freshNames, name)
+		if string(name[0]) == "_" {
+			markedNames = append(markedNames, name)
+		} else {
+			freshNames = append(freshNames, name)
+		}
 	}
+	sort.Strings(markedNames)
 	sort.Strings(freshNames)
 
-	// Initialise the registers with generated free names.
+	// Place marked names ("_"-prefixed names) first in the register.
 	register := make(map[int]string)
+	regIndex := 1
+	for _, name := range markedNames {
+		register[regIndex] = name
+		regIndex++
+	}
+
+	// Initialise the registers with generated free names.
 	for i, name := range freshNames {
 		fn := fnPrefix + strconv.Itoa(i+1)
-		register[i+1] = fn
+		register[regIndex] = fn
 
 		// Substitute the actual name with a generated free name.
 		subName(process, Name{
@@ -200,6 +213,8 @@ func newRootConf(process Element) Configuration {
 				})
 			}
 		}
+
+		regIndex++
 	}
 	return Configuration{
 		Process: process,
