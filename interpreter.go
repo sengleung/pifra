@@ -431,6 +431,15 @@ func trans(conf Configuration) []Configuration {
 				// o' ¦- $a.P^'
 				conf.Register.RemoveMax()
 
+				// Convert the restriction free name to a bound name.
+				subName(conf.Process, Name{
+					Name: resName,
+					Type: Free,
+				}, Name{
+					Name: resName,
+					Type: Bound,
+				})
+
 				confs = append(confs, conf)
 			}
 
