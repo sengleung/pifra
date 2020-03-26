@@ -9,7 +9,7 @@ import (
 var boundNameIndex int
 
 func generateBoundName(namePrefix string) string {
-	name := namePrefix + "_" + strconv.Itoa(boundNameIndex)
+	name := bnPrefix + namePrefix + "_" + strconv.Itoa(boundNameIndex)
 	boundNameIndex = boundNameIndex + 1
 	return name
 }

@@ -491,8 +491,6 @@ func trans(conf Configuration) []Configuration {
 		procConf.Process = proc
 		doAlphaConversion(proc)
 
-		normaliseBoundNames(procConf)
-
 		// Detects infinitely recursive processes such as P(a) = P(a).
 		if infProc {
 			return []Configuration{}
