@@ -708,6 +708,17 @@ func trans(conf Configuration) []Configuration {
 						}
 						substituteName(rproc, oldName, newName)
 
+						// Convert restriction free name in P' to bound name.
+						oldName = Name{
+							Name: resName,
+							Type: Free,
+						}
+						newName = Name{
+							Name: resName,
+							Type: Bound,
+						}
+						substituteName(lproc, oldName, newName)
+
 						close.Process = &ElemRestriction{
 							Restrict: Name{
 								Name: resName,
@@ -750,6 +761,17 @@ func trans(conf Configuration) []Configuration {
 							Type: Bound,
 						}
 						substituteName(lproc, oldName, newName)
+
+						// Convert restriction free name in Q' to bound name.
+						oldName = Name{
+							Name: resName,
+							Type: Free,
+						}
+						newName = Name{
+							Name: resName,
+							Type: Bound,
+						}
+						substituteName(rproc, oldName, newName)
 
 						close.Process = &ElemRestriction{
 							Restrict: Name{
