@@ -225,7 +225,7 @@ func newRootConf(process Element) Configuration {
 	}
 }
 
-var infProc bool
+var recVisitedProcs map[string]bool
 
 func explore(root Configuration) Lts {
 	// Visited states.
@@ -500,13 +500,17 @@ func trans(conf Configuration) []Configuration {
 		procConf.Process = proc
 		doAlphaConversion(proc)
 
+		// Create visited processes set.
+		if recVisitedProcs == nil {
+			recVisitedProcs = make(map[string]bool)
+		}
 		// Detects infinitely recursive processes such as P(a) = P(a).
-		if infProc {
+		if recVisitedProcs[processName] {
 			return []Configuration{}
 		}
-		infProc = true
+		recVisitedProcs[processName] = true
 		tconfs := trans(procConf)
-		infProc = false
+		recVisitedProcs = nil
 
 		return tconfs
 
