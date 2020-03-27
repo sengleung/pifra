@@ -1,0 +1,11 @@
+GenFreshB(a) = $fr5. GF1(a,fr5)
+GF1(a,fr5) = $fr1. a'<fr1>. GF2(a,fr5)
+GF2(a,fr5) = $fr2. a'<fr2>. GF3(a,fr5)
+GF3(a,fr5) = $fr3. a'<fr3>. GF4(a,fr5)
+GF4(a,fr5) = $fr4. a'<fr4>. GF5(a,fr5)
+GF5(a,fr5) =       a'<fr5>. GF1(a,fr5) + $fr6. a'<fr6>. GF1(a,fr5)
+
+Test(a) = Inp(a) | a(x).a(y).[x=y] _BAD'<_BAD>. $dummy. dummy'<_BAD>.0
+Inp(a) = a(z).Inp(a)
+
+$a. (GenFreshB(a) | Test(a))

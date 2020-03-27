@@ -12,7 +12,7 @@ import (
 
 func TestLtsGeneration(t *testing.T) {
 	ppLtsTestFlags := map[string]Flags{
-		"gen-fresh-a": Flags{
+		"gen-fresh-b": Flags{
 			MaxStates:    100,
 			RegisterSize: 1073741824,
 			Pretty:       true,
