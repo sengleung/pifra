@@ -11,6 +11,19 @@ import (
 )
 
 func TestLtsGeneration(t *testing.T) {
+	ppLtsTestFlags := map[string]Flags{
+		"gen-fresh-a": Flags{
+			MaxStates:    100,
+			RegisterSize: 1073741824,
+			Pretty:       true,
+		},
+	}
+	gvLtsTestFlags := map[string]Flags{
+		"gen-fresh-b": Flags{
+			MaxStates:    100,
+			RegisterSize: 1073741824,
+		},
+	}
 	t.Run("lts_generation", func(t *testing.T) {
 		// Current working directory.
 		pwd, err := os.Getwd()
@@ -46,32 +59,30 @@ func TestLtsGeneration(t *testing.T) {
 			RegisterSize: 1073741824,
 			Pretty:       true,
 		}
-		compareLts(t, flags, testFiles, testFolder, outFolder, ".txt")
+		compareLts(t, flags, ppLtsTestFlags, testFiles, testFolder, outFolder, ".txt")
 
 		// Test LTS GraphViz DOT output.
 		flags = Flags{
 			MaxStates:    10,
 			RegisterSize: 1073741824,
 		}
-		compareLts(t, flags, testFiles, testFolder, outFolder, ".dot")
+		compareLts(t, flags, gvLtsTestFlags, testFiles, testFolder, outFolder, ".dot")
 	})
 }
 
-func compareLts(t *testing.T, flags Flags, testFiles []string, testFolder string, outFolder string, ext string) {
+func compareLts(t *testing.T, flags Flags, specificFlags map[string]Flags, testFiles []string, testFolder string, outFolder string, ext string) {
 	// Write LTS's to output directory.
 	for _, testFile := range testFiles {
 		outputPath := path.Join(outFolder, testFile+ext)
 		testPath := path.Join(testFolder, testFile+".pi")
 
-		flags.OutputFile = outputPath
-		flags.InputFile = testPath
-		if err := OutputMode(flags); err != nil {
-			t.Error(err)
+		opts := flags
+		if val, ok := specificFlags[testFile]; ok {
+			opts = val
 		}
-
-		flags.OutputFile = outputPath
-		flags.InputFile = testPath
-		if err := OutputMode(flags); err != nil {
+		opts.OutputFile = outputPath
+		opts.InputFile = testPath
+		if err := OutputMode(opts); err != nil {
 			t.Error(err)
 		}
 	}
