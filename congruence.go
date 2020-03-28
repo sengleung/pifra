@@ -15,6 +15,7 @@ func applyStructrualCongruence(conf Configuration) {
 		garbageCollection(conf)
 	}
 
+	scopeRes(conf.Process)
 	normaliseNilProc(conf.Process)
 	normaliseFreshNames(conf)
 	normaliseBoundNames(conf)
@@ -230,6 +231,121 @@ func normaliseNilProc(elem Element) Element {
 		rootElem.Next = normaliseNilProc(rootElem.Next)
 	}
 	return elem
+}
+
+func scopeRes(elem Element) Element {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypProcess:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = scopeRes(outElem.Next)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = scopeRes(inpElem.Next)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemEquality)
+		matchElem.Next = scopeRes(matchElem.Next)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resName := resElem.Restrict
+		if resElem.Next.Type() == ElemTypParallel {
+			parElem := resElem.Next.(*ElemParallel)
+			appearsLeft := appearsIn(parElem.ProcessL, resName)
+			appearsRight := appearsIn(parElem.ProcessR, resName)
+			if !appearsLeft && !appearsRight {
+				return parElem
+			}
+			if appearsLeft && appearsRight {
+				resElem.Next = scopeRes(resElem.Next)
+				return resElem
+			}
+			if !appearsLeft && appearsRight {
+				parElem.ProcessR = &ElemRestriction{
+					Restrict: resName,
+					Next:     parElem.ProcessR,
+				}
+				parElem.ProcessR = scopeRes(parElem.ProcessR)
+				return parElem
+			}
+			if appearsLeft && !appearsRight {
+				parElem.ProcessL = &ElemRestriction{
+					Restrict: resName,
+					Next:     parElem.ProcessL,
+				}
+				parElem.ProcessL = scopeRes(parElem.ProcessL)
+				return parElem
+			}
+		}
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.ProcessL = scopeRes(sumElem.ProcessL)
+		sumElem.ProcessR = scopeRes(sumElem.ProcessR)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parElem.ProcessL = scopeRes(parElem.ProcessL)
+		parElem.ProcessR = scopeRes(parElem.ProcessR)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = scopeRes(rootElem.Next)
+	}
+	return elem
+}
+
+func appearsIn(elem Element, name Name) bool {
+	switch elem.Type() {
+	case ElemTypNil:
+		return false
+	case ElemTypProcess:
+		procElem := elem.(*ElemProcess)
+		for _, param := range procElem.Parameters {
+			if param == name {
+				return true
+			}
+		}
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		if outElem.Channel == name {
+			return true
+		}
+		if outElem.Output == name {
+			return true
+		}
+		return appearsIn(outElem.Next, name)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		if inpElem.Channel == name {
+			return true
+		}
+		if inpElem.Input == name {
+			return true
+		}
+		return appearsIn(inpElem.Next, name)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemEquality)
+		if matchElem.NameL == name {
+			return true
+		}
+		if matchElem.NameR == name {
+			return true
+		}
+		return appearsIn(matchElem.Next, name)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		return appearsIn(resElem.Next, name)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		appears := appearsIn(sumElem.ProcessL, name)
+		return appears || appearsIn(sumElem.ProcessR, name)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		appears := appearsIn(parElem.ProcessL, name)
+		return appears || appearsIn(parElem.ProcessR, name)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return appearsIn(rootElem.Next, name)
+	}
+	return false
 }
 
 func sortRes(elem Element) Element {
