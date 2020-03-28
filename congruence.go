@@ -249,7 +249,8 @@ func scopeRes(elem Element) Element {
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
 		resName := resElem.Restrict
-		if resElem.Next.Type() == ElemTypParallel {
+		switch resElem.Next.Type() {
+		case ElemTypParallel:
 			parElem := resElem.Next.(*ElemParallel)
 			appearsLeft := appearsIn(parElem.ProcessL, resName)
 			appearsRight := appearsIn(parElem.ProcessR, resName)
@@ -275,6 +276,38 @@ func scopeRes(elem Element) Element {
 				}
 				parElem.ProcessL = scopeRes(parElem.ProcessL)
 				return parElem
+			}
+		case ElemTypSum:
+			sumElem := resElem.Next.(*ElemSum)
+			appearsLeft := appearsIn(sumElem.ProcessL, resName)
+			appearsRight := appearsIn(sumElem.ProcessR, resName)
+			if !appearsLeft && !appearsRight {
+				return sumElem
+			}
+			if appearsLeft && appearsRight {
+				resElem.Next = scopeRes(resElem.Next)
+				return resElem
+			}
+			if !appearsLeft && appearsRight {
+				sumElem.ProcessR = &ElemRestriction{
+					Restrict: resName,
+					Next:     sumElem.ProcessR,
+				}
+				sumElem.ProcessR = scopeRes(sumElem.ProcessR)
+				return sumElem
+			}
+			if appearsLeft && !appearsRight {
+				sumElem.ProcessL = &ElemRestriction{
+					Restrict: resName,
+					Next:     sumElem.ProcessL,
+				}
+				sumElem.ProcessL = scopeRes(sumElem.ProcessL)
+				return sumElem
+			}
+		default:
+			resElem.Next = scopeRes(resElem.Next)
+			if !appearsIn(resElem.Next, resName) {
+				return resElem.Next
 			}
 		}
 	case ElemTypSum:
