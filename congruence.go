@@ -15,12 +15,16 @@ func applyStructrualCongruence(conf Configuration) {
 		garbageCollection(conf)
 	}
 
+	rmRes(conf.Process)
 	scopeRes(conf.Process)
+
 	normaliseNilProc(conf.Process)
 	normaliseFreshNames(conf)
 	normaliseBoundNames(conf)
-	sortRes(conf.Process)
+
 	sortSumPar(conf.Process)
+	scopeRes(conf.Process)
+	sortRes(conf.Process)
 }
 
 func getConfigurationKey(conf Configuration) string {
@@ -233,6 +237,40 @@ func normaliseNilProc(elem Element) Element {
 	return elem
 }
 
+func rmRes(elem Element) Element {
+	switch elem.Type() {
+	case ElemTypNil:
+	case ElemTypProcess:
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		outElem.Next = rmRes(outElem.Next)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		inpElem.Next = rmRes(inpElem.Next)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemEquality)
+		matchElem.Next = rmRes(matchElem.Next)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		resElem.Next = rmRes(resElem.Next)
+		if !appearsIn(resElem.Next, resElem.Restrict) {
+			return resElem.Next
+		}
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		sumElem.ProcessL = rmRes(sumElem.ProcessL)
+		sumElem.ProcessR = rmRes(sumElem.ProcessR)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		parElem.ProcessL = rmRes(parElem.ProcessL)
+		parElem.ProcessR = rmRes(parElem.ProcessR)
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		rootElem.Next = rmRes(rootElem.Next)
+	}
+	return elem
+}
+
 func scopeRes(elem Element) Element {
 	switch elem.Type() {
 	case ElemTypNil:
@@ -249,12 +287,15 @@ func scopeRes(elem Element) Element {
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
 		resName := resElem.Restrict
+		resElem.Next = scopeRes(resElem.Next)
 		switch resElem.Next.Type() {
 		case ElemTypParallel:
 			parElem := resElem.Next.(*ElemParallel)
 			appearsLeft := appearsIn(parElem.ProcessL, resName)
 			appearsRight := appearsIn(parElem.ProcessR, resName)
 			if !appearsLeft && !appearsRight {
+				parElem.ProcessL = scopeRes(parElem.ProcessL)
+				parElem.ProcessR = scopeRes(parElem.ProcessR)
 				return parElem
 			}
 			if appearsLeft && appearsRight {
@@ -282,6 +323,8 @@ func scopeRes(elem Element) Element {
 			appearsLeft := appearsIn(sumElem.ProcessL, resName)
 			appearsRight := appearsIn(sumElem.ProcessR, resName)
 			if !appearsLeft && !appearsRight {
+				sumElem.ProcessL = scopeRes(sumElem.ProcessL)
+				sumElem.ProcessR = scopeRes(sumElem.ProcessR)
 				return sumElem
 			}
 			if appearsLeft && appearsRight {
@@ -303,11 +346,6 @@ func scopeRes(elem Element) Element {
 				}
 				sumElem.ProcessL = scopeRes(sumElem.ProcessL)
 				return sumElem
-			}
-		default:
-			resElem.Next = scopeRes(resElem.Next)
-			if !appearsIn(resElem.Next, resName) {
-				return resElem.Next
 			}
 		}
 	case ElemTypSum:
@@ -365,6 +403,9 @@ func appearsIn(elem Element, name Name) bool {
 		return appearsIn(matchElem.Next, name)
 	case ElemTypRestriction:
 		resElem := elem.(*ElemRestriction)
+		if resElem.Restrict == name {
+			return true
+		}
 		return appearsIn(resElem.Next, name)
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
@@ -411,7 +452,7 @@ func sortRes(elem Element) Element {
 			prev.Next = cur
 			prev = cur
 		}
-		prev.Next = lastElem
+		prev.Next = sortRes(lastElem)
 		return head
 	case ElemTypSum:
 		sumElem := elem.(*ElemSum)
