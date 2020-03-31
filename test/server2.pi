@@ -1,0 +1,5 @@
+A(as)    = $ab. as'<ab>. ab'<hello>. 0
+B(sb)    = sb(chnl). chnl(msg). [msg!=hello] _BAD'<_BAD>. 0
+S(as,sb) = as(chnl). sb'<chnl>. 0
+
+$sb. ( A(as) | B(sb) | S(as, sb) )
