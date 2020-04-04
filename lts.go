@@ -2,6 +2,7 @@ package pifra
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 	"strconv"
 	"text/template"
@@ -129,6 +130,202 @@ func prettyPrintGraphSymbol(symbol Symbol) string {
 		return strconv.Itoa(s) + "⊛"
 	case SymbolTypTau:
 		return "τ"
+	case SymbolTypKnown:
+		return strconv.Itoa(s)
+	}
+	return ""
+}
+
+func generateGraphVizTexFile(lts Lts, outputStateNo bool) []byte {
+	vertices := lts.States
+	edges := lts.Transitions
+
+	var buffer bytes.Buffer
+
+	gvl := ""
+	if gvLayout != "" {
+		gvl = "\n    " + gvLayout + "\n"
+	}
+	buffer.WriteString("digraph {" + gvl + "\n")
+
+	buffer.WriteString(`    d2toptions="--format tikz --crop --autosize --nominsize";`)
+	buffer.WriteString("\n")
+	buffer.WriteString(`    d2tdocpreamble="\usepackage{amssymb}";`)
+	buffer.WriteString("\n\n")
+
+	var ids []int
+	for id := range vertices {
+		ids = append(ids, id)
+	}
+	sort.Ints(ids)
+
+	for _, id := range ids {
+		conf := vertices[id]
+
+		var config string
+		if outputStateNo {
+			config = "s_{" + strconv.Itoa(id) + "}"
+		} else {
+			config = `\begin{matrix} ` +
+				prettyPrintTexRegister(conf.Register) +
+				` \vdash \\ ` +
+				prettyPrintTexAst(conf.Process) +
+				` \end{matrix}`
+		}
+
+		var layout string
+		if id == 0 {
+			layout = layout + `style="double",`
+		}
+		if lts.RegSizeReached[id] {
+			layout = layout + `style="thick",`
+		}
+
+		vertex := VertexTemplate{
+			State:  "s" + strconv.Itoa(id),
+			Config: config,
+			Layout: layout,
+		}
+		var tmpl *template.Template
+		tmpl, _ = template.New("todos").Parse("    {{.State}} [{{.Layout}}texlbl=\"${{.Config}}$\"]\n")
+		tmpl.Execute(&buffer, vertex)
+	}
+
+	buffer.WriteString("\n")
+
+	for _, edge := range edges {
+		edg := EdgeTemplate{
+			Source:      "s" + strconv.Itoa(edge.Source),
+			Destination: "s" + strconv.Itoa(edge.Destination),
+			Label:       prettyPrintTexGraphLabel(edge.Label),
+		}
+		tmpl, _ := template.New("todos").Parse(
+			"    {{.Source}} -> {{.Destination}} [style=\"right\",label=\"\",texlbl=\"${{.Label}}$\"]\n")
+		tmpl.Execute(&buffer, edg)
+	}
+
+	buffer.WriteString("}\n")
+
+	var output bytes.Buffer
+	buffer.WriteTo(&output)
+	return output.Bytes()
+}
+
+func prettyPrintTexRegister(register Register) string {
+	str := `\{`
+	labels := register.Labels()
+	reg := register.Register
+
+	for i, label := range labels {
+		if i == len(labels)-1 {
+			str = str + "(" + strconv.Itoa(label) + "," + getTexName(reg[label]) + ")"
+		} else {
+			str = str + "(" + strconv.Itoa(label) + "," + getTexName(reg[label]) + "),"
+		}
+	}
+	return str + `\}`
+}
+
+func getTexName(name string) string {
+	if string(name[0]) == "#" {
+		return "a" + "_{" + name[1:] + "}"
+	}
+	if string(name[0]) == "&" {
+		return "b" + "_{" + name[1:] + "}"
+	}
+	if string(name[0]) == "_" {
+		return name[1:]
+	}
+	return name
+}
+
+// PrettyPrintAst returns a string containing the pi-calculus syntax of the AST.
+func prettyPrintTexAst(elem Element) string {
+	return prettyPrintTexAstAcc(elem, "")
+}
+
+func prettyPrintTexAstAcc(elem Element, str string) string {
+	elemTyp := elem.Type()
+	switch elemTyp {
+	case ElemTypNil:
+		str += "0"
+	case ElemTypOutput:
+		outElem := elem.(*ElemOutput)
+		str += fmt.Sprintf(`\bar{%s} \langle %s \rangle . `,
+			getTexName(outElem.Channel.Name), getTexName(outElem.Output.Name))
+		return prettyPrintTexAstAcc(outElem.Next, str)
+	case ElemTypInput:
+		inpElem := elem.(*ElemInput)
+		str += fmt.Sprintf(`%s ( %s ) . `,
+			getTexName(inpElem.Channel.Name), getTexName(inpElem.Input.Name))
+		return prettyPrintTexAstAcc(inpElem.Next, str)
+	case ElemTypMatch:
+		matchElem := elem.(*ElemEquality)
+		if matchElem.Inequality {
+			str += fmt.Sprintf(`\lbrack %s \neq %s \rbrack . `,
+				getTexName(matchElem.NameL.Name), getTexName(matchElem.NameR.Name))
+		} else {
+			str += fmt.Sprintf(`\lbrack %s = %s \rbrack . `,
+				getTexName(matchElem.NameL.Name), getTexName(matchElem.NameR.Name))
+		}
+		return prettyPrintTexAstAcc(matchElem.Next, str)
+	case ElemTypRestriction:
+		resElem := elem.(*ElemRestriction)
+		str += fmt.Sprintf(`\nu %s . `,
+			getTexName(resElem.Restrict.Name))
+		return prettyPrintTexAstAcc(resElem.Next, str)
+	case ElemTypSum:
+		sumElem := elem.(*ElemSum)
+		left := prettyPrintTexAstAcc(sumElem.ProcessL, "")
+		right := prettyPrintTexAstAcc(sumElem.ProcessR, "")
+		str += fmt.Sprintf(`( %s + %s )`, left, right)
+	case ElemTypParallel:
+		parElem := elem.(*ElemParallel)
+		left := prettyPrintTexAstAcc(parElem.ProcessL, "")
+		right := prettyPrintTexAstAcc(parElem.ProcessR, "")
+		str += fmt.Sprintf(`( %s \mid %s )`, left, right)
+	case ElemTypProcess:
+		pcsElem := elem.(*ElemProcess)
+		if len(pcsElem.Parameters) == 0 {
+			str = str + pcsElem.Name
+		} else {
+			params := "("
+			for i, param := range pcsElem.Parameters {
+				if i == len(pcsElem.Parameters)-1 {
+					params = params + getTexName(param.Name) + ")"
+				} else {
+					params = params + getTexName(param.Name) + ", "
+				}
+			}
+			str = str + pcsElem.Name + params
+		}
+	case ElemTypRoot:
+		rootElem := elem.(*ElemRoot)
+		return prettyPrintTexAstAcc(rootElem.Next, str)
+	}
+	return str
+}
+
+func prettyPrintTexGraphLabel(label Label) string {
+	if label.Symbol.Type == SymbolTypTau {
+		return `\tau`
+	}
+	return prettyPrintTexGraphSymbol(label.Symbol) + ` \, ` + prettyPrintTexGraphSymbol(label.Symbol2)
+}
+
+func prettyPrintTexGraphSymbol(symbol Symbol) string {
+	s := symbol.Value
+	switch symbol.Type {
+	case SymbolTypInput:
+		return strconv.Itoa(s)
+	case SymbolTypOutput:
+		return `\bar{` + strconv.Itoa(s) + `}`
+	case SymbolTypFreshInput:
+		return strconv.Itoa(s) + `^{\bullet}`
+	case SymbolTypFreshOutput:
+		return strconv.Itoa(s) + `^{\circledast}`
+	case SymbolTypTau:
+		return `\tau`
 	case SymbolTypKnown:
 		return strconv.Itoa(s)
 	}

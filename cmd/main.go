@@ -95,6 +95,7 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the LTS in a prompt")
 	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file (default format is the Graphviz DOT language)")
+	rootCmd.PersistentFlags().BoolVarP(&flags.GVTex, "output-tex", "t", false, "output the LTS file with LaTeX labels for use with dot2tex")
 	rootCmd.PersistentFlags().BoolVarP(&flags.Pretty, "output-pretty", "p", false, "output the LTS file in a pretty-printed format")
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.GVOutputStates, "output-states", "s", false, "output state numbers instead of configurations for the Graphviz DOT file")

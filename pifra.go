@@ -22,6 +22,7 @@ type Flags struct {
 
 	GVLayout       string
 	GVOutputStates bool
+	GVTex          bool
 
 	Pretty     bool
 	Statistics bool
@@ -87,6 +88,8 @@ func OutputMode(flags Flags) error {
 			var output []byte
 			if flags.Pretty {
 				output = generatePrettyLts(lts)
+			} else if flags.GVTex {
+				output = generateGraphVizTexFile(lts, flags.GVOutputStates)
 			} else {
 				output = generateGraphVizFile(lts, flags.GVOutputStates)
 			}
