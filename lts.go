@@ -200,7 +200,7 @@ func generateGraphVizTexFile(lts Lts, outputStateNo bool) []byte {
 			Label:       prettyPrintTexGraphLabel(edge.Label),
 		}
 		tmpl, _ := template.New("todos").Parse(
-			"    {{.Source}} -> {{.Destination}} [style=\"right\",label=\"\",texlbl=\"${{.Label}}$\"]\n")
+			"    {{.Source}} -> {{.Destination}} [label=\"\",texlbl=\"${{.Label}}$\"]\n")
 		tmpl.Execute(&buffer, edg)
 	}
 
