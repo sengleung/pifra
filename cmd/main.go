@@ -38,8 +38,8 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 var rootCmd = &cobra.Command{
 	Use:   "pifra [OPTION...] FILE",
 	Short: "LTS generator for the pi-calculus represented by FRA.",
-	Long: `Labelled transition system (LTS) generation for the
-pi-calculus represented by fresh-register automata.`,
+	Long: `Labelled transition system (LTS) generation of
+pi-calculus models represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.RegisterSize < 0 {
 			fmt.Println("error: register size must be positive. 0 defaults to unlimited.")
