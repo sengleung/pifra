@@ -70,7 +70,7 @@ func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 		if outputStateNo {
 			config = "s" + strconv.Itoa(id)
 		} else {
-			config = prettyPrintRegister(conf.Register) + " ⊢\n" + PrettyPrintAst(conf.Process)
+			config = prettyPrintRegister(conf.Registers) + " ⊢\n" + PrettyPrintAst(conf.Process)
 		}
 
 		var layout string
@@ -167,7 +167,7 @@ func generateGraphVizTexFile(lts Lts, outputStateNo bool) []byte {
 			config = "s_{" + strconv.Itoa(id) + "}"
 		} else {
 			config = `\begin{matrix} ` +
-				prettyPrintTexRegister(conf.Register) +
+				prettyPrintTexRegister(conf.Registers) +
 				` \vdash \\ ` +
 				prettyPrintTexAst(conf.Process) +
 				` \end{matrix}`
@@ -211,10 +211,10 @@ func generateGraphVizTexFile(lts Lts, outputStateNo bool) []byte {
 	return output.Bytes()
 }
 
-func prettyPrintTexRegister(register Register) string {
+func prettyPrintTexRegister(register Registers) string {
 	str := `\{`
 	labels := register.Labels()
-	reg := register.Register
+	reg := register.Registers
 
 	for i, label := range labels {
 		if i == len(labels)-1 {
@@ -350,7 +350,7 @@ func generatePrettyLts(lts Lts) []byte {
 	}
 
 	rootString := "s0" + rootR + " = " +
-		prettyPrintRegister(root.Register) + " |- " + PrettyPrintAst(root.Process)
+		prettyPrintRegister(root.Registers) + " |- " + PrettyPrintAst(root.Process)
 	buffer.WriteString(rootString)
 
 	// Prevent extraneous new line if there are no edges.
@@ -370,7 +370,7 @@ func generatePrettyLts(lts Lts) []byte {
 		}
 		transString := "s" + strconv.Itoa(edge.Source) + srcR + "  " +
 			prettyPrintLabel(edge.Label) + "  s" + strconv.Itoa(edge.Destination) + dstR + " = " +
-			prettyPrintRegister(vertex.Register) + " |- " + PrettyPrintAst(vertex.Process)
+			prettyPrintRegister(vertex.Registers) + " |- " + PrettyPrintAst(vertex.Process)
 		buffer.WriteString(transString)
 
 		// Prevent extraneous new line at last edge.

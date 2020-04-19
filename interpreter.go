@@ -12,9 +12,9 @@ var maxStatesExplored = 1
 var registerSize = 1073741824
 
 type Configuration struct {
-	Process  Element
-	Register Register
-	Label    Label
+	Process   Element
+	Registers Registers
+	Label     Label
 }
 
 type SymbolType int
@@ -38,43 +38,43 @@ type Label struct {
 	Symbol2 Symbol
 }
 
-type Register struct {
-	Size     int
-	Register map[int]string
+type Registers struct {
+	Size      int
+	Registers map[int]string
 }
 
 // UpdateMax adds a free name to the register at the register size + 1 and
 // increments the register size.
 // σ+v = σ U {(|σ|+1, v)}.
-func (reg *Register) UpdateMax(freeName string) int {
+func (reg *Registers) UpdateMax(freeName string) int {
 	reg.Size = reg.Size + 1
-	reg.Register[reg.Size] = freeName
+	reg.Registers[reg.Size] = freeName
 	return reg.Size
 }
 
 // RemoveMax removes a free name from the register at the register size + 1
 // and decrements the register size.
 // Undos UpdateMax.
-func (reg *Register) RemoveMax() {
-	delete(reg.Register, reg.Size)
+func (reg *Registers) RemoveMax() {
+	delete(reg.Registers, reg.Size)
 	reg.Size = reg.Size - 1
 }
 
 // AddEmptyName increments all labels by one while retaining mapping
 // to their name and leaves an empty name (#) at label 1.
 // #+o = {(1, #)} U {(i+1, v′) | (i, v′) E o}.
-func (reg *Register) AddEmptyName() {
+func (reg *Registers) AddEmptyName() {
 	labels := reg.Labels()
 	for i := len(labels) - 1; i >= 0; i-- {
 		label := labels[i]
-		reg.Register[label+1] = reg.GetName(label)
+		reg.Registers[label+1] = reg.GetName(label)
 	}
-	delete(reg.Register, 1)
+	delete(reg.Registers, 1)
 }
 
 // UpdateMin updates the register with a name at the minimum label
 // where it does not exist in the set of free names.
-func (reg *Register) UpdateMin(name string, freshNames []string) int {
+func (reg *Registers) UpdateMin(name string, freshNames []string) int {
 	freshNamesSet := make(map[string]bool)
 	for _, freshName := range freshNames {
 		freshNamesSet[freshName] = true
@@ -82,7 +82,7 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 
 	for label := 1; label <= reg.Size+1; label++ {
 		if !freshNamesSet[reg.GetName(label)] {
-			reg.Register[label] = name
+			reg.Registers[label] = name
 			return label
 		}
 	}
@@ -90,9 +90,9 @@ func (reg *Register) UpdateMin(name string, freshNames []string) int {
 }
 
 // Labels returns register labels in sorted order.
-func (reg *Register) Labels() []int {
+func (reg *Registers) Labels() []int {
 	var labels []int
-	for k := range reg.Register {
+	for k := range reg.Registers {
 		labels = append(labels, k)
 	}
 	sort.Ints(labels)
@@ -100,18 +100,18 @@ func (reg *Register) Labels() []int {
 }
 
 // GetName returns register name corresponding to the label.
-func (reg *Register) GetName(label int) string {
-	if name, ok := reg.Register[label]; ok {
+func (reg *Registers) GetName(label int) string {
+	if name, ok := reg.Registers[label]; ok {
 		return name
 	}
 	return "NAME_NOT_FOUND"
 }
 
 // GetLabel returns register label corresponding to the name.
-func (reg *Register) GetLabel(name string) int {
+func (reg *Registers) GetLabel(name string) int {
 	labels := reg.Labels()
 	for _, label := range labels {
-		n := reg.Register[label]
+		n := reg.Registers[label]
 		if n == name {
 			return label
 		}
@@ -218,9 +218,9 @@ func newRootConf(process Element) Configuration {
 	}
 	return Configuration{
 		Process: process,
-		Register: Register{
-			Size:     registerSize,
-			Register: register,
+		Registers: Registers{
+			Size:      registerSize,
+			Registers: register,
 		},
 	}
 }
@@ -264,7 +264,7 @@ func explore(root Configuration) Lts {
 
 		srcId := visited[getConfigurationKey(state)]
 
-		if len(state.Register.Register) > registerSize {
+		if len(state.Registers.Registers) > registerSize {
 			regSizeReached[srcId] = true
 		} else {
 			confs := trans(state)
@@ -310,7 +310,7 @@ func trans(conf Configuration) []Configuration {
 		inpElem := inp1Conf.Process.(*ElemInput)
 
 		// Find the input channel label in the register.
-		inpLabel := inp1Conf.Register.GetLabel(inpElem.Channel.Name)
+		inpLabel := inp1Conf.Registers.GetLabel(inpElem.Channel.Name)
 		inp1Conf.Label = Label{
 			Symbol: Symbol{
 				Type:  SymbolTypInput,
@@ -320,11 +320,11 @@ func trans(conf Configuration) []Configuration {
 
 		// INP2A
 		var confs []Configuration
-		for _, label := range inp1Conf.Register.Labels() {
+		for _, label := range inp1Conf.Registers.Labels() {
 			inp2aConf := deepcopy.Copy(inp1Conf).(Configuration)
 			inp2aElem := inp2aConf.Process.(*ElemInput)
 			substituteName(inp2aElem, inp2aElem.Input, Name{
-				Name: inp2aConf.Register.GetName(label),
+				Name: inp2aConf.Registers.GetName(label),
 				Type: Free,
 			})
 			inp2aConf.Label.Symbol2 = Symbol{
@@ -348,7 +348,7 @@ func trans(conf Configuration) []Configuration {
 		freshNamesP := GetAllFreeNames(inp2bElem.Next)
 		inp2bConf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypFreshInput,
-			Value: inp2bConf.Register.UpdateMin(name, freshNamesP),
+			Value: inp2bConf.Registers.UpdateMin(name, freshNamesP),
 		}
 		inp2bConf.Process = inp2bElem.Next
 
@@ -359,7 +359,7 @@ func trans(conf Configuration) []Configuration {
 		out1Conf := conf
 		outElem := out1Conf.Process.(*ElemOutput)
 
-		outLabel := out1Conf.Register.GetLabel(outElem.Channel.Name)
+		outLabel := out1Conf.Registers.GetLabel(outElem.Channel.Name)
 		out1Conf.Label = Label{
 			Symbol: Symbol{
 				Type:  SymbolTypOutput,
@@ -372,7 +372,7 @@ func trans(conf Configuration) []Configuration {
 		out2Conf := out1Conf
 		out2Elem := out2Conf.Process.(*ElemOutput)
 
-		label := out2Conf.Register.GetLabel(out2Elem.Output.Name)
+		label := out2Conf.Registers.GetLabel(out2Elem.Output.Name)
 
 		out2Conf.Label.Symbol2 = Symbol{
 			Type:  SymbolTypKnown,
@@ -416,7 +416,7 @@ func trans(conf Configuration) []Configuration {
 		resName := resElem.Restrict.Name
 		resConf.Process = resElem.Next
 		// (o+a) ¦- P^
-		resLabel := resConf.Register.UpdateMax(resName)
+		resLabel := resConf.Registers.UpdateMax(resName)
 		// (o+a) ¦- P^ -t-> (o'+a) ¦- P^' -t-> (o'+a) ¦- P^'
 		tconfs := trans(resConf)
 		// (o'+a) ¦- P^
@@ -429,7 +429,7 @@ func trans(conf Configuration) []Configuration {
 					Next:     conf.Process,
 				}
 				// o' ¦- $a.P^'
-				conf.Register.RemoveMax()
+				conf.Registers.RemoveMax()
 
 				// Convert the restriction free name to a bound name.
 				subName(conf.Process, Name{
@@ -449,11 +449,11 @@ func trans(conf Configuration) []Configuration {
 				conf.Label.Symbol.Value != resLabel &&
 				conf.Label.Symbol2.Value == resLabel {
 				// o
-				conf.Register = deepcopy.Copy(baseResConf.Register).(Register)
+				conf.Registers = deepcopy.Copy(baseResConf.Registers).(Registers)
 				// fn(P')
 				freeNamesP := GetAllFreeNames(conf.Process)
 				// o[j -> a], j = min{j | reg(j) !E fn(P')}
-				label := conf.Register.UpdateMin(resName, freeNamesP)
+				label := conf.Registers.UpdateMin(resName, freeNamesP)
 				// ij
 				conf.Label.Symbol2.Value = label
 				// ij^
@@ -558,16 +558,16 @@ func trans(conf Configuration) []Configuration {
 				freeNamesP := GetAllFreeNames(conf.Process)
 				freeNamesQ := GetAllFreeNames(parElem.ProcessR)
 				// Get the name reg(i).
-				name := conf.Register.GetName(conf.Label.Symbol2.Value)
+				name := conf.Registers.GetName(conf.Label.Symbol2.Value)
 				// Update register to be j = min{j | reg(j) \notin fn(P′,Q)}.
-				newLabel := parConf.Register.UpdateMin(name,
+				newLabel := parConf.Registers.UpdateMin(name,
 					append(freeNamesP, freeNamesQ...))
 				// Update the label j.
 				parConf.Label = conf.Label
 				parConf.Label.Symbol2.Value = newLabel
 			} else {
 				parConf.Label = conf.Label
-				parConf.Register = conf.Register
+				parConf.Registers = conf.Registers
 			}
 			// Insert P' to P' | Q.
 			parConf.Process.(*ElemParallel).ProcessL = conf.Process
@@ -591,16 +591,16 @@ func trans(conf Configuration) []Configuration {
 				freeNamesQ := GetAllFreeNames(conf.Process)
 				freeNamesP := GetAllFreeNames(parElem.ProcessL)
 				// Get the name reg(i).
-				name := conf.Register.GetName(conf.Label.Symbol2.Value)
+				name := conf.Registers.GetName(conf.Label.Symbol2.Value)
 				// Update register to be j = min{j | reg(j) \notin fn(P,Q')}.
-				newLabel := parConf.Register.UpdateMin(name,
+				newLabel := parConf.Registers.UpdateMin(name,
 					append(freeNamesP, freeNamesQ...))
 				// Update the label j.
 				parConf.Label = conf.Label
 				parConf.Label.Symbol2.Value = newLabel
 			} else {
 				parConf.Label = conf.Label
-				parConf.Register = conf.Register
+				parConf.Registers = conf.Registers
 			}
 			// Insert Q' to P | Q'.
 			parConf.Process.(*ElemParallel).ProcessR = conf.Process
@@ -665,7 +665,7 @@ func trans(conf Configuration) []Configuration {
 		// CLOSE
 		clconf := deepcopy.Copy(conf).(Configuration)
 		// (#+o)
-		clconf.Register.AddEmptyName()
+		clconf.Registers.AddEmptyName()
 		parElem = clconf.Process.(*ElemParallel)
 		// (#+o) ¦- P
 		clconf.Process = parElem.ProcessL
@@ -674,7 +674,7 @@ func trans(conf Configuration) []Configuration {
 
 		crconf := deepcopy.Copy(conf).(Configuration)
 		// (#+o)
-		crconf.Register.AddEmptyName()
+		crconf.Registers.AddEmptyName()
 		parElem = crconf.Process.(*ElemParallel)
 		// (#+o) ¦- Q
 		crconf.Process = parElem.ProcessR
@@ -697,9 +697,9 @@ func trans(conf Configuration) []Configuration {
 						rproc := deepcopy.Copy(rconf.Process).(Element)
 
 						// Q'{a/b}
-						resName := lconf.Register.GetName(1)
+						resName := lconf.Registers.GetName(1)
 						oldName := Name{
-							Name: rconf.Register.GetName(1),
+							Name: rconf.Registers.GetName(1),
 							Type: Free,
 						}
 						newName := Name{
@@ -751,9 +751,9 @@ func trans(conf Configuration) []Configuration {
 						rproc := deepcopy.Copy(rconf.Process).(Element)
 
 						// P'{a/b}
-						resName := rconf.Register.GetName(1)
+						resName := rconf.Registers.GetName(1)
 						oldName := Name{
-							Name: lconf.Register.GetName(1),
+							Name: lconf.Registers.GetName(1),
 							Type: Free,
 						}
 						newName := Name{
@@ -813,15 +813,15 @@ func trans(conf Configuration) []Configuration {
 
 // PrettyPrintConfiguration returns a pretty printed string of the configuration.
 func PrettyPrintConfiguration(conf Configuration) string {
-	return prettyPrintLabel(conf.Label) + " -> " + prettyPrintRegister(conf.Register) + " ¦- " +
+	return prettyPrintLabel(conf.Label) + " -> " + prettyPrintRegister(conf.Registers) + " ¦- " +
 		PrettyPrintAst(conf.Process)
 
 }
 
-func prettyPrintRegister(register Register) string {
+func prettyPrintRegister(register Registers) string {
 	str := "{"
 	labels := register.Labels()
-	reg := register.Register
+	reg := register.Registers
 
 	for i, label := range labels {
 		if i == len(labels)-1 {

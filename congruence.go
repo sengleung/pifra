@@ -28,7 +28,7 @@ func applyStructrualCongruence(conf Configuration) {
 }
 
 func getConfigurationKey(conf Configuration) string {
-	return prettyPrintRegister(conf.Register) + PrettyPrintAst(conf.Process)
+	return prettyPrintRegister(conf.Registers) + PrettyPrintAst(conf.Process)
 }
 
 func garbageCollection(conf Configuration) {
@@ -38,9 +38,9 @@ func garbageCollection(conf Configuration) {
 		freshNames[freshName] = true
 	}
 
-	for label, name := range conf.Register.Register {
+	for label, name := range conf.Registers.Registers {
 		if !freshNames[name] {
-			delete(conf.Register.Register, label)
+			delete(conf.Registers.Registers, label)
 		}
 	}
 }
@@ -59,14 +59,14 @@ func normaliseFreshNames(conf Configuration) {
 
 	usedNames := make(map[string]bool)
 
-	labels := conf.Register.Labels()
+	labels := conf.Registers.Labels()
 	for _, label := range labels {
-		name := conf.Register.GetName(label)
+		name := conf.Registers.GetName(label)
 		usedNames[name] = true
 	}
 
 	for _, label := range labels {
-		name := conf.Register.GetName(label)
+		name := conf.Registers.GetName(label)
 		if string(name[0]) == bnPrefix {
 			fn := genFn(usedNames)
 			subName(conf.Process, Name{
@@ -74,7 +74,7 @@ func normaliseFreshNames(conf Configuration) {
 			}, Name{
 				Name: fn,
 			})
-			conf.Register.Register[label] = fn
+			conf.Registers.Registers[label] = fn
 		}
 	}
 }
@@ -190,9 +190,9 @@ func normaliseBoundNames(conf Configuration) {
 	normaliseBnRes(conf.Process)
 
 	// Rename bound names in register.
-	for label, name := range conf.Register.Register {
+	for label, name := range conf.Registers.Registers {
 		if newName, ok := oldNames[name]; ok {
-			conf.Register.Register[label] = newName
+			conf.Registers.Registers[label] = newName
 		}
 	}
 }

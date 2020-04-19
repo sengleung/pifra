@@ -91,7 +91,7 @@ func init() {
 
 	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of states explored")
 	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 0, "register size (default is unlimited)")
-	rootCmd.PersistentFlags().BoolVarP(&flags.DisableGC, "disable-gc", "d", false, "disable register garbage collection")
+	rootCmd.PersistentFlags().BoolVarP(&flags.DisableGC, "disable-gc", "d", false, "disable garbage collection")
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the LTS in a prompt")
 	rootCmd.PersistentFlags().StringVarP(&flags.OutputFile, "output", "o", "", "output the LTS to a file (default format is the Graphviz DOT language)")
