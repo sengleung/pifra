@@ -459,3 +459,51 @@ func generatePrettyLts(lts Lts) []byte {
 	buffer.WriteTo(&output)
 	return output.Bytes()
 }
+
+// PrettyPrintConfiguration returns a pretty printed string of the configuration.
+func PrettyPrintConfiguration(conf Configuration) string {
+	return prettyPrintLabel(conf.Label) + " -> " + prettyPrintRegister(conf.Registers) + " ¦- " +
+		PrettyPrintAst(conf.Process)
+
+}
+
+func prettyPrintRegister(register Registers) string {
+	str := "{"
+	labels := register.Labels()
+	reg := register.Registers
+
+	for i, label := range labels {
+		if i == len(labels)-1 {
+			str = str + "(" + strconv.Itoa(label) + "," + reg[label] + ")"
+		} else {
+			str = str + "(" + strconv.Itoa(label) + "," + reg[label] + "),"
+		}
+	}
+	return str + "}"
+}
+
+func prettyPrintLabel(label Label) string {
+	if label.Symbol.Type == SymbolTypTau {
+		return "t   "
+	}
+	return prettyPrintSymbol(label.Symbol) + prettyPrintSymbol(label.Symbol2)
+}
+
+func prettyPrintSymbol(symbol Symbol) string {
+	s := symbol.Value
+	switch symbol.Type {
+	case SymbolTypInput:
+		return strconv.Itoa(s) + " "
+	case SymbolTypOutput:
+		return strconv.Itoa(s) + "'"
+	case SymbolTypFreshInput:
+		return strconv.Itoa(s) + "*"
+	case SymbolTypFreshOutput:
+		return strconv.Itoa(s) + "^"
+	case SymbolTypTau:
+		return "t   "
+	case SymbolTypKnown:
+		return strconv.Itoa(s) + " "
+	}
+	return ""
+}
