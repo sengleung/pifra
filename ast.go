@@ -74,7 +74,7 @@ func subName(elem Element, oldName Name, newName Name) {
 }
 
 // InitRootAst performs alpha-conversion and adds a root element to the AST as the head,
-// for use in the interpreter.
+// for use in the transition relation.
 func InitRootAst(elem Element) Element {
 	DoAlphaConversion(elem)
 	return &ElemRoot{
