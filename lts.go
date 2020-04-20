@@ -2,6 +2,7 @@ package pifra
 
 import (
 	"bytes"
+	"container/list"
 	"fmt"
 	"sort"
 	"strconv"
@@ -44,6 +45,81 @@ var a4GVLayout = []byte(`
 `)
 
 var gvLayout string
+
+func explore(root Configuration) Lts {
+	// Visited states.
+	visited := make(map[string]int)
+	// Encountered transitions.
+	trnsSeen := make(map[Transition]bool)
+	// Track which states have reached the register size.
+	regSizeReached := make(map[int]bool)
+	// LTS states.
+	states := make(map[int]Configuration)
+	// LTS transitions.
+	var trns []Transition
+	// State ID.
+	var stateId int
+
+	applyStructrualCongruence(root)
+	rootKey := getConfigurationKey(root)
+	visited[rootKey] = stateId
+	states[stateId] = root
+	stateId++
+
+	queue := list.New()
+	queue.PushBack(root)
+	dequeue := func() Configuration {
+		c := queue.Front()
+		queue.Remove(c)
+		return c.Value.(Configuration)
+	}
+
+	var statesExplored int
+	var statesGenerated int
+
+	// BFS traversal state exploration.
+	for queue.Len() > 0 && statesExplored < maxStatesExplored {
+		state := dequeue()
+
+		srcId := visited[getConfigurationKey(state)]
+
+		if len(state.Registers.Registers) > registerSize {
+			regSizeReached[srcId] = true
+		} else {
+			confs := trans(state)
+			for _, conf := range confs {
+				statesGenerated++
+				applyStructrualCongruence(conf)
+				dstKey := getConfigurationKey(conf)
+				if _, ok := visited[dstKey]; !ok {
+					visited[dstKey] = stateId
+					states[stateId] = conf
+					stateId++
+					queue.PushBack(conf)
+				}
+				trn := Transition{
+					Source:      srcId,
+					Destination: visited[dstKey],
+					Label:       conf.Label,
+				}
+				if !trnsSeen[trn] {
+					trnsSeen[trn] = true
+					trns = append(trns, trn)
+				}
+			}
+		}
+
+		statesExplored++
+	}
+
+	return Lts{
+		States:          states,
+		Transitions:     trns,
+		RegSizeReached:  regSizeReached,
+		StatesExplored:  statesExplored,
+		StatesGenerated: statesGenerated,
+	}
+}
 
 func generateGraphVizFile(lts Lts, outputStateNo bool) []byte {
 	vertices := lts.States
