@@ -38,7 +38,7 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 var rootCmd = &cobra.Command{
 	Use:   "pifra [OPTION...] FILE",
 	Short: "LTS generator for the pi-calculus represented by FRA.",
-	Long: `Labelled transition system (LTS) generation of
+	Long: `pifra generates labelled transition systems (LTS) of
 pi-calculus models represented by fresh-register automata.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if flags.RegisterSize < 0 {
@@ -90,7 +90,7 @@ func init() {
 	rootCmd.PersistentFlags().SortFlags = false
 
 	rootCmd.PersistentFlags().IntVarP(&flags.MaxStates, "max-states", "n", 20, "maximum number of states explored")
-	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "register-size", "r", 0, "register size (default is unlimited)")
+	rootCmd.PersistentFlags().IntVarP(&flags.RegisterSize, "max-registers", "r", 0, "maximum number of registers (default is unlimited)")
 	rootCmd.PersistentFlags().BoolVarP(&flags.DisableGC, "disable-gc", "d", false, "disable garbage collection")
 
 	rootCmd.PersistentFlags().BoolVarP(&flags.InteractiveMode, "interactive", "i", false, "inspect interactively the LTS in a prompt")
