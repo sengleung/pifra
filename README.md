@@ -199,7 +199,7 @@ pifra -o lts.dot fresh.pi
 dot -Tpdf -o lts.pdf lts.dot
 ```
 
-<img src="https://gist.github.com/sengleung/b5cc1f324e4e2813ebf608eb31121167/raw/cee4a151c4a22728ccd0022a089d07e16181e54a/lts.png" width="500">
+<img src="https://gist.github.com/sengleung/2cb39973c38e28b0fc1d39848cba13d2/raw/34fd15faa0fda23038c9ab2f454d034a3d583fd9/lts.png" width="500">
 
 
 ### GraphViz DOT with LaTeX labels LTS
@@ -212,7 +212,7 @@ dot2tex -o lts.tex lts.dot
 pdflatex lts.tex
 ```
 
-<img src="https://gist.github.com/sengleung/b5cc1f324e4e2813ebf608eb31121167/raw/cee4a151c4a22728ccd0022a089d07e16181e54a/lts-tex.png" width="500">
+<img src="https://gist.github.com/sengleung/2cb39973c38e28b0fc1d39848cba13d2/raw/34fd15faa0fda23038c9ab2f454d034a3d583fd9/lts-tex.png" width="500">
 
 State numbers can be outputted instead of configurations.
 
@@ -222,4 +222,4 @@ dot2tex -o lts.tex lts.dot
 pdflatex lts.tex
 ```
 
-<img src="https://gist.github.com/sengleung/b5cc1f324e4e2813ebf608eb31121167/raw/cee4a151c4a22728ccd0022a089d07e16181e54a/lts-tex-states.png" width="500">
+<img src="https://gist.github.com/sengleung/2cb39973c38e28b0fc1d39848cba13d2/raw/34fd15faa0fda23038c9ab2f454d034a3d583fd9/lts-tex-states.png" width="500">
