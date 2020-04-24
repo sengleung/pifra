@@ -307,7 +307,7 @@ func getTexName(name string) string {
 		return "a" + "_{" + name[1:] + "}"
 	}
 	if string(name[0]) == "&" {
-		return "b" + "_{" + name[1:] + "}"
+		return "x" + "_{" + name[1:] + "}"
 	}
 	if string(name[0]) == "_" {
 		return name[1:]
