@@ -1,10 +1,16 @@
 # pifra - Pi-Calculus Fresh-Register Automata
 
-pifra is a tool for generating labelled transition systems (LTS) of pi-calculus models represented by fresh-register automata (FRA).
+pifra is a tool for generating labelled transition systems (LTS) of pi-calculus models represented by fresh-register
+automata (FRA).
 
-The LTS is generated according to the xπ-calculus FRA transition relation described in the paper [Fresh-Register Automata](http://www.cs.ox.ac.uk/people/nikos.tzevelekos/FRA_11.pdf) by [Nikos Tzevelekos](http://www.tzevelekos.org/). The LTS is minimised by normalising each explored state based on equivalance rules.
+The LTS is generated according to the xπ-calculus FRA transition relation described in the paper [_Fresh-Register
+Automata_](http://www.cs.ox.ac.uk/people/nikos.tzevelekos/FRA_11.pdf) by [Nikos Tzevelekos](
+http://www.tzevelekos.org/). The LTS is minimised by normalising each explored state based on equivalance rules.
 
-This work was carried out as part of a master's dissertation with [Vasileios Koutavas](https://www.scss.tcd.ie/Vasileios.Koutavas/) at Trinity College Dublin.
+This work was carried out as part of a master's dissertation with [Vasileios Koutavas](
+https://www.scss.tcd.ie/Vasileios.Koutavas/) at Trinity College Dublin. The dissertation is entitled [_Modelling
+Concurrent Systems: Generation of Labelled Transition Systems of Pi-Calculus Models through the Use of Fresh-Register
+Automata_](https://www.scss.tcd.ie/publications/theses/diss/2020/TCD-SCSS-DISSERTATION-2020-050.pdf).
 
 ## Installation
 
