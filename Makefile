@@ -9,7 +9,7 @@ generate:
 	@rm -rf lex.go parser.go parser.output coverage.out coverage.html
 	@ragel -Z -G2 -o lex.go lex.rl
 	@goyacc -o parser.go -v parser.output parser.y
-	@go build -o $$GOPATH/bin/pifra pifra/main.go
+	@go build -o $$GOPATH/bin/pifra cmd/pifra/main.go
 
 cover:
 	@go test -coverprofile=coverage.out
