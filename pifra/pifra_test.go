@@ -30,10 +30,11 @@ func TestLtsGeneration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		modulePath := filepath.Dir(pwd)
 		// Test directory.
-		testFolder := path.Join(pwd, "test")
+		testFolder := path.Join(modulePath, "test")
 		// Output directory.
-		outFolder := path.Join(pwd, "test", "out")
+		outFolder := path.Join(modulePath, "test", "out")
 
 		// Get test files, trimming extension ".pi".
 		var testFiles []string

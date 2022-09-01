@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sengleung/pifra"
+	"github.com/sengleung/pifra/pifra"
 	"github.com/spf13/cobra"
 )
 
